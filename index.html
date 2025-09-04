@@ -651,7 +651,8 @@
                 statusDiv.textContent = '✅ อัพเดทอัตราดอกเบียสำเร็จ!';
                 
                 // อัพเดทเวลาล่าสุด
-                document.getElementById('rateUpdateTime').textContent = 
+                const rateUpdateEl = document.getElementById('rateUpdateTime');
+if(rateUpdateEl) rateUpdateEl.textContent = 
                     `อัพเดทล่าสุด: ${new Date().toLocaleString('th-TH')}`;
 
                 // คำนวณใหม่ด้วยอัตราที่อัพเดท
@@ -918,7 +919,8 @@
             checkExistingSession();
             
             // ตั้งเวลาอัพเดทล่าสุด
-            document.getElementById('rateUpdateTime').textContent = 
+            const rateUpdateEl = document.getElementById('rateUpdateTime');
+if(rateUpdateEl) rateUpdateEl.textContent = 
                 `อัพเดทล่าสุด: ${new Date().toLocaleString('th-TH')}`;
         });
 
@@ -948,11 +950,15 @@
         });
 
         // เพิ่ม Enter key support สำหรับ login form
-        document.getElementById('email').addEventListener('keypress', function(e) {
+        const emailInput = document.getElementById('email');
+if(emailInput){
+  emailInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') handleAuth();
         });
 
-        document.getElementById('password').addEventListener('keypress', function(e) {
+        const passwordInput = document.getElementById('password');
+if(passwordInput){
+  passwordInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') handleAuth();
         });
 
@@ -1093,5 +1099,23 @@
             console.log('📊 Database ready for loan calculations');
         }
     </script>
+
+<!-- ==== Placeholders Added for Auth & Rate Update ==== -->
+<div id="loginForm" style="display:none;">
+  <input type="text" id="email" placeholder="Email">
+  <input type="password" id="password" placeholder="Password">
+  <button id="authButton">เข้าสู่ระบบ</button>
+  <button id="toggleButton">สมัครสมาชิก</button>
+</div>
+<div id="userInfo" style="display:none;">
+  <span id="welcomeMessage"></span>
+  <button onclick="logout()">ออกจากระบบ</button>
+</div>
+<div id="savedCalculationsSection" style="display:none;">
+  <div id="savedCalculationsList"></div>
+  <button id="saveBtn" disabled>บันทึก</button>
+</div>
+<div id="rateUpdateTime" style="margin-top:10px;color:#fff;font-size:0.9em;"></div>
+
 </body>
 </html>
