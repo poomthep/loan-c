@@ -882,26 +882,32 @@
 
         function compareBanks(loanAmount, loanTerm) {
             const container = document.getElementById('bankComparison');
-            container.innerHTML = '';
+            if (!container) return;
+            
+            try {
+                container.innerHTML = '';
 
-            bankData.forEach(bank => {
-                const monthlyPayment = calculateMonthlyPayment(loanAmount, bank.rate, loanTerm);
-                const totalPayments = monthlyPayment * loanTerm * 12;
-                const totalInterest = totalPayments - loanAmount;
+                bankData.forEach(bank => {
+                    const monthlyPayment = calculateMonthlyPayment(loanAmount, bank.rate, loanTerm);
+                    const totalPayments = monthlyPayment * loanTerm * 12;
+                    const totalInterest = totalPayments - loanAmount;
 
-                const bankCard = document.createElement('div');
-                bankCard.className = 'bank-card';
-                bankCard.style.borderLeftColor = bank.color;
-                
-                bankCard.innerHTML = `
-                    <div class="bank-name">${bank.name}</div>
-                    <div><strong>อัตราดอกเบีย:</strong> ${bank.rate}%</div>
-                    <div><strong>ผ่อนต่อเดือน:</strong> ${formatNumber(monthlyPayment)} บาท</div>
-                    <div><strong>ดอกเบียรวม:</strong> ${formatNumber(totalInterest)} บาท</div>
-                `;
+                    const bankCard = document.createElement('div');
+                    bankCard.className = 'bank-card';
+                    bankCard.style.borderLeftColor = bank.color;
+                    
+                    bankCard.innerHTML = `
+                        <div class="bank-name">${bank.name}</div>
+                        <div><strong>อัตราดอกเบีย:</strong> ${bank.rate}%</div>
+                        <div><strong>ผ่อนต่อเดือน:</strong> ${formatNumber(monthlyPayment)} บาท</div>
+                        <div><strong>ดอกเบียรวม:</strong> ${formatNumber(totalInterest)} บาท</div>
+                    `;
 
-                container.appendChild(bankCard);
-            });
+                    container.appendChild(bankCard);
+                });
+            } catch (error) {
+                console.error('Error comparing banks:', error);
+            }
         }
 
         // เริ่มต้นการทำงาน
