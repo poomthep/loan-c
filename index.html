@@ -953,12 +953,18 @@ if(rateUpdateEl) rateUpdateEl.textContent =
         const emailInput = document.getElementById('email');
 if(emailInput){
   emailInput.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') handleAuth();
+  });
+}
             if (e.key === 'Enter') handleAuth();
         });
 
         const passwordInput = document.getElementById('password');
 if(passwordInput){
   passwordInput.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') handleAuth();
+  });
+}
             if (e.key === 'Enter') handleAuth();
         });
 
@@ -1101,12 +1107,12 @@ if(passwordInput){
     </script>
 
 <!-- ==== Placeholders Added for Auth & Rate Update ==== -->
-<div id="loginForm" style="display:none;">
+<form id="loginForm" style="display:none;">
   <input type="text" id="email" placeholder="Email">
   <input type="password" id="password" placeholder="Password">
   <button id="authButton">เข้าสู่ระบบ</button>
   <button id="toggleButton">สมัครสมาชิก</button>
-</div>
+</form>
 <div id="userInfo" style="display:none;">
   <span id="welcomeMessage"></span>
   <button onclick="logout()">ออกจากระบบ</button>
