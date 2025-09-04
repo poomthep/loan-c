@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เครื่องมือวิเคราะห์สินเชื่อบ้าน</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            text-align: center;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+        }
+
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .result-item {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 10px 20px rgba(240, 147, 251, 0.3);
+        }
+
+        .result-item h3 {
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .result-item .value {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 20px;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .amortization-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            display: block;
+            white-space: nowrap;
+        }
+
+        .amortization-table thead {
+            background: #667eea;
+            color: white;
+            position: sticky;
+            top: 0;
+        }
+
+        .amortization-table th,
+        .amortization-table td {
+            padding: 12px;
+            text-align: right;
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        .amortization-table tbody {
+            display: block;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .amortization-table thead,
+        .amortization-table tbody tr {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+        }
+
+        .comparison-section {
+            margin-top: 30px;
+        }
+
+        .bank-comparison {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .bank-card {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 15px;
+            border-left: 5px solid #667eea;
+            transition: transform 0.2s ease;
+        }
+
+        .bank-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .bank-name {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .results-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+        }
+
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏠 เครื่องมือวิเคราะห์สินเชื่อบ้าน</h1>
+            <p>วิเคราะห์และเปรียบเทียบแพ็กเกจสินเชื่อจากธนาคารชั้นนำ</p>
+        </div>
+
+        <div class="main-content">
+            <div class="card">
+                <h2>📊 ข้อมูลสินเชื่อ</h2>
+                <div class="input-group">
+                    <label for="housePrice">ราคาบ้าน (บาท)</label>
+                    <input type="number" id="housePrice" placeholder="5,000,000" value="5000000">
+                </div>
+                
+                <div class="input-group">
+                    <label for="downPayment">เงินดาวน์ (%)</label>
+                    <input type="number" id="downPayment" placeholder="20" value="20" min="0" max="100">
+                </div>
+
+                <div class="input-group">
+                    <label for="interestRate">อัตราดอกเบีย (% ต่อปี)</label>
+                    <input type="number" id="interestRate" placeholder="3.5" value="3.5" step="0.1">
+                </div>
+
+                <div class="input-group">
+                    <label for="loanTerm">ระยะเวลากู้ (ปี)</label>
+                    <select id="loanTerm">
+                        <option value="10">10 ปี</option>
+                        <option value="15">15 ปี</option>
+                        <option value="20">20 ปี</option>
+                        <option value="25">25 ปี</option>
+                        <option value="30" selected>30 ปี</option>
+                        <option value="35">35 ปี</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="monthlyIncome">รายได้ต่อเดือน (บาท)</label>
+                    <input type="number" id="monthlyIncome" placeholder="80,000" value="80000">
+                </div>
+
+                <button class="btn" onclick="calculateLoan()">🔍 วิเคราะห์สินเชื่อ</button>
+            </div>
+
+            <div class="card">
+                <h2>💰 ผลการวิเคราะห์</h2>
+                <div class="results-grid">
+                    <div class="result-item">
+                        <h3>ยอดกู้ยืม</h3>
+                        <div class="value" id="loanAmount">-</div>
+                    </div>
+                    <div class="result-item">
+                        <h3>ผ่อนต่อเดือน</h3>
+                        <div class="value" id="monthlyPayment">-</div>
+                    </div>
+                    <div class="result-item">
+                        <h3>ดอกเบียรวม</h3>
+                        <div class="value" id="totalInterest">-</div>
+                    </div>
+                    <div class="result-item">
+                        <h3>ต้นทุนรวม</h3>
+                        <div class="value" id="totalCost">-</div>
+                    </div>
+                </div>
+                
+                <div id="debtRatioAlert"></div>
+                
+                <div class="chart-container">
+                    <canvas id="paymentChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="card full-width comparison-section">
+            <h2>🏦 เปรียบเทียบธนาคาร</h2>
+            <div class="bank-comparison" id="bankComparison"></div>
+        </div>
+
+        <div class="card full-width">
+            <h2>📋 ตารางการชำระหนี้ (12 เดือนแรก)</h2>
+            <div style="overflow-x: auto;">
+                <table class="amortization-table">
+                    <thead>
+                        <tr>
+                            <th width="10%">งวด</th>
+                            <th width="20%">ยอดผ่อน</th>
+                            <th width="20%">เงินต้น</th>
+                            <th width="20%">ดอกเบีย</th>
+                            <th width="30%">เงินต้นคงเหลือ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="amortizationTable">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Supabase Configuration
+        const SUPABASE_URL = 'https://your-project.supabase.co'; // แทนที่ด้วย URL จริง
+        const SUPABASE_ANON_KEY = 'your-anon-key'; // แทนที่ด้วย API Key จริง
+        
+        // ในกรณีที่ไม่ได้ใช้ Supabase จริง จะใช้ Local Storage แทน
+        const USE_SUPABASE = false; // เปลี่ยนเป็น true เมื่อต้องการใช้ Supabase จริง
+        
+        let supabase = null;
+        let currentUser = null;
+        let isLoginMode = true;
+
+        // Mock API for bank rates (จำลอง API ธนาคาร)
+        const mockBankAPI = {
+            rates: [
+                { name: 'ธนาคารกสิกรไทย', rate: 3.45, lastUpdate: new Date() },
+                { name: 'ธนาคารกรุงเทพ', rate: 3.55, lastUpdate: new Date() },
+                { name: 'ธนาคารไทยพาณิชย์', rate: 3.50, lastUpdate: new Date() },
+                { name: 'ธนาคารกรุงไทย', rate: 3.40, lastUpdate: new Date() },
+                { name: 'ธนาคารทหารไทยธนชาต', rate: 3.60, lastUpdate: new Date() }
+            ],
+            getRates: async function() {
+                // จำลองการเรียก API
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                // สุ่มอัตราดอกเบียใหม่
+                this.rates = this.rates.map(bank => ({
+                    ...bank,
+                    rate: (Math.random() * 1.5 + 2.8).toFixed(2), // สุ่มระหว่าง 2.8-4.3%
+                    lastUpdate: new Date()
+                }));
+                
+                return this.rates;
+            }
+        };
+
+        const bankData = mockBankAPI.rates.map(bank => ({
+            name: bank.name,
+            rate: parseFloat(bank.rate),
+            color: ['#4CAF50', '#2196F3', '#FF9800', '#9C27B0', '#F44336'][Math.floor(Math.random() * 5)]
+        }));
+
+        let paymentChart = null;
+
+        // Initialize Supabase (หากใช้งานจริง)
+        if (USE_SUPABASE && typeof supabase !== 'undefined') {
+            try {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            } catch (error) {
+                console.log('Supabase not available, using localStorage');
+            }
+        }
+
+        // Authentication Functions
+        async function handleAuth() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (!email || !password) {
+                alert('กรุณากรอกอีเมลและรหัสผ่าน');
+                return;
+            }
+
+            try {
+                if (USE_SUPABASE && supabase) {
+                    if (isLoginMode) {
+                        const { data, error } = await supabase.auth.signInWithPassword({
+                            email: email,
+                            password: password
+                        });
+                        if (error) throw error;
+                        currentUser = data.user;
+                    } else {
+                        const { data, error } = await supabase.auth.signUp({
+                            email: email,
+                            password: password
+                        });
+                        if (error) throw error;
+                        alert('สมัครสมาชิกสำเร็จ! กรุณาตรวจสอบอีเมลเพื่อยืนยันบัญชี');
+                        return;
+                    }
+                } else {
+                    // ใช้ localStorage สำหรับ Demo
+                    if (isLoginMode) {
+                        const users = JSON.parse(localStorage.getItem('loanapp_users') || '[]');
+                        const user = users.find(u => u.email === email && u.password === password);
+                        if (!user) {
+                            throw new Error('อีเมลหรือรหัสผ่านไม่ถูกต้อง');
+                        }
+                        currentUser = { email: user.email, id: user.id };
+                    } else {
+                        const users = JSON.parse(localStorage.getItem('loanapp_users') || '[]');
+                        if (users.some(u => u.email === email)) {
+                            throw new Error('อีเมลนี้ถูกใช้งานแล้ว');
+                        }
+                        const newUser = {
+                            id: Date.now().toString(),
+                            email: email,
+                            password: password
+                        };
+                        users.push(newUser);
+                        localStorage.setItem('loanapp_users', JSON.stringify(users));
+                        alert('สมัครสมาชิกสำเร็จ! กรุณาเข้าสู่ระบบ');
+                        toggleAuthMode();
+                        return;
+                    }
+                }
+
+                // อัพเดท UI หลังจากเข้าสู่ระบบสำเร็จ
+                updateAuthUI(true);
+                loadSavedCalculations();
+
+            } catch (error) {
+                alert('เกิดข้อผิดพลาด: ' + error.message);
+            }
+        }
+
+        function toggleAuthMode() {
+            isLoginMode = !isLoginMode;
+            const authButton = document.getElementById('authButton');
+            const toggleButton = document.getElementById('toggleButton');
+            
+            if (isLoginMode) {
+                authButton.textContent = 'เข้าสู่ระบบ';
+                toggleButton.textContent = 'สมัครสมาชิก';
+            } else {
+                authButton.textContent = 'สมัครสมาชิก';
+                toggleButton.textContent = 'เข้าสู่ระบบ';
+            }
+        }
+
+        async function logout() {
+            if (USE_SUPABASE && supabase) {
+                await supabase.auth.signOut();
+            }
+            currentUser = null;
+            updateAuthUI(false);
+        }
+
+        function updateAuthUI(loggedIn) {
+            const loginForm = document.getElementById('loginForm');
+            const userInfo = document.getElementById('userInfo');
+            const saveBtn = document.getElementById('saveBtn');
+            const savedSection = document.getElementById('savedCalculationsSection');
+
+            if (loggedIn) {
+                loginForm.style.display = 'none';
+                userInfo.style.display = 'flex';
+                document.getElementById('welcomeMessage').textContent = 
+                    `ยินดีต้อนรับ ${currentUser.email}`;
+                saveBtn.disabled = false;
+                savedSection.style.display = 'block';
+            } else {
+                loginForm.style.display = 'flex';
+                userInfo.style.display = 'none';
+                saveBtn.disabled = true;
+                savedSection.style.display = 'none';
+            }
+
+            // Clear form
+            document.getElementById('email').value = '';
+            document.getElementById('password').value = '';
+        }
+
+        // Data Management Functions
+        async function saveLoanData() {
+            if (!currentUser) {
+                alert('กรุณาเข้าสู่ระบบก่อนบันทึกข้อมูล');
+                return;
+            }
+
+            const loanData = {
+                user_id: currentUser.id,
+                house_price: parseFloat(document.getElementById('housePrice').value),
+                down_payment: parseFloat(document.getElementById('downPayment').value),
+                interest_rate: parseFloat(document.getElementById('interestRate').value),
+                loan_term: parseFloat(document.getElementById('loanTerm').value),
+                monthly_income: parseFloat(document.getElementById('monthlyIncome').value),
+                created_at: new Date().toISOString(),
+                calculation_results: {
+                    loan_amount: document.getElementById('loanAmount').textContent,
+                    monthly_payment: document.getElementById('monthlyPayment').textContent,
+                    total_interest: document.getElementById('totalInterest').textContent,
+                    total_cost: document.getElementById('totalCost').textContent
+                }
+            };
+
+            try {
+                if (USE_SUPABASE && supabase) {
+                    const { data, error } = await supabase
+                        .from('loan_calculations')
+                        .insert([loanData]);
+                    
+                    if (error) throw error;
+                } else {
+                    // ใช้ localStorage
+                    const savedData = JSON.parse(localStorage.getItem('loan_calculations') || '[]');
+                    savedData.push({ ...loanData, id: Date.now() });
+                    localStorage.setItem('loan_calculations', JSON.stringify(savedData));
+                }
+
+                alert('บันทึกข้อมูลสำเร็จ!');
+                loadSavedCalculations();
+
+            } catch (error) {
+                alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' + error.message);
+            }
+        }
+
+        async function loadSavedCalculations() {
+            if (!currentUser) return;
+
+            try {
+                let calculations = [];
+                
+                if (USE_SUPABASE && supabase) {
+                    const { data, error } = await supabase
+                        .from('loan_calculations')
+                        .select('*')
+                        .eq('user_id', currentUser.id)
+                        .order('created_at', { ascending: false })
+                        .limit(10);
+                    
+                    if (error) throw error;
+                    calculations = data;
+                } else {
+                    const savedData = JSON.parse(localStorage.getItem('loan_calculations') || '[]');
+                    calculations = savedData
+                        .filter(calc => calc.user_id === currentUser.id)
+                        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                        .slice(0, 10);
+                }
+
+                displaySavedCalculations(calculations);
+
+            } catch (error) {
+                console.error('Error loading calculations:', error);
+            }
+        }
+
+        function displaySavedCalculations(calculations) {
+            const container = document.getElementById('savedCalculationsList');
+            
+            if (calculations.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666;">ยังไม่มีการคำนวณที่บันทึกไว้</p>';
+                return;
+            }
+
+            container.innerHTML = calculations.map(calc => `
+                <div class="calculation-item">
+                    <div class="calculation-header">
+                        <strong>ราคาบ้าน: ${formatNumber(calc.house_price)} บาท</strong>
+                        <div class="calculation-date">${new Date(calc.created_at).toLocaleDateString('th-TH')}</div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; font-size: 14px;">
+                        <div><strong>ยอดกู้:</strong> ${calc.calculation_results.loan_amount}</div>
+                        <div><strong>ผ่อนต่อเดือน:</strong> ${calc.calculation_results.monthly_payment}</div>
+                        <div><strong>ดอกเบียรวม:</strong> ${calc.calculation_results.total_interest}</div>
+                        <div><strong>อัตราดอกเบีย:</strong> ${calc.interest_rate}%</div>
+                    </div>
+                    <button class="btn-secondary" onclick="loadCalculation(${calc.id || 'null'})" style="margin-top: 10px; padding: 5px 10px; font-size: 12px;">โหลดข้อมูลนี้</button>
+                </div>
+            `).join('');
+        }
+
+        function loadCalculation(calcId) {
+            const savedData = JSON.parse(localStorage.getItem('loan_calculations') || '[]');
+            const calculation = savedData.find(calc => calc.id === calcId);
+            
+            if (calculation) {
+                document.getElementById('housePrice').value = calculation.house_price;
+                document.getElementById('downPayment').value = calculation.down_payment;
+                document.getElementById('interestRate').value = calculation.interest_rate;
+                document.getElementById('loanTerm').value = calculation.loan_term;
+                document.getElementById('monthlyIncome').value = calculation.monthly_income;
+                
+                calculateLoan();
+                
+                // เลื่อนขึ้นไปด้านบน
+                document.querySelector('.main-content').scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // API Integration Functions
+        async function fetchLatestRates() {
+            const statusDiv = document.getElementById('apiStatus');
+            statusDiv.style.display = 'block';
+            statusDiv.className = 'api-status status-loading';
+            statusDiv.textContent = '🔄 กำลังอัพเดทอัตราดอกเบียจากธนาคาร...';
+
+            try {
+                const rates = await mockBankAPI.getRates();
+                
+                // อัพเดทข้อมูลธนาคาร
+                bankData.forEach((bank, index) => {
+                    if (rates[index]) {
+                        bank.rate = parseFloat(rates[index].rate);
+                    }
+                });
+
+                statusDiv.className = 'api-status status-success';
+                statusDiv.textContent = '✅ อัพเดทอัตราดอกเบียสำเร็จ!';
+                
+                // อัพเดทเวลาล่าสุด
+                document.getElementById('rateUpdateTime').textContent = 
+                    `อัพเดทล่าสุด: ${new Date().toLocaleString('th-TH')}`;
+
+                // คำนวณใหม่ด้วยอัตราที่อัพเดท
+                calculateLoan();
+
+                setTimeout(() => {
+                    statusDiv.style.display = 'none';
+                }, 3000);
+
+            } catch (error) {
+                statusDiv.className = 'api-status status-error';
+                statusDiv.textContent = '❌ เกิดข้อผิดพลาดในการอัพเดทอัตราดอกเบีย';
+                
+                setTimeout(() => {
+                    statusDiv.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        // PDF Export Function
+        async function exportToPDF() {
+            try {
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF();
+
+                // เพิ่ม Font สำหรับภาษาไทย (ถ้ามี)
+                pdf.setFont('helvetica');
+                pdf.setFontSize(16);
+
+                // Header
+                pdf.text('Loan Analysis Report', 20, 20);
+                pdf.setFontSize(12);
+                
+                // ข้อมูลสินเชื่อ
+                const housePrice = document.getElementById('housePrice').value;
+                const downPayment = document.getElementById('downPayment').value;
+                const interestRate = document.getElementById('interestRate').value;
+                const loanTerm = document.getElementById('loanTerm').value;
+                const monthlyIncome = document.getElementById('monthlyIncome').value;
+
+                let yPos = 40;
+                pdf.text('Loan Information:', 20, yPos);
+                yPos += 10;
+                pdf.text(`House Price: ${formatNumber(housePrice)} Baht`, 30, yPos);
+                yPos += 8;
+                pdf.text(`Down Payment: ${downPayment}%`, 30, yPos);
+                yPos += 8;
+                pdf.text(`Interest Rate: ${interestRate}%`, 30, yPos);
+                yPos += 8;
+                pdf.text(`Loan Term: ${loanTerm} years`, 30, yPos);
+                yPos += 8;
+                pdf.text(`Monthly Income: ${formatNumber(monthlyIncome)} Baht`, 30, yPos);
+
+                // ผลการคำนวณ
+                yPos += 20;
+                pdf.text('Calculation Results:', 20, yPos);
+                yPos += 10;
+                pdf.text(`Loan Amount: ${document.getElementById('loanAmount').textContent}`, 30, yPos);
+                yPos += 8;
+                pdf.text(`Monthly Payment: ${document.getElementById('monthlyPayment').textContent}`, 30, yPos);
+                yPos += 8;
+                pdf.text(`Total Interest: ${document.getElementById('totalInterest').textContent}`, 30, yPos);
+                yPos += 8;
+                pdf.text(`Total Cost: ${document.getElementById('totalCost').textContent}`, 30, yPos);
+
+                // เปรียบเทียบธนาคาร
+                yPos += 20;
+                pdf.text('Bank Comparison:', 20, yPos);
+                yPos += 10;
+
+                const loanAmount = parseFloat(housePrice) * (1 - parseFloat(downPayment) / 100);
+                bankData.forEach(bank => {
+                    const monthlyPayment = calculateMonthlyPayment(loanAmount, bank.rate, parseFloat(loanTerm));
+                    pdf.text(`${bank.name}: ${bank.rate}% - ${formatNumber(monthlyPayment)} Baht/month`, 30, yPos);
+                    yPos += 8;
+                });
+
+                // บันทึกไฟล์
+                const fileName = `loan-analysis-${new Date().toISOString().split('T')[0]}.pdf`;
+                pdf.save(fileName);
+
+            } catch (error) {
+                alert('เกิดข้อผิดพลาดในการสร้าง PDF: ' + error.message);
+            }
+        }
+
+        function formatNumber(num) {
+            return new Intl.NumberFormat('th-TH').format(Math.round(num));
+        }
+
+        function calculateMonthlyPayment(principal, rate, term) {
+            const monthlyRate = rate / 100 / 12;
+            const numPayments = term * 12;
+            
+            if (monthlyRate === 0) {
+                return principal / numPayments;
+            }
+            
+            return (principal * monthlyRate * Math.pow(1 + monthlyRate, numPayments)) /
+                   (Math.pow(1 + monthlyRate, numPayments) - 1);
+        }
+
+        function calculateLoan() {
+            const housePrice = parseFloat(document.getElementById('housePrice').value) || 0;
+            const downPaymentPercent = parseFloat(document.getElementById('downPayment').value) || 0;
+            const interestRate = parseFloat(document.getElementById('interestRate').value) || 0;
+            const loanTerm = parseFloat(document.getElementById('loanTerm').value) || 30;
+            const monthlyIncome = parseFloat(document.getElementById('monthlyIncome').value) || 0;
+
+            // คำนวณยอดกู้ยืม
+            const downPaymentAmount = housePrice * (downPaymentPercent / 100);
+            const loanAmount = housePrice - downPaymentAmount;
+
+            // คำนวณยอดผ่อนรายเดือน
+            const monthlyPayment = calculateMonthlyPayment(loanAmount, interestRate, loanTerm);
+            
+            // คำนวณดอกเบียรวมและต้นทุนรวม
+            const totalPayments = monthlyPayment * loanTerm * 12;
+            const totalInterest = totalPayments - loanAmount;
+            const totalCost = housePrice + totalInterest;
+
+            // แสดงผล
+            document.getElementById('loanAmount').textContent = formatNumber(loanAmount) + ' บาท';
+            document.getElementById('monthlyPayment').textContent = formatNumber(monthlyPayment) + ' บาท';
+            document.getElementById('totalInterest').textContent = formatNumber(totalInterest) + ' บาท';
+            document.getElementById('totalCost').textContent = formatNumber(totalCost) + ' บาท';
+
+            // คำนวณ Debt-to-Income Ratio
+            const debtRatio = (monthlyPayment / monthlyIncome) * 100;
+            showDebtRatioAlert(debtRatio);
+
+            // สร้างกราห
+            createPaymentChart(loanAmount, totalInterest);
+
+            // สร้างตารางการชำระหนี้
+            createAmortizationTable(loanAmount, interestRate, loanTerm, monthlyPayment);
+
+            // เปรียบเทียบธนาคาร
+            compareBanks(loanAmount, loanTerm);
+        }
+
+        function showDebtRatioAlert(ratio) {
+            const alertDiv = document.getElementById('debtRatioAlert');
+            let alertClass = '';
+            let message = '';
+
+            if (ratio <= 30) {
+                alertClass = 'success';
+                message = `✅ อัตราหนี้ต่อรายได้: ${ratio.toFixed(1)}% - อยู่ในเกณฑ์ที่ดี`;
+            } else if (ratio <= 40) {
+                alertClass = 'warning';
+                message = `⚠️ อัตราหนี้ต่อรายได้: ${ratio.toFixed(1)}% - ควรระมัดระวัง`;
+            } else {
+                alertClass = 'warning';
+                message = `🚨 อัตราหนี้ต่อรายได้: ${ratio.toFixed(1)}% - เสี่ยงสูง ควรปรับลดยอดกู้`;
+            }
+
+            alertDiv.innerHTML = `<div class="${alertClass}">${message}</div>`;
+        }
+
+        function createPaymentChart(principal, interest) {
+            const ctx = document.getElementById('paymentChart').getContext('2d');
+            
+            if (paymentChart) {
+                paymentChart.destroy();
+            }
+
+            paymentChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['เงินต้น', 'ดอกเบีย'],
+                    datasets: [{
+                        data: [principal, interest],
+                        backgroundColor: ['#667eea', '#f093fb'],
+                        borderWidth: 3,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': ' + formatNumber(context.raw) + ' บาท';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createAmortizationTable(loanAmount, interestRate, loanTerm, monthlyPayment) {
+            const tbody = document.getElementById('amortizationTable');
+            tbody.innerHTML = '';
+
+            let remainingBalance = loanAmount;
+            const monthlyRate = interestRate / 100 / 12;
+
+            // แสดงเพียง 12 งวดแรก
+            for (let month = 1; month <= 12; month++) {
+                const interestPayment = remainingBalance * monthlyRate;
+                const principalPayment = monthlyPayment - interestPayment;
+                remainingBalance -= principalPayment;
+
+                const row = tbody.insertRow();
+                row.insertCell(0).textContent = month;
+                row.insertCell(1).textContent = formatNumber(monthlyPayment);
+                row.insertCell(2).textContent = formatNumber(principalPayment);
+                row.insertCell(3).textContent = formatNumber(interestPayment);
+                row.insertCell(4).textContent = formatNumber(Math.max(0, remainingBalance));
+
+                // สลับสีแถว
+                if (month % 2 === 0) {
+                    row.style.backgroundColor = '#f8f9fa';
+                }
+            }
+        }
+
+        function compareBanks(loanAmount, loanTerm) {
+            const container = document.getElementById('bankComparison');
+            container.innerHTML = '';
+
+            bankData.forEach(bank => {
+                const monthlyPayment = calculateMonthlyPayment(loanAmount, bank.rate, loanTerm);
+                const totalPayments = monthlyPayment * loanTerm * 12;
+                const totalInterest = totalPayments - loanAmount;
+
+                const bankCard = document.createElement('div');
+                bankCard.className = 'bank-card';
+                bankCard.style.borderLeftColor = bank.color;
+                
+                bankCard.innerHTML = `
+                    <div class="bank-name">${bank.name}</div>
+                    <div><strong>อัตราดอกเบีย:</strong> ${bank.rate}%</div>
+                    <div><strong>ผ่อนต่อเดือน:</strong> ${formatNumber(monthlyPayment)} บาท</div>
+                    <div><strong>ดอกเบียรวม:</strong> ${formatNumber(totalInterest)} บาท</div>
+                `;
+
+                container.appendChild(bankCard);
+            });
+        }
+
+        // เริ่มต้นการทำงาน
+        window.addEventListener('load', function() {
+            calculateLoan();
+            
+            // ตรวจสอบ session ที่มีอยู่
+            checkExistingSession();
+            
+            // ตั้งเวลาอัพเดทล่าสุด
+            document.getElementById('rateUpdateTime').textContent = 
+                `อัพเดทล่าสุด: ${new Date().toLocaleString('th-TH')}`;
+        });
+
+        async function checkExistingSession() {
+            if (USE_SUPABASE && supabase) {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) {
+                    currentUser = user;
+                    updateAuthUI(true);
+                    loadSavedCalculations();
+                }
+            } else {
+                // ตรวจสอบ localStorage session
+                const savedSession = localStorage.getItem('loanapp_session');
+                if (savedSession) {
+                    currentUser = JSON.parse(savedSession);
+                    updateAuthUI(true);
+                    loadSavedCalculations();
+                }
+            }
+        }
+
+        // เพิ่ม Event Listeners สำหรับการคำนวณอัตโนมัติ
+        document.querySelectorAll('input, select').forEach(element => {
+            element.addEventListener('change', calculateLoan);
+            element.addEventListener('input', calculateLoan);
+        });
+
+        // เพิ่ม Enter key support สำหรับ login form
+        document.getElementById('email').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') handleAuth();
+        });
+
+        document.getElementById('password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') handleAuth();
+        });
+
+        // บันทึก session ใน localStorage (สำหรับ demo)
+        function saveSession() {
+            if (!USE_SUPABASE && currentUser) {
+                localStorage.setItem('loanapp_session', JSON.stringify(currentUser));
+            }
+        }
+
+        // ลบ session
+        function clearSession() {
+            localStorage.removeItem('loanapp_session');
+        }
+
+        // อัพเดทฟังก์ชัน updateAuthUI เพื่อจัดการ session
+        const originalUpdateAuthUI = updateAuthUI;
+        updateAuthUI = function(loggedIn) {
+            originalUpdateAuthUI(loggedIn);
+            if (loggedIn) {
+                saveSession();
+            } else {
+                clearSession();
+            }
+        };
+
+        // เพิ่มฟังก์ชันสำหรับลบการคำนวณที่บันทึกไว้
+        async function deleteCalculation(calcId) {
+            if (!confirm('คุณต้องการลบการคำนวณนี้หรือไม่?')) return;
+
+            try {
+                if (USE_SUPABASE && supabase) {
+                    const { error } = await supabase
+                        .from('loan_calculations')
+                        .delete()
+                        .eq('id', calcId);
+                    if (error) throw error;
+                } else {
+                    const savedData = JSON.parse(localStorage.getItem('loan_calculations') || '[]');
+                    const filteredData = savedData.filter(calc => calc.id !== calcId);
+                    localStorage.setItem('loan_calculations', JSON.stringify(filteredData));
+                }
+
+                loadSavedCalculations();
+                alert('ลบการคำนวณสำเร็จ');
+
+            } catch (error) {
+                alert('เกิดข้อผิดพลาด: ' + error.message);
+            }
+        }
+
+        // อัพเดทฟังก์ชัน displaySavedCalculations เพื่อเพิ่มปุ่มลบ
+        const originalDisplaySavedCalculations = displaySavedCalculations;
+        displaySavedCalculations = function(calculations) {
+            const container = document.getElementById('savedCalculationsList');
+            
+            if (calculations.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666;">ยังไม่มีการคำนวณที่บันทึกไว้</p>';
+                return;
+            }
+
+            container.innerHTML = calculations.map(calc => `
+                <div class="calculation-item">
+                    <div class="calculation-header">
+                        <strong>ราคาบ้าน: ${formatNumber(calc.house_price)} บาท</strong>
+                        <div class="calculation-date">${new Date(calc.created_at).toLocaleDateString('th-TH')}</div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; font-size: 14px;">
+                        <div><strong>ยอดกู้:</strong> ${calc.calculation_results.loan_amount}</div>
+                        <div><strong>ผ่อนต่อเดือน:</strong> ${calc.calculation_results.monthly_payment}</div>
+                        <div><strong>ดอกเบียรวม:</strong> ${calc.calculation_results.total_interest}</div>
+                        <div><strong>อัตราดอกเบีย:</strong> ${calc.interest_rate}%</div>
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <button class="btn-secondary" onclick="loadCalculation(${calc.id || 'null'})" style="padding: 5px 10px; font-size: 12px; flex: 1;">โหลดข้อมูล</button>
+                        <button class="btn-danger" onclick="deleteCalculation(${calc.id || 'null'})" style="padding: 5px 10px; font-size: 12px; flex: 1;">ลบ</button>
+                    </div>
+                </div>
+            `).join('');
+        };
+
+        // เพิ่มฟังก์ชัน Export ข้อมูลทั้งหมดเป็น JSON
+        async function exportAllData() {
+            if (!currentUser) {
+                alert('กรุณาเข้าสู่ระบบก่อน');
+                return;
+            }
+
+            try {
+                let calculations = [];
+                
+                if (USE_SUPABASE && supabase) {
+                    const { data, error } = await supabase
+                        .from('loan_calculations')
+                        .select('*')
+                        .eq('user_id', currentUser.id);
+                    if (error) throw error;
+                    calculations = data;
+                } else {
+                    const savedData = JSON.parse(localStorage.getItem('loan_calculations') || '[]');
+                    calculations = savedData.filter(calc => calc.user_id === currentUser.id);
+                }
+
+                const dataStr = JSON.stringify(calculations, null, 2);
+                const dataBlob = new Blob([dataStr], {type: 'application/json'});
+                
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(dataBlob);
+                link.download = `loan-calculations-${new Date().toISOString().split('T')[0]}.json`;
+                link.click();
+
+            } catch (error) {
+                alert('เกิดข้อผิดพลาด: ' + error.message);
+            }
+        }
+
+        // เพิ่มปุ่ม Export ในส่วนการคำนวณที่บันทึกไว้
+        const originalLoadSavedCalculations = loadSavedCalculations;
+        loadSavedCalculations = async function() {
+            await originalLoadSavedCalculations();
+            
+            // เพิ่มปุ่ม Export ทั้งหมด
+            const savedSection = document.getElementById('savedCalculationsSection');
+            if (savedSection.style.display !== 'none') {
+                const existingButton = savedSection.querySelector('.export-all-button');
+                if (!existingButton) {
+                    const exportButton = document.createElement('button');
+                    exportButton.className = 'btn-secondary export-all-button';
+                    exportButton.onclick = exportAllData;
+                    exportButton.textContent = '📦 Export ข้อมูลทั้งหมด';
+                    exportButton.style.marginBottom = '20px';
+                    
+                    savedSection.insertBefore(exportButton, document.getElementById('savedCalculationsList'));
+                }
+            }
+        };
+
+        console.log('🏠 Loan Analysis App Loaded Successfully!');
+        console.log('Features: PDF Export, Data Management, Supabase Integration');
+        console.log('🔗 Connected to Supabase:', SUPABASE_URL);
+        
+        if (!USE_SUPABASE) {
+            console.log('📝 Fallback Mode: Using localStorage');
+            console.log('💡 Supabase connection failed, check console for errors');
+        } else {
+            console.log('🎯 Production Mode: Using Supabase for data storage');
+            console.log('📊 Database ready for loan calculations');
+        }
+    </script>
+</body>
+</html>
