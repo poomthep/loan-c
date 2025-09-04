@@ -9,44 +9,37 @@
         * {
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-        }
+            box-sizing: border-box}
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding: 20px;
-        }
+            padding: 20px}
 
         .container {
             max-width: 1200px;
-            margin: 0 auto;
-        }
+            margin: 0 auto}
 
         .header {
             text-align: center;
             color: white;
-            margin-bottom: 30px;
-        }
+            margin-bottom: 30px}
 
         .header h1 {
             font-size: 2.5em;
             margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3)}
 
         .header p {
             font-size: 1.2em;
-            opacity: 0.9;
-        }
+            opacity: 0.9}
 
         .main-content {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 30px;
-            margin-bottom: 30px;
-        }
+            margin-bottom: 30px}
 
         .card {
             background: rgba(255, 255, 255, 0.95);
@@ -54,8 +47,7 @@
             padding: 25px;
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
+            border: 1px solid rgba(255, 255, 255, 0.2)}
 
         .card h2 {
             color: #333;
@@ -63,19 +55,16 @@
             font-size: 1.5em;
             text-align: center;
             border-bottom: 2px solid #667eea;
-            padding-bottom: 10px;
-        }
+            padding-bottom: 10px}
 
         .input-group {
-            margin-bottom: 20px;
-        }
+            margin-bottom: 20px}
 
         .input-group label {
             display: block;
             margin-bottom: 8px;
             color: #555;
-            font-weight: 600;
-        }
+            font-weight: 600}
 
         .input-group input, .input-group select {
             width: 100%;
@@ -83,14 +72,12 @@
             border: 2px solid #e1e5e9;
             border-radius: 10px;
             font-size: 16px;
-            transition: border-color 0.3s ease;
-        }
+            transition: border-color 0.3s ease}
 
         .input-group input:focus, .input-group select:focus {
             outline: none;
             border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1)}
 
         .btn {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -103,20 +90,17 @@
             cursor: pointer;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
             width: 100%;
-            margin-top: 10px;
-        }
+            margin-top: 10px}
 
         .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
-        }
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3)}
 
         .results-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
-            margin: 20px 0;
-        }
+            margin: 20px 0}
 
         .result-item {
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
@@ -124,29 +108,24 @@
             border-radius: 15px;
             text-align: center;
             color: white;
-            box-shadow: 0 10px 20px rgba(240, 147, 251, 0.3);
-        }
+            box-shadow: 0 10px 20px rgba(240, 147, 251, 0.3)}
 
         .result-item h3 {
             font-size: 0.9em;
             margin-bottom: 10px;
-            opacity: 0.9;
-        }
+            opacity: 0.9}
 
         .result-item .value {
             font-size: 1.5em;
-            font-weight: bold;
-        }
+            font-weight: bold}
 
         .chart-container {
             position: relative;
             height: 300px;
-            margin-top: 20px;
-        }
+            margin-top: 20px}
 
         .full-width {
-            grid-column: 1 / -1;
-        }
+            grid-column: 1 / -1}
 
         .amortization-table {
             width: 100%;
@@ -155,79 +134,65 @@
             max-height: 400px;
             overflow-y: auto;
             display: block;
-            white-space: nowrap;
-        }
+            white-space: nowrap}
 
         .amortization-table thead {
             background: #667eea;
             color: white;
             position: sticky;
-            top: 0;
-        }
+            top: 0}
 
         .amortization-table th,
         .amortization-table td {
             padding: 12px;
             text-align: right;
-            border-bottom: 1px solid #e1e5e9;
-        }
+            border-bottom: 1px solid #e1e5e9}
 
         .amortization-table tbody {
             display: block;
             max-height: 300px;
-            overflow-y: auto;
-        }
+            overflow-y: auto}
 
         .amortization-table thead,
         .amortization-table tbody tr {
             display: table;
             width: 100%;
-            table-layout: fixed;
-        }
+            table-layout: fixed}
 
         .comparison-section {
-            margin-top: 30px;
-        }
+            margin-top: 30px}
 
         .bank-comparison {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
-            margin-top: 20px;
-        }
+            margin-top: 20px}
 
         .bank-card {
             background: rgba(255, 255, 255, 0.9);
             padding: 20px;
             border-radius: 15px;
             border-left: 5px solid #667eea;
-            transition: transform 0.2s ease;
-        }
+            transition: transform 0.2s ease}
 
         .bank-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
-        }
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1)}
 
         .bank-name {
             font-weight: bold;
             color: #667eea;
-            margin-bottom: 10px;
-        }
+            margin-bottom: 10px}
 
         @media (max-width: 768px) {
             .main-content {
-                grid-template-columns: 1fr;
-            }
+                grid-template-columns: 1fr}
             
             .header h1 {
-                font-size: 2em;
-            }
+                font-size: 2em}
             
             .results-grid {
-                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            }
-        }
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr))}
 
         .warning {
             background: #fff3cd;
@@ -235,8 +200,7 @@
             color: #856404;
             padding: 15px;
             border-radius: 10px;
-            margin: 20px 0;
-        }
+            margin: 20px 0}
 
         .success {
             background: #d4edda;
@@ -244,8 +208,7 @@
             color: #155724;
             padding: 15px;
             border-radius: 10px;
-            margin: 20px 0;
-        }
+            margin: 20px 0}
     </style>
 </head>
 <body>
@@ -379,9 +342,7 @@
                     lastUpdate: new Date()
                 }));
                 
-                return this.rates;
-            }
-        };
+                return this.rates};
 
         const bankData = mockBankAPI.rates.map(bank => ({
             name: bank.name,
@@ -394,11 +355,8 @@
         // Initialize Supabase (หากใช้งานจริง)
         if (USE_SUPABASE && typeof supabase !== 'undefined') {
             try {
-                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            } catch (error) {
-                console.log('Supabase not available, using localStorage');
-            }
-        }
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)} catch (error) {
+                console.log('Supabase not available, using localStorage')}
 
         // Authentication Functions
         async function handleAuth() {
@@ -407,8 +365,7 @@
 
             if (!email || !password) {
                 alert('กรุณากรอกอีเมลและรหัสผ่าน');
-                return;
-            }
+                return}
 
             try {
                 if (USE_SUPABASE && supabase) {
@@ -418,30 +375,24 @@
                             password: password
                         });
                         if (error) throw error;
-                        currentUser = data.user;
-                    } else {
+                        currentUser = data.user} else {
                         const { data, error } = await supabase.auth.signUp({
                             email: email,
                             password: password
                         });
                         if (error) throw error;
                         alert('สมัครสมาชิกสำเร็จ! กรุณาตรวจสอบอีเมลเพื่อยืนยันบัญชี');
-                        return;
-                    }
-                } else {
+                        return} else {
                     // ใช้ localStorage สำหรับ Demo
                     if (isLoginMode) {
                         const users = JSON.parse(localStorage.getItem('loanapp_users') || '[]');
                         const user = users.find(u => u.email === email && u.password === password);
                         if (!user) {
-                            throw new Error('อีเมลหรือรหัสผ่านไม่ถูกต้อง');
-                        }
-                        currentUser = { email: user.email, id: user.id };
-                    } else {
+                            throw new Error('อีเมลหรือรหัสผ่านไม่ถูกต้อง')}
+                        currentUser = { email: user.email, id: user.id }} else {
                         const users = JSON.parse(localStorage.getItem('loanapp_users') || '[]');
                         if (users.some(u => u.email === email)) {
-                            throw new Error('อีเมลนี้ถูกใช้งานแล้ว');
-                        }
+                            throw new Error('อีเมลนี้ถูกใช้งานแล้ว')}
                         const newUser = {
                             id: Date.now().toString(),
                             email: email,
@@ -451,18 +402,12 @@
                         localStorage.setItem('loanapp_users', JSON.stringify(users));
                         alert('สมัครสมาชิกสำเร็จ! กรุณาเข้าสู่ระบบ');
                         toggleAuthMode();
-                        return;
-                    }
-                }
+                        return}
 
                 // อัพเดท UI หลังจากเข้าสู่ระบบสำเร็จ
                 updateAuthUI(true);
-                loadSavedCalculations();
-
-            } catch (error) {
-                alert('เกิดข้อผิดพลาด: ' + error.message);
-            }
-        }
+                loadSavedCalculations()} catch (error) {
+                alert('เกิดข้อผิดพลาด: ' + error.message)}
 
         function toggleAuthMode() {
             isLoginMode = !isLoginMode;
@@ -471,20 +416,15 @@
             
             if (isLoginMode) {
                 authButton.textContent = 'เข้าสู่ระบบ';
-                toggleButton.textContent = 'สมัครสมาชิก';
-            } else {
+                toggleButton.textContent = 'สมัครสมาชิก'} else {
                 authButton.textContent = 'สมัครสมาชิก';
-                toggleButton.textContent = 'เข้าสู่ระบบ';
-            }
-        }
+                toggleButton.textContent = 'เข้าสู่ระบบ'}
 
         async function logout() {
             if (USE_SUPABASE && supabase) {
-                await supabase.auth.signOut();
-            }
+                await supabase.auth.signOut()}
             currentUser = null;
-            updateAuthUI(false);
-        }
+            updateAuthUI(false)}
 
         function updateAuthUI(loggedIn) {
             const loginForm = document.getElementById('loginForm');
@@ -498,25 +438,21 @@
                 document.getElementById('welcomeMessage').textContent = 
                     `ยินดีต้อนรับ ${currentUser.email}`;
                 saveBtn.disabled = false;
-                savedSection.style.display = 'block';
-            } else {
+                savedSection.style.display = 'block'} else {
                 loginForm.style.display = 'flex';
                 userInfo.style.display = 'none';
                 saveBtn.disabled = true;
-                savedSection.style.display = 'none';
-            }
+                savedSection.style.display = 'none'}
 
             // Clear form
             document.getElementById('email').value = '';
-            document.getElementById('password').value = '';
-        }
+            document.getElementById('password').value = ''}
 
         // Data Management Functions
         async function saveLoanData() {
             if (!currentUser) {
                 alert('กรุณาเข้าสู่ระบบก่อนบันทึกข้อมูล');
-                return;
-            }
+                return}
 
             const loanData = {
                 user_id: currentUser.id,
@@ -531,8 +467,7 @@
                     monthly_payment: document.getElementById('monthlyPayment').textContent,
                     total_interest: document.getElementById('totalInterest').textContent,
                     total_cost: document.getElementById('totalCost').textContent
-                }
-            };
+                };
 
             try {
                 if (USE_SUPABASE && supabase) {
@@ -540,21 +475,15 @@
                         .from('loan_calculations')
                         .insert([loanData]);
                     
-                    if (error) throw error;
-                } else {
+                    if (error) throw error} else {
                     // ใช้ localStorage
                     const savedData = JSON.parse(localStorage.getItem('loan_calculations') || '[]');
                     savedData.push({ ...loanData, id: Date.now() });
-                    localStorage.setItem('loan_calculations', JSON.stringify(savedData));
-                }
+                    localStorage.setItem('loan_calculations', JSON.stringify(savedData))}
 
                 alert('บันทึกข้อมูลสำเร็จ!');
-                loadSavedCalculations();
-
-            } catch (error) {
-                alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' + error.message);
-            }
-        }
+                loadSavedCalculations()} catch (error) {
+                alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' + error.message)}
 
         async function loadSavedCalculations() {
             if (!currentUser) return;
@@ -571,29 +500,22 @@
                         .limit(10);
                     
                     if (error) throw error;
-                    calculations = data;
-                } else {
+                    calculations = data} else {
                     const savedData = JSON.parse(localStorage.getItem('loan_calculations') || '[]');
                     calculations = savedData
                         .filter(calc => calc.user_id === currentUser.id)
                         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-                        .slice(0, 10);
-                }
+                        .slice(0, 10)}
 
-                displaySavedCalculations(calculations);
-
-            } catch (error) {
-                console.error('Error loading calculations:', error);
-            }
-        }
+                displaySavedCalculations(calculations)} catch (error) {
+                console.error('Error loading calculations:', error)}
 
         function displaySavedCalculations(calculations) {
             const container = document.getElementById('savedCalculationsList');
             
             if (calculations.length === 0) {
                 container.innerHTML = '<p style="text-align: center; color: #666;">ยังไม่มีการคำนวณที่บันทึกไว้</p>';
-                return;
-            }
+                return}
 
             container.innerHTML = calculations.map(calc => `
                 <div class="calculation-item">
@@ -609,8 +531,7 @@
                     </div>
                     <button class="btn-secondary" onclick="loadCalculation(${calc.id || 'null'})" style="margin-top: 10px; padding: 5px 10px; font-size: 12px;">โหลดข้อมูลนี้</button>
                 </div>
-            `).join('');
-        }
+            `).join('')}
 
         function loadCalculation(calcId) {
             const savedData = JSON.parse(localStorage.getItem('loan_calculations') || '[]');
@@ -626,9 +547,7 @@
                 calculateLoan();
                 
                 // เลื่อนขึ้นไปด้านบน
-                document.querySelector('.main-content').scrollIntoView({ behavior: 'smooth' });
-            }
-        }
+                document.querySelector('.main-content').scrollIntoView({ behavior: 'smooth' })}
 
         // API Integration Functions
         async function fetchLatestRates() {
@@ -643,9 +562,7 @@
                 // อัพเดทข้อมูลธนาคาร
                 bankData.forEach((bank, index) => {
                     if (rates[index]) {
-                        bank.rate = parseFloat(rates[index].rate);
-                    }
-                });
+                        bank.rate = parseFloat(rates[index].rate)});
 
                 statusDiv.className = 'api-status status-success';
                 statusDiv.textContent = '✅ อัพเดทอัตราดอกเบียสำเร็จ!';
@@ -659,18 +576,12 @@ if(rateUpdateEl) rateUpdateEl.textContent =
                 calculateLoan();
 
                 setTimeout(() => {
-                    statusDiv.style.display = 'none';
-                }, 3000);
-
-            } catch (error) {
+                    statusDiv.style.display = 'none'}, 3000)} catch (error) {
                 statusDiv.className = 'api-status status-error';
                 statusDiv.textContent = '❌ เกิดข้อผิดพลาดในการอัพเดทอัตราดอกเบีย';
                 
                 setTimeout(() => {
-                    statusDiv.style.display = 'none';
-                }, 5000);
-            }
-        }
+                    statusDiv.style.display = 'none'}, 5000)}
 
         // PDF Export Function
         async function exportToPDF() {
@@ -727,33 +638,25 @@ if(rateUpdateEl) rateUpdateEl.textContent =
                 bankData.forEach(bank => {
                     const monthlyPayment = calculateMonthlyPayment(loanAmount, bank.rate, parseFloat(loanTerm));
                     pdf.text(`${bank.name}: ${bank.rate}% - ${formatNumber(monthlyPayment)} Baht/month`, 30, yPos);
-                    yPos += 8;
-                });
+                    yPos += 8});
 
                 // บันทึกไฟล์
                 const fileName = `loan-analysis-${new Date().toISOString().split('T')[0]}.pdf`;
-                pdf.save(fileName);
-
-            } catch (error) {
-                alert('เกิดข้อผิดพลาดในการสร้าง PDF: ' + error.message);
-            }
-        }
+                pdf.save(fileName)} catch (error) {
+                alert('เกิดข้อผิดพลาดในการสร้าง PDF: ' + error.message)}
 
         function formatNumber(num) {
-            return new Intl.NumberFormat('th-TH').format(Math.round(num));
-        }
+            return new Intl.NumberFormat('th-TH').format(Math.round(num))}
 
         function calculateMonthlyPayment(principal, rate, term) {
             const monthlyRate = rate / 100 / 12;
             const numPayments = term * 12;
             
             if (monthlyRate === 0) {
-                return principal / numPayments;
-            }
+                return principal / numPayments}
             
             return (principal * monthlyRate * Math.pow(1 + monthlyRate, numPayments)) /
-                   (Math.pow(1 + monthlyRate, numPayments) - 1);
-        }
+                   (Math.pow(1 + monthlyRate, numPayments) - 1)}
 
         function calculateLoan() {
             const housePrice = parseFloat(document.getElementById('housePrice').value) || 0;
@@ -791,8 +694,7 @@ if(rateUpdateEl) rateUpdateEl.textContent =
             createAmortizationTable(loanAmount, interestRate, loanTerm, monthlyPayment);
 
             // เปรียบเทียบธนาคาร
-            compareBanks(loanAmount, loanTerm);
-        }
+            compareBanks(loanAmount, loanTerm)}
 
         function showDebtRatioAlert(ratio) {
             const alertDiv = document.getElementById('debtRatioAlert');
@@ -801,24 +703,19 @@ if(rateUpdateEl) rateUpdateEl.textContent =
 
             if (ratio <= 30) {
                 alertClass = 'success';
-                message = `✅ อัตราหนี้ต่อรายได้: ${ratio.toFixed(1)}% - อยู่ในเกณฑ์ที่ดี`;
-            } else if (ratio <= 40) {
+                message = `✅ อัตราหนี้ต่อรายได้: ${ratio.toFixed(1)}% - อยู่ในเกณฑ์ที่ดี`} else if (ratio <= 40) {
                 alertClass = 'warning';
-                message = `⚠️ อัตราหนี้ต่อรายได้: ${ratio.toFixed(1)}% - ควรระมัดระวัง`;
-            } else {
+                message = `⚠️ อัตราหนี้ต่อรายได้: ${ratio.toFixed(1)}% - ควรระมัดระวัง`} else {
                 alertClass = 'warning';
-                message = `🚨 อัตราหนี้ต่อรายได้: ${ratio.toFixed(1)}% - เสี่ยงสูง ควรปรับลดยอดกู้`;
-            }
+                message = `🚨 อัตราหนี้ต่อรายได้: ${ratio.toFixed(1)}% - เสี่ยงสูง ควรปรับลดยอดกู้`}
 
-            alertDiv.innerHTML = `<div class="${alertClass}">${message}</div>`;
-        }
+            alertDiv.innerHTML = `<div class="${alertClass}">${message}</div>`}
 
         function createPaymentChart(principal, interest) {
             const ctx = document.getElementById('paymentChart').getContext('2d');
             
             if (paymentChart) {
-                paymentChart.destroy();
-            }
+                paymentChart.destroy()}
 
             paymentChart = new Chart(ctx, {
                 type: 'doughnut',
@@ -840,19 +737,13 @@ if(rateUpdateEl) rateUpdateEl.textContent =
                             labels: {
                                 padding: 20,
                                 usePointStyle: true
-                            }
-                        },
+                            },
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return context.label + ': ' + formatNumber(context.raw) + ' บาท';
-                                }
-                            }
+                                    return context.label + ': ' + formatNumber(context.raw) + ' บาท'}
                         }
-                    }
-                }
-            });
-        }
+                })}
 
         function createAmortizationTable(loanAmount, interestRate, loanTerm, monthlyPayment) {
             const tbody = document.getElementById('amortizationTable');
@@ -876,9 +767,7 @@ if(rateUpdateEl) rateUpdateEl.textContent =
 
                 // สลับสีแถว
                 if (month % 2 === 0) {
-                    row.style.backgroundColor = '#f8f9fa';
-                }
-            }
+                    row.style.backgroundColor = '#f8f9fa'}
         }
 
         function compareBanks(loanAmount, loanTerm) {
@@ -904,12 +793,8 @@ if(rateUpdateEl) rateUpdateEl.textContent =
                         <div><strong>ดอกเบียรวม:</strong> ${formatNumber(totalInterest)} บาท</div>
                     `;
 
-                    container.appendChild(bankCard);
-                });
-            } catch (error) {
-                console.error('Error comparing banks:', error);
-            }
-        }
+                    container.appendChild(bankCard)})} catch (error) {
+                console.error('Error comparing banks:', error)}
 
         // เริ่มต้นการทำงาน
         window.addEventListener('load', function() {
@@ -921,64 +806,52 @@ if(rateUpdateEl) rateUpdateEl.textContent =
             // ตั้งเวลาอัพเดทล่าสุด
             const rateUpdateEl = document.getElementById('rateUpdateTime');
 if(rateUpdateEl) rateUpdateEl.textContent = 
-                `อัพเดทล่าสุด: ${new Date().toLocaleString('th-TH')}`;
-        });
+                `อัพเดทล่าสุด: ${new Date().toLocaleString('th-TH')}`});
 
         async function checkExistingSession() {
             if (USE_SUPABASE && supabase) {
-                const { data: { user } } = await supabase.auth.getUser();
+                const { data: { user } = await supabase.auth.getUser();
                 if (user) {
                     currentUser = user;
                     updateAuthUI(true);
-                    loadSavedCalculations();
-                }
-            } else {
+                    loadSavedCalculations()} else {
                 // ตรวจสอบ localStorage session
                 const savedSession = localStorage.getItem('loanapp_session');
                 if (savedSession) {
                     currentUser = JSON.parse(savedSession);
                     updateAuthUI(true);
-                    loadSavedCalculations();
-                }
-            }
+                    loadSavedCalculations()}
         }
 
         // เพิ่ม Event Listeners สำหรับการคำนวณอัตโนมัติ
         document.querySelectorAll('input, select').forEach(element => {
             element.addEventListener('change', calculateLoan);
-            element.addEventListener('input', calculateLoan);
-        });
+            element.addEventListener('input', calculateLoan)});
 
         // เพิ่ม Enter key support สำหรับ login form
-        const emailInput = document.getElementById('email');
-if(emailInput){
+const emailInput = document.getElementById('email');
+if (emailInput) {
   emailInput.addEventListener('keypress', function(e) {
     if (e.key === 'Enter') handleAuth();
   });
 }
-            if (e.key === 'Enter') handleAuth();
-        });
 
-        const passwordInput = document.getElementById('password');
-if(passwordInput){
+const passwordInput = document.getElementById('password');
+if (passwordInput) {
   passwordInput.addEventListener('keypress', function(e) {
     if (e.key === 'Enter') handleAuth();
   });
-}
-            if (e.key === 'Enter') handleAuth();
-        });
+})}
+            if (e.key === 'Enter') handleAuth()});
 
         // บันทึก session ใน localStorage (สำหรับ demo)
         function saveSession() {
             if (!USE_SUPABASE && currentUser) {
-                localStorage.setItem('loanapp_session', JSON.stringify(currentUser));
-            }
-        }
+                localStorage.setItem('loanapp_session', JSON.stringify(currentUser))}
 
         // ลบ session
         function clearSession() {
-            localStorage.removeItem('loanapp_session');
-        }
+            localStorage.removeItem('loanapp_session')}
 
         // อัพเดทฟังก์ชัน updateAuthUI เพื่อจัดการ session - ลบออกเพราะปรับไปแล้วข้างบน
 
@@ -992,20 +865,14 @@ if(passwordInput){
                         .from('loan_calculations')
                         .delete()
                         .eq('id', calcId);
-                    if (error) throw error;
-                } else {
+                    if (error) throw error} else {
                     const savedData = JSON.parse(localStorage.getItem('loan_calculations') || '[]');
                     const filteredData = savedData.filter(calc => calc.id !== calcId);
-                    localStorage.setItem('loan_calculations', JSON.stringify(filteredData));
-                }
+                    localStorage.setItem('loan_calculations', JSON.stringify(filteredData))}
 
                 loadSavedCalculations();
-                alert('ลบการคำนวณสำเร็จ');
-
-            } catch (error) {
-                alert('เกิดข้อผิดพลาด: ' + error.message);
-            }
-        }
+                alert('ลบการคำนวณสำเร็จ')} catch (error) {
+                alert('เกิดข้อผิดพลาด: ' + error.message)}
 
         // อัพเดทฟังก์ชัน displaySavedCalculations เพื่อเพิ่มปุ่มลบ
         const originalDisplaySavedCalculations = displaySavedCalculations;
@@ -1014,8 +881,7 @@ if(passwordInput){
             
             if (calculations.length === 0) {
                 container.innerHTML = '<p style="text-align: center; color: #666;">ยังไม่มีการคำนวณที่บันทึกไว้</p>';
-                return;
-            }
+                return}
 
             container.innerHTML = calculations.map(calc => `
                 <div class="calculation-item">
@@ -1034,15 +900,13 @@ if(passwordInput){
                         <button class="btn-danger" onclick="deleteCalculation(${calc.id || 'null'})" style="padding: 5px 10px; font-size: 12px; flex: 1;">ลบ</button>
                     </div>
                 </div>
-            `).join('');
-        };
+            `).join('')};
 
         // เพิ่มฟังก์ชัน Export ข้อมูลทั้งหมดเป็น JSON
         async function exportAllData() {
             if (!currentUser) {
                 alert('กรุณาเข้าสู่ระบบก่อน');
-                return;
-            }
+                return}
 
             try {
                 let calculations = [];
@@ -1053,11 +917,9 @@ if(passwordInput){
                         .select('*')
                         .eq('user_id', currentUser.id);
                     if (error) throw error;
-                    calculations = data;
-                } else {
+                    calculations = data} else {
                     const savedData = JSON.parse(localStorage.getItem('loan_calculations') || '[]');
-                    calculations = savedData.filter(calc => calc.user_id === currentUser.id);
-                }
+                    calculations = savedData.filter(calc => calc.user_id === currentUser.id)}
 
                 const dataStr = JSON.stringify(calculations, null, 2);
                 const dataBlob = new Blob([dataStr], {type: 'application/json'});
@@ -1065,12 +927,8 @@ if(passwordInput){
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(dataBlob);
                 link.download = `loan-calculations-${new Date().toISOString().split('T')[0]}.json`;
-                link.click();
-
-            } catch (error) {
-                alert('เกิดข้อผิดพลาด: ' + error.message);
-            }
-        }
+                link.click()} catch (error) {
+                alert('เกิดข้อผิดพลาด: ' + error.message)}
 
         // เพิ่มปุ่ม Export ในส่วนการคำนวณที่บันทึกไว้
         const originalLoadSavedCalculations = loadSavedCalculations;
@@ -1088,9 +946,7 @@ if(passwordInput){
                     exportButton.textContent = '📦 Export ข้อมูลทั้งหมด';
                     exportButton.style.marginBottom = '20px';
                     
-                    savedSection.insertBefore(exportButton, document.getElementById('savedCalculationsList'));
-                }
-            }
+                    savedSection.insertBefore(exportButton, document.getElementById('savedCalculationsList'))}
         };
 
         console.log('🏠 Loan Analysis App Loaded Successfully!');
@@ -1099,16 +955,14 @@ if(passwordInput){
         
         if (!USE_SUPABASE) {
             console.log('📝 Fallback Mode: Using localStorage');
-            console.log('💡 Supabase connection failed, check console for errors');
-        } else {
+            console.log('💡 Supabase connection failed, check console for errors')} else {
             console.log('🎯 Production Mode: Using Supabase for data storage');
-            console.log('📊 Database ready for loan calculations');
-        }
+            console.log('📊 Database ready for loan calculations')}
     </script>
 
 <!-- ==== Placeholders Added for Auth & Rate Update ==== -->
 <form id="loginForm" style="display:none;">
-  <input type="text" id="email" placeholder="Email">
+  <input type="text" id="email" placeholder="Email" autocomplete="username">
   <input type="password" id="password" placeholder="Password" autocomplete="current-password">
   <button id="authButton">เข้าสู่ระบบ</button>
   <button id="toggleButton">สมัครสมาชิก</button>
