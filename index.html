@@ -362,97 +362,114 @@
         }
 
         // Authentication Functions
-        async function handleAuth() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+        
+async function handleAuth() {
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
 
-            if (!email || !password) {
-                alert('กรุณากรอกอีเมลและรหัสผ่าน');
-                return}
+  if (!email || !password) {
+    alert('กรุณากรอกอีเมลและรหัสผ่าน');
+    return;
+  }
 
-            try {
-                if (USE_SUPABASE && supabase) {
-                    if (isLoginMode) {
-                        const { data, error } = await supabase.auth.signInWithPassword({
-                            email: email,
-                            password: password
-                        });
-                        if (error) throw error;
-                        currentUser = data.user} else {
-                        const { data, error } = await supabase.auth.signUp({
-                            email: email,
-                            password: password
-                        });
-                        if (error) throw error;
-                        alert('สมัครสมาชิกสำเร็จ! กรุณาตรวจสอบอีเมลเพื่อยืนยันบัญชี');
-                        return} else 
-                    // ใช้ localStorage สำหรับ Demo
-                    if (isLoginMode) {
-                        const users = JSON.parse(localStorage.getItem('loanapp_users') || '[]');
-                        const user = users.find(u => u.email === email && u.password === password);
-                        if (!user) {
-                            throw new Error('อีเมลหรือรหัสผ่านไม่ถูกต้อง')}
-                        currentUser = { email: user.email, id: user.id }} else {
-                        const users = JSON.parse(localStorage.getItem('loanapp_users') || '[]');
-                        if (users.some(u => u.email === email)) {
-                            throw new Error('อีเมลนี้ถูกใช้งานแล้ว')}
-                        const newUser = {
-                            id: Date.now().toString(),
-                            email: email,
-                            password: password
-                        };
-                        users.push(newUser);
-                        localStorage.setItem('loanapp_users', JSON.stringify(users));
-                        alert('สมัครสมาชิกสำเร็จ! กรุณาเข้าสู่ระบบ');
-                        toggleAuthMode();
-                        return}
+  try {
+    if (USE_SUPABASE && supabase) {
+      if (isLoginMode) {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: email,
+          password: password
+        });
+        if (error) throw error;
+        currentUser = data.user;
+      } else {
+        const { data, error } = await supabase.auth.signUp({
+          email: email,
+          password: password
+        });
+        if (error) throw error;
+        alert('สมัครสมาชิกสำเร็จ! กรุณาตรวจสอบอีเมลเพื่อยืนยันบัญชี');
+        return;
+      }
+    } else {
+      // LocalStorage fallback (demo)
+      if (isLoginMode) {
+        const users = JSON.parse(localStorage.getItem('loanapp_users') || '[]');
+        const user = users.find(u => u.email === email && u.password === password);
+        if (!user) throw new Error('อีเมลหรือรหัสผ่านไม่ถูกต้อง');
+        currentUser = { email: user.email, id: user.id };
+      } else {
+        const users = JSON.parse(localStorage.getItem('loanapp_users') || '[]');
+        if (users.some(u => u.email === email)) {
+          throw new Error('อีเมลนี้ถูกใช้งานแล้ว');
+        }
+        const newUser = { id: Date.now().toString(), email, password };
+        users.push(newUser);
+        localStorage.setItem('loanapp_users', JSON.stringify(users));
+        alert('สมัครสมาชิกสำเร็จ! กรุณาเข้าสู่ระบบ');
+        toggleAuthMode();
+        return;
+      }
+    }
 
-                // อัพเดท UI หลังจากเข้าสู่ระบบสำเร็จ
-                updateAuthUI(true);
-                loadSavedCalculations();
-            } catch (error) {
-                alert('เกิดข้อผิดพลาด: ' + error.message)}
+    updateAuthUI(true);
+    await loadSavedCalculations();
+  } catch (error) {
+    alert('เกิดข้อผิดพลาด: ' + error.message);
+  }
+}
 
-        function toggleAuthMode() {
-            isLoginMode = !isLoginMode;
-            const authButton = document.getElementById('authButton');
-            const toggleButton = document.getElementById('toggleButton');
-            
-            if (isLoginMode) {
-                authButton.textContent = 'เข้าสู่ระบบ';
-                toggleButton.textContent = 'สมัครสมาชิก'} else {
-                authButton.textContent = 'สมัครสมาชิก';
-                toggleButton.textContent = 'เข้าสู่ระบบ'}
+function toggleAuthMode() {
+  isLoginMode = !isLoginMode;
+  const authButton = document.getElementById('authButton');
+  const toggleButton = document.getElementById('toggleButton');
+  if (authButton && toggleButton) {
+    if (isLoginMode) {
+      authButton.textContent = 'เข้าสู่ระบบ';
+      toggleButton.textContent = 'สมัครสมาชิก';
+    } else {
+      authButton.textContent = 'สมัครสมาชิก';
+      toggleButton.textContent = 'เข้าสู่ระบบ';
+    }
+  }
+}
 
-        async function logout() {
-            if (USE_SUPABASE && supabase) {
-                await supabase.auth.signOut()}
-            currentUser = null;
-            updateAuthUI(false)}
+async function logout() {
+  if (USE_SUPABASE && supabase) {
+    await supabase.auth.signOut();
+  }
+  currentUser = null;
+  updateAuthUI(false);
+}
 
-        function updateAuthUI(loggedIn) {
-            const loginForm = document.getElementById('loginForm');
-            const userInfo = document.getElementById('userInfo');
-            const saveBtn = document.getElementById('saveBtn');
-            const savedSection = document.getElementById('savedCalculationsSection');
+function updateAuthUI(loggedIn) {
+  const loginForm = document.getElementById('loginForm');
+  const userInfo = document.getElementById('userInfo');
+  const saveBtn = document.getElementById('saveBtn');
+  const savedSection = document.getElementById('savedCalculationsSection');
 
-            if (loggedIn) {
-                loginForm.style.display = 'none';
-                userInfo.style.display = 'flex';
-                document.getElementById('welcomeMessage').textContent = 
-                    `ยินดีต้อนรับ ${currentUser.email}`;
-                saveBtn.disabled = false;
-                savedSection.style.display = 'block'} else {
-                loginForm.style.display = 'flex';
-                userInfo.style.display = 'none';
-                saveBtn.disabled = true;
-                savedSection.style.display = 'none'}
+  if (loggedIn) {
+    if (loginForm) loginForm.style.display = 'none';
+    if (userInfo) userInfo.style.display = 'flex';
+    const welcomeMessage = document.getElementById('welcomeMessage');
+    if (welcomeMessage && currentUser) {
+      welcomeMessage.textContent = `ยินดีต้อนรับ ${currentUser.email}`;
+    }
+    if (saveBtn) saveBtn.disabled = false;
+    if (savedSection) savedSection.style.display = 'block';
+  } else {
+    if (loginForm) loginForm.style.display = 'flex';
+    if (userInfo) userInfo.style.display = 'none';
+    if (saveBtn) saveBtn.disabled = true;
+    if (savedSection) savedSection.style.display = 'none';
+  }
 
-            // Clear form
-            document.getElementById('email').value = '';
-            document.getElementById('password').value = ''}
+  const emailEl = document.getElementById('email');
+  const passEl = document.getElementById('password');
+  if (emailEl) emailEl.value = '';
+  if (passEl) passEl.value = '';
+}
 
-        // Data Management Functions
+// Data Management Functions
         async function saveLoanData() {
             if (!currentUser) {
                 alert('กรุณาเข้าสู่ระบบก่อนบันทึกข้อมูล');
