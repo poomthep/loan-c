@@ -561,7 +561,7 @@
                 
                 return this.rates;
             }
-        };
+        }
 
         const bankData = mockBankAPI.rates.map(bank => ({
             name: bank.name,
@@ -641,7 +641,7 @@
                         if (!user) {
                             throw new Error('อีเมลหรือรหัสผ่านไม่ถูกต้อง');
                         }
-                        currentUser = { email: user.email, id: user.id };
+                        currentUser = { email: user.email, id: user.id }
                     } else {
                         const users = JSON.parse(localStorage.getItem('loanapp_users') || '[]');
                         if (users.some(u => u.email === email)) {
@@ -651,7 +651,7 @@
                             id: Date.now().toString(),
                             email: email,
                             password: password
-                        };
+                        }
                         users.push(newUser);
                         localStorage.setItem('loanapp_users', JSON.stringify(users));
                         alert('สมัครสมาชิกสำเร็จ! กรุณาเข้าสู่ระบบ');
@@ -915,7 +915,7 @@
                     monthlyPayment: document.getElementById('monthlyPayment'),
                     totalInterest: document.getElementById('totalInterest'),
                     totalCost: document.getElementById('totalCost')
-                };
+                }
 
                 if (elements.loanAmount) elements.loanAmount.textContent = formatNumber(loanAmount) + ' บาท';
                 if (elements.monthlyPayment) elements.monthlyPayment.textContent = formatNumber(monthlyPayment) + ' บาท';
@@ -1149,7 +1149,7 @@
                     return false;
                 }
                 return true;
-            };
+            }
             
             if (checkElements()) {
                 setupApp();
@@ -1192,13 +1192,19 @@
                 });
 
                 // เพิ่ม Enter key support สำหรับ login form
-                const emailInput = document.getElementById('email');
-                const passwordInput = document.getElementById('password');
-                
-                if (emailInput) {
-                    emailInput.addEventListener('keypress', function(e) {
-                        if (e.key === 'Enter') handleAuth();
-                    });
+const emailInput = document.getElementById('email');
+if (emailInput) {
+  emailInput.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') handleAuth();
+  });
+}
+
+const passwordInput = document.getElementById('password');
+if (passwordInput) {
+  passwordInput.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') handleAuth();
+  });
+});
                 }
 
                 if (passwordInput) {
@@ -1333,7 +1339,7 @@
                     total_interest: document.getElementById('totalInterest').textContent,
                     total_cost: document.getElementById('totalCost').textContent
                 }
-            };
+            }
 
             try {
                 if (USE_SUPABASE && supabase) {
