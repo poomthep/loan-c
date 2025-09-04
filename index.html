@@ -355,8 +355,11 @@
         // Initialize Supabase (หากใช้งานจริง)
         if (USE_SUPABASE && typeof supabase !== 'undefined') {
             try {
-                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)} catch (error) { console.error(error); } catch (error) {
-                console.log('Supabase not available, using localStorage')}
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            } catch (error) {
+                console.log('Supabase not available, using localStorage');
+            }
+        }
 
         // Authentication Functions
         async function handleAuth() {
@@ -370,7 +373,7 @@
             try {
                 if (USE_SUPABASE && supabase) {
                     if (isLoginMode) {
-                        const { data, error } catch (error) { console.error(error); } = await supabase.auth.signInWithPassword({
+                        const { data, error } = await supabase.auth.signInWithPassword({
                             email: email,
                             password: password
                         });
@@ -389,7 +392,7 @@
                         const user = users.find(u => u.email === email && u.password === password);
                         if (!user) {
                             throw new Error('อีเมลหรือรหัสผ่านไม่ถูกต้อง')}
-                        currentUser = { email: user.email, id: user.id } else {
+                        currentUser = { email: user.email, id: user.id }} else {
                         const users = JSON.parse(localStorage.getItem('loanapp_users') || '[]');
                         if (users.some(u => u.email === email)) {
                             throw new Error('อีเมลนี้ถูกใช้งานแล้ว')}
@@ -397,7 +400,7 @@
                             id: Date.now().toString(),
                             email: email,
                             password: password
-                        }
+                        };
                         users.push(newUser);
                         localStorage.setItem('loanapp_users', JSON.stringify(users));
                         alert('สมัครสมาชิกสำเร็จ! กรุณาเข้าสู่ระบบ');
@@ -406,7 +409,8 @@
 
                 // อัพเดท UI หลังจากเข้าสู่ระบบสำเร็จ
                 updateAuthUI(true);
-                loadSavedCalculations()} catch (error) {
+                loadSavedCalculations();
+            } catch (error) {
                 alert('เกิดข้อผิดพลาด: ' + error.message)}
 
         function toggleAuthMode() {
@@ -467,11 +471,11 @@
                     monthly_payment: document.getElementById('monthlyPayment').textContent,
                     total_interest: document.getElementById('totalInterest').textContent,
                     total_cost: document.getElementById('totalCost').textContent
-                }
+                };
 
             try {
                 if (USE_SUPABASE && supabase) {
-                    const { data, error } catch (error) { console.error(error); } = await supabase
+                    const { data, error } = await supabase
                         .from('loan_calculations')
                         .insert([loanData]);
                     
@@ -482,7 +486,8 @@
                     localStorage.setItem('loan_calculations', JSON.stringify(savedData))}
 
                 alert('บันทึกข้อมูลสำเร็จ!');
-                loadSavedCalculations()} catch (error) {
+                loadSavedCalculations();
+            } catch (error) {
                 alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' + error.message)}
 
         async function loadSavedCalculations() {
@@ -492,7 +497,7 @@
                 let calculations = [];
                 
                 if (USE_SUPABASE && supabase) {
-                    const { data, error } catch (error) { console.error(error); } = await supabase
+                    const { data, error } = await supabase
                         .from('loan_calculations')
                         .select('*')
                         .eq('user_id', currentUser.id)
@@ -507,7 +512,8 @@
                         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
                         .slice(0, 10)}
 
-                displaySavedCalculations(calculations)} catch (error) {
+                displaySavedCalculations(calculations);
+            } catch (error) {
                 console.error('Error loading calculations:', error)}
 
         function displaySavedCalculations(calculations) {
@@ -562,7 +568,7 @@
                 // อัพเดทข้อมูลธนาคาร
                 bankData.forEach((bank, index) => {
                     if (rates[index]) {
-                        bank.rate = parseFloat(rates[index].rate)} catch (error) { console.error(error); });
+                        bank.rate = parseFloat(rates[index].rate)});
 
                 statusDiv.className = 'api-status status-success';
                 statusDiv.textContent = '✅ อัพเดทอัตราดอกเบียสำเร็จ!';
@@ -576,17 +582,20 @@ if(rateUpdateEl) rateUpdateEl.textContent =
                 calculateLoan();
 
                 setTimeout(() => {
-                    statusDiv.style.display = 'none'}, 3000)} catch (error) {
-                statusDiv.className = 'api-status status-error';
+                    statusDiv.style.display = 'none';
+                }, 3000);
+            } catch (error) {
+statusDiv.className = 'api-status status-error';
                 statusDiv.textContent = '❌ เกิดข้อผิดพลาดในการอัพเดทอัตราดอกเบีย';
-                
+}
                 setTimeout(() => {
-                    statusDiv.style.display = 'none'}, 5000)}
+                    statusDiv.style.display = 'none';
+                }, 5000);
 
         // PDF Export Function
         async function exportToPDF() {
             try {
-                const { jsPDF } catch (error) { console.error(error); } = window.jspdf;
+                const { jsPDF } = window.jspdf;
                 const pdf = new jsPDF();
 
                 // เพิ่ม Font สำหรับภาษาไทย (ถ้ามี)
@@ -642,7 +651,8 @@ if(rateUpdateEl) rateUpdateEl.textContent =
 
                 // บันทึกไฟล์
                 const fileName = `loan-analysis-${new Date().toISOString().split('T')[0]}.pdf`;
-                pdf.save(fileName)} catch (error) {
+                pdf.save(fileName);
+            } catch (error) {
                 alert('เกิดข้อผิดพลาดในการสร้าง PDF: ' + error.message)}
 
         function formatNumber(num) {
@@ -787,13 +797,15 @@ if(rateUpdateEl) rateUpdateEl.textContent =
                     bankCard.style.borderLeftColor = bank.color;
                     
                     bankCard.innerHTML = `
-                        <div class="bank-name">${bank.name} catch (error) { console.error(error); }</div>
+                        <div class="bank-name">${bank.name}</div>
                         <div><strong>อัตราดอกเบีย:</strong> ${bank.rate}%</div>
                         <div><strong>ผ่อนต่อเดือน:</strong> ${formatNumber(monthlyPayment)} บาท</div>
                         <div><strong>ดอกเบียรวม:</strong> ${formatNumber(totalInterest)} บาท</div>
                     `;
 
-                    container.appendChild(bankCard)})} catch (error) {
+                    container.appendChild(bankCard);
+                });
+            } catch (error) {
                 console.error('Error comparing banks:', error)}
 
         // เริ่มต้นการทำงาน
@@ -861,7 +873,7 @@ if (passwordInput) {
 
             try {
                 if (USE_SUPABASE && supabase) {
-                    const { error } catch (error) { console.error(error); } = await supabase
+                    const { error } = await supabase
                         .from('loan_calculations')
                         .delete()
                         .eq('id', calcId);
@@ -871,7 +883,8 @@ if (passwordInput) {
                     localStorage.setItem('loan_calculations', JSON.stringify(filteredData))}
 
                 loadSavedCalculations();
-                alert('ลบการคำนวณสำเร็จ')} catch (error) {
+                alert('ลบการคำนวณสำเร็จ');
+            } catch (error) {
                 alert('เกิดข้อผิดพลาด: ' + error.message)}
 
         // อัพเดทฟังก์ชัน displaySavedCalculations เพื่อเพิ่มปุ่มลบ
@@ -900,7 +913,7 @@ if (passwordInput) {
                         <button class="btn-danger" onclick="deleteCalculation(${calc.id || 'null'})" style="padding: 5px 10px; font-size: 12px; flex: 1;">ลบ</button>
                     </div>
                 </div>
-            `).join('')}
+            `).join('')};
 
         // เพิ่มฟังก์ชัน Export ข้อมูลทั้งหมดเป็น JSON
         async function exportAllData() {
@@ -912,7 +925,7 @@ if (passwordInput) {
                 let calculations = [];
                 
                 if (USE_SUPABASE && supabase) {
-                    const { data, error } catch (error) { console.error(error); } = await supabase
+                    const { data, error } = await supabase
                         .from('loan_calculations')
                         .select('*')
                         .eq('user_id', currentUser.id);
@@ -927,7 +940,8 @@ if (passwordInput) {
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(dataBlob);
                 link.download = `loan-calculations-${new Date().toISOString().split('T')[0]}.json`;
-                link.click()} catch (error) {
+                link.click();
+            } catch (error) {
                 alert('เกิดข้อผิดพลาด: ' + error.message)}
 
         // เพิ่มปุ่ม Export ในส่วนการคำนวณที่บันทึกไว้
@@ -947,7 +961,7 @@ if (passwordInput) {
                     exportButton.style.marginBottom = '20px';
                     
                     savedSection.insertBefore(exportButton, document.getElementById('savedCalculationsList'))}
-        }
+        };
 
         console.log('🏠 Loan Analysis App Loaded Successfully!');
         console.log('Features: PDF Export, Data Management, Supabase Integration');
