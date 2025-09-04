@@ -401,11 +401,11 @@
             <div class="login-form" id="loginForm">
                 <div class="input-group">
                     <label for="email">อีเมล</label>
-                    <input type="email" id="email" placeholder="your@email.com">
+                    <input type="email" id="email" placeholder="your@email.com" autocomplete="username">
                 </div>
                 <div class="input-group">
                     <label for="password">รหัสผ่าน</label>
-                    <input type="password" id="password" placeholder="••••••••">
+                    <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
                 </div>
                 <button class="btn" onclick="handleAuth()" id="authButton">เข้าสู่ระบบ</button>
                 <button class="btn-secondary" onclick="toggleAuthMode()" id="toggleButton">สมัครสมาชิก</button>
@@ -663,8 +663,8 @@
                 // อัพเดท UI หลังจากเข้าสู่ระบบสำเร็จ
                 updateAuthUI(true);
                 await loadSavedCalculations();
-
-                alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' + error.message);
+            } catch (error) {
+                alert('เกิดข้อผิดพลาด: ' + error.message);
             }
         }
 
