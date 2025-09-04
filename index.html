@@ -355,7 +355,7 @@
         // Initialize Supabase (หากใช้งานจริง)
         if (USE_SUPABASE && typeof supabase !== 'undefined') {
             try {
-                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)} catch (error) {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)} catch (error) { console.error(error); } catch (error) {
                 console.log('Supabase not available, using localStorage')}
 
         // Authentication Functions
@@ -370,7 +370,7 @@
             try {
                 if (USE_SUPABASE && supabase) {
                     if (isLoginMode) {
-                        const { data, error } = await supabase.auth.signInWithPassword({
+                        const { data, error } catch (error) { console.error(error); } = await supabase.auth.signInWithPassword({
                             email: email,
                             password: password
                         });
@@ -389,7 +389,7 @@
                         const user = users.find(u => u.email === email && u.password === password);
                         if (!user) {
                             throw new Error('อีเมลหรือรหัสผ่านไม่ถูกต้อง')}
-                        currentUser = { email: user.email, id: user.id }} else {
+                        currentUser = { email: user.email, id: user.id } else {
                         const users = JSON.parse(localStorage.getItem('loanapp_users') || '[]');
                         if (users.some(u => u.email === email)) {
                             throw new Error('อีเมลนี้ถูกใช้งานแล้ว')}
@@ -397,7 +397,7 @@
                             id: Date.now().toString(),
                             email: email,
                             password: password
-                        };
+                        }
                         users.push(newUser);
                         localStorage.setItem('loanapp_users', JSON.stringify(users));
                         alert('สมัครสมาชิกสำเร็จ! กรุณาเข้าสู่ระบบ');
@@ -467,11 +467,11 @@
                     monthly_payment: document.getElementById('monthlyPayment').textContent,
                     total_interest: document.getElementById('totalInterest').textContent,
                     total_cost: document.getElementById('totalCost').textContent
-                };
+                }
 
             try {
                 if (USE_SUPABASE && supabase) {
-                    const { data, error } = await supabase
+                    const { data, error } catch (error) { console.error(error); } = await supabase
                         .from('loan_calculations')
                         .insert([loanData]);
                     
@@ -492,7 +492,7 @@
                 let calculations = [];
                 
                 if (USE_SUPABASE && supabase) {
-                    const { data, error } = await supabase
+                    const { data, error } catch (error) { console.error(error); } = await supabase
                         .from('loan_calculations')
                         .select('*')
                         .eq('user_id', currentUser.id)
@@ -562,7 +562,7 @@
                 // อัพเดทข้อมูลธนาคาร
                 bankData.forEach((bank, index) => {
                     if (rates[index]) {
-                        bank.rate = parseFloat(rates[index].rate)});
+                        bank.rate = parseFloat(rates[index].rate)} catch (error) { console.error(error); });
 
                 statusDiv.className = 'api-status status-success';
                 statusDiv.textContent = '✅ อัพเดทอัตราดอกเบียสำเร็จ!';
@@ -586,7 +586,7 @@ if(rateUpdateEl) rateUpdateEl.textContent =
         // PDF Export Function
         async function exportToPDF() {
             try {
-                const { jsPDF } = window.jspdf;
+                const { jsPDF } catch (error) { console.error(error); } = window.jspdf;
                 const pdf = new jsPDF();
 
                 // เพิ่ม Font สำหรับภาษาไทย (ถ้ามี)
@@ -787,7 +787,7 @@ if(rateUpdateEl) rateUpdateEl.textContent =
                     bankCard.style.borderLeftColor = bank.color;
                     
                     bankCard.innerHTML = `
-                        <div class="bank-name">${bank.name}</div>
+                        <div class="bank-name">${bank.name} catch (error) { console.error(error); }</div>
                         <div><strong>อัตราดอกเบีย:</strong> ${bank.rate}%</div>
                         <div><strong>ผ่อนต่อเดือน:</strong> ${formatNumber(monthlyPayment)} บาท</div>
                         <div><strong>ดอกเบียรวม:</strong> ${formatNumber(totalInterest)} บาท</div>
@@ -841,7 +841,6 @@ if (passwordInput) {
   passwordInput.addEventListener('keypress', function(e) {
     if (e.key === 'Enter') handleAuth();
   });
-}
 })}
             if (e.key === 'Enter') handleAuth()});
 
@@ -862,7 +861,7 @@ if (passwordInput) {
 
             try {
                 if (USE_SUPABASE && supabase) {
-                    const { error } = await supabase
+                    const { error } catch (error) { console.error(error); } = await supabase
                         .from('loan_calculations')
                         .delete()
                         .eq('id', calcId);
@@ -901,7 +900,7 @@ if (passwordInput) {
                         <button class="btn-danger" onclick="deleteCalculation(${calc.id || 'null'})" style="padding: 5px 10px; font-size: 12px; flex: 1;">ลบ</button>
                     </div>
                 </div>
-            `).join('')};
+            `).join('')}
 
         // เพิ่มฟังก์ชัน Export ข้อมูลทั้งหมดเป็น JSON
         async function exportAllData() {
@@ -913,7 +912,7 @@ if (passwordInput) {
                 let calculations = [];
                 
                 if (USE_SUPABASE && supabase) {
-                    const { data, error } = await supabase
+                    const { data, error } catch (error) { console.error(error); } = await supabase
                         .from('loan_calculations')
                         .select('*')
                         .eq('user_id', currentUser.id);
@@ -948,7 +947,7 @@ if (passwordInput) {
                     exportButton.style.marginBottom = '20px';
                     
                     savedSection.insertBefore(exportButton, document.getElementById('savedCalculationsList'))}
-        };
+        }
 
         console.log('🏠 Loan Analysis App Loaded Successfully!');
         console.log('Features: PDF Export, Data Management, Supabase Integration');
