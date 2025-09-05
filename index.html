@@ -6,7 +6,7 @@
     <title>เครื่องมือวิเคราะห์สินเชื่อบ้าน</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/supabase-js/2.38.0/umd/supabase.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -271,24 +271,71 @@
             gap: 20px;
             margin-top: 20px;
         }
-
-        .bank-card {
-            background: rgba(255, 255, 255, 0.9);
-            padding: 20px;
+        
+        /* Enhanced Bank Card Styles */
+        .enhanced-bank-card {
+            background-color: #ffffff;
             border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
             border-left: 5px solid #667eea;
-            transition: transform 0.2s ease;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
         }
 
-        .bank-card:hover {
+        .enhanced-bank-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.12);
         }
 
+        .bank-header {
+            margin-bottom: 15px;
+        }
+        
         .bank-name {
-            font-weight: bold;
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #343a40;
+        }
+
+        .selected-promotion {
+            font-size: 0.9em;
+            color: #6c757d;
+            background-color: #f8f9fa;
+            padding: 3px 8px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-top: 5px;
+        }
+        
+        .rate-breakdown {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .rate-year {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .year-label {
+            color: #495057;
+        }
+        
+        .year-rate {
+            font-weight: 600;
             color: #667eea;
-            margin-bottom: 10px;
+        }
+
+        .total-summary {
+            border-top: 1px solid #e9ecef;
+            padding-top: 10px;
+            margin-top: auto;
         }
 
         .saved-calculations {
@@ -409,6 +456,9 @@
                 <button class="btn" onclick="handleAuth()" id="authButton">เข้าสู่ระบบ</button>
                 <button class="btn-secondary" onclick="toggleAuthMode()" id="toggleButton">สมัครสมาชิก</button>
             </div>
+			
+			<div id="loginError" style="display: none; color: white; background-color: rgba(255, 82, 82, 0.7); text-align: center; padding: 10px; border-radius: 8px; margin-top: 15px;"></div>
+
             <div class="user-info" id="userInfo" style="display: none;">
                 <span id="welcomeMessage"></span>
                 <button class="btn-danger" onclick="logout()" style="padding: 8px 16px;">ออกจากระบบ</button>
@@ -434,7 +484,7 @@
                 </div>
 
                 <div class="input-group">
-                    <label for="interestRate">อัตราดอกเบี้ย (% ต่อปี)</label>
+                    <label for="interestRate">อัตราดอกเบี้ยเฉลี่ย (% ต่อปี)</label>
                     <input type="number" id="interestRate" placeholder="3.5" value="3.5" step="0.1">
                 </div>
 
@@ -460,12 +510,12 @@
                 <div class="export-section">
                     <button class="btn-secondary" onclick="saveLoanData()" id="saveBtn" disabled>💾 บันทึกข้อมูล</button>
                     <button class="btn-secondary" onclick="exportToPDF()">📄 Export PDF</button>
-                    <button class="btn-secondary" onclick="fetchLatestRates()">🔄 อัพเดทอัตราดอกเบี้ย</button>
+                    <button class="btn-secondary" onclick="fetchLatestRates()">🔄 อัพเดทโปรโมชั่น</button>
                 </div>
             </div>
 
             <div class="card">
-                <h2>💰 ผลการวิเคราะห์</h2>
+                <h2>💰 ผลการวิเคราะห์ (ดอกเบี้ยเฉลี่ย)</h2>
                 <div class="results-grid">
                     <div class="result-item">
                         <h3>ยอดกู้ยืม</h3>
@@ -494,7 +544,7 @@
         </div>
 
         <div class="card full-width comparison-section">
-            <h2>🏦 เปรียบเทียบธนาคาร</h2>
+            <h2>🏦 เปรียบเทียบโปรโมชั่นธนาคาร</h2>
             <div class="api-status" id="apiStatus" style="display: none;"></div>
             <div class="bank-comparison" id="bankComparison"></div>
             <div class="rate-update-time" id="rateUpdateTime"></div>
@@ -536,45 +586,30 @@
         let isLoginMode = true;
         let paymentChart = null;
 
-        // Mock API for bank rates (จำลอง API ธนาคาร)
+        // --- NEW: Mock API for tiered bank promotions ---
         const mockBankAPI = {
-            rates: [
-                { name: 'ธนาคารกสิกรไทย', rate: 3.45, lastUpdate: new Date() },
-                { name: 'ธนาคารกรุงเทพ', rate: 3.55, lastUpdate: new Date() },
-                { name: 'ธนาคารไทยพาณิชย์', rate: 3.50, lastUpdate: new Date() },
-                { name: 'ธนาคารกรุงไทย', rate: 3.40, lastUpdate: new Date() },
-                { name: 'ธนาคารทหารไทยธนชาต', rate: 3.60, lastUpdate: new Date() }
-            ],
-            getRates: async function() {
-                await new Promise(resolve => setTimeout(resolve, 1500));
-                this.rates = this.rates.map(bank => ({
-                    ...bank,
-                    rate: (Math.random() * 1.5 + 2.8).toFixed(2),
-                    lastUpdate: new Date()
-                }));
-                return this.rates;
+            promotions: {
+                "ธนาคารกสิกรไทย": [
+                    { name: "บ้านใหม่ ดอกเบี้ยพิเศษ", rates: [{ year: 1, rate: 1.99, description: "MRR - 5.31%" }, { year: 2, rate: 2.99, description: "MRR - 4.31%" }, { year: 3, rate: 3.99, description: "MRR - 3.31%" }, { year: 4, rate: 4.5, description: "MRR - 2.81%" }], conditions: "สำหรับลูกค้าที่ซื้อบ้านใหม่เท่านั้น", color: "#4CAF50" },
+                    { name: "พนักงานเงินเดือน", rates: [{ year: 1, rate: 2.50, description: "MRR - 4.81%" }, { year: 2, rate: 3.50, description: "MRR - 3.81%" }, { year: 3, rate: 4.50, description: "MRR - 2.81%" }], conditions: "สำหรับผู้มีรายได้ประจำ", color: "#4CAF50" }
+                ],
+                "ธนาคารกรุงเทพ": [
+                    { name: "บ้านบัวหลวง", rates: [{ year: 1, rate: 2.75, description: "MLR - 4.20%" }, { year: 2, rate: 2.75, description: "MLR - 4.20%" }, { year: 3, rate: 4.75, description: "MLR - 2.20%" }], conditions: "ฟรีค่าประเมินหลักทรัพย์", color: "#2196F3" }
+                ],
+                "ธนาคารไทยพาณิชย์": [
+                    { name: "My Home My Love", rates: [{ year: 1, rate: 3.20, description: "เรทพิเศษคงที่" }, { year: 2, rate: 4.20, description: "MRR - 3.10%" }, { year: 3, rate: 5.20, description: "MRR - 2.10%" }], conditions: "วงเงินกู้สูงสุด 100%", color: "#FF9800" },
+                ]
+            },
+            async updatePromotions() {
+                await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API delay
+                // In a real app, you would fetch this data from a server.
+                // Here we just return the existing mock data.
+                return this.promotions;
             }
         };
 
-        const bankData = mockBankAPI.rates.map(bank => ({
-            name: bank.name,
-            rate: parseFloat(bank.rate),
-            color: ['#4CAF50', '#2196F3', '#FF9800', '#9C27B0', '#F44336'][Math.floor(Math.random() * 5)]
-        }));
-
-        // Initialize Supabase
-        try {
-            if (typeof window.supabase !== 'undefined') {
-                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                console.log('✅ Supabase initialized successfully');
-            } else {
-                console.warn('⚠️ Supabase library not loaded, falling back to localStorage');
-                USE_SUPABASE = false;
-            }
-        } catch (error) {
-            console.error('❌ Supabase initialization failed:', error);
-            USE_SUPABASE = false;
-        }
+        let bankPromotions = mockBankAPI.promotions;
+        let selectedPromotions = {}; // Stores user's choice for each bank
 
         // Utility Functions
         function formatNumber(num) {
@@ -582,21 +617,62 @@
             return new Intl.NumberFormat('th-TH').format(Math.round(num));
         }
 
-        function calculateMonthlyPayment(principal, rate, term) {
-            if (!principal || !rate || !term) return 0;
-            const monthlyRate = rate / 100 / 12;
-            const numPayments = term * 12;
-            if (monthlyRate === 0) {
-                return principal / numPayments;
-            }
+        // --- UPDATED: Main monthly payment calculator ---
+        function calculateMonthlyPayment(principal, annualRate, termYears) {
+            if (!principal || !annualRate || !termYears) return 0;
+            const monthlyRate = annualRate / 100 / 12;
+            const numPayments = termYears * 12;
+            if (monthlyRate === 0) return principal / numPayments;
             return (principal * monthlyRate * Math.pow(1 + monthlyRate, numPayments)) /
                    (Math.pow(1 + monthlyRate, numPayments) - 1);
         }
 
+        // --- NEW: Calculator for tiered interest rates ---
+        function calculateTieredMonthlyPayment(principal, tieredRates, termYears) {
+            const numPayments = termYears * 12;
+            let remainingBalance = principal;
+            let totalInterest = 0;
+            
+            // First, calculate an average monthly payment over the whole term using an average rate
+            const averageRate = tieredRates.reduce((acc, r) => acc + r.rate, 0) / tieredRates.length;
+            const monthlyPayment = calculateMonthlyPayment(principal, averageRate, termYears);
+            
+            for (let month = 1; month <= numPayments; month++) {
+                const currentYear = Math.ceil(month / 12);
+                
+                // Find the correct rate for the current year
+                let currentAnnualRate = tieredRates[tieredRates.length - 1].rate;
+                for (const rateInfo of tieredRates) {
+                    if (currentYear <= rateInfo.year) {
+                        currentAnnualRate = rateInfo.rate;
+                        break;
+                    }
+                }
+                
+                const monthlyRate = currentAnnualRate / 100 / 12;
+                const interestForMonth = remainingBalance * monthlyRate;
+                totalInterest += interestForMonth;
+                const principalForMonth = monthlyPayment - interestForMonth;
+                remainingBalance -= principalForMonth;
+                
+                if (remainingBalance <= 0) break;
+            }
+            
+            return {
+                monthlyPayment: monthlyPayment,
+                totalInterest: totalInterest
+            };
+        }
+
         // Authentication Functions
+// Authentication Functions
         async function handleAuth() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('loginError'); // ดึง element div มาใช้งาน
+
+            // ซ่อนข้อความ error เดิมก่อน
+            if(errorDiv) errorDiv.style.display = 'none';
 
             if (!email || !password) {
                 alert('กรุณากรอกอีเมลและรหัสผ่าน');
@@ -615,16 +691,15 @@
                         alert('สมัครสมาชิกสำเร็จ! กรุณาตรวจสอบอีเมลเพื่อยืนยันบัญชี');
                         return;
                     }
-                } else {
-                    // Fallback to localStorage
+                } else { // Fallback to localStorage
                     if (isLoginMode) {
                         const users = JSON.parse(localStorage.getItem('loanapp_users') || '[]');
                         const user = users.find(u => u.email === email && u.password === password);
-                        if (!user) throw new Error('อีเมลหรือรหัสผ่านไม่ถูกต้อง');
+                        if (!user) throw new Error('อีเมลหรือรหัสผ่านไม่ถูกต้อง (LocalStorage)');
                         currentUser = { email: user.email, id: user.id };
                     } else {
                         const users = JSON.parse(localStorage.getItem('loanapp_users') || '[]');
-                        if (users.some(u => u.email === email)) throw new Error('อีเมลนี้ถูกใช้งานแล้ว');
+                        if (users.some(u => u.email === email)) throw new Error('อีเมลนี้ถูกใช้งานแล้ว (LocalStorage)');
                         const newUser = { id: Date.now().toString(), email, password };
                         users.push(newUser);
                         localStorage.setItem('loanapp_users', JSON.stringify(users));
@@ -636,7 +711,23 @@
                 updateAuthUI(true);
                 await loadSavedCalculations();
             } catch (error) {
-                alert('เกิดข้อผิดพลาด: ' + error.message);
+                // --- ส่วนที่ปรับปรุง ---
+                console.error('Authentication Error:', error); // แสดง error แบบเต็มใน console
+                if (errorDiv) {
+                    // แปลงข้อความ error ของ Supabase ให้เข้าใจง่ายขึ้น
+                    let friendlyMessage = error.message;
+                    if (error.message === 'Invalid login credentials') {
+                        friendlyMessage = 'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
+                    } else if (error.message === 'Email not confirmed') {
+                        friendlyMessage = 'กรุณายืนยันอีเมลของคุณก่อนเข้าสู่ระบบ';
+                    }
+                    
+                    errorDiv.textContent = 'เกิดข้อผิดพลาด: ' + friendlyMessage;
+                    errorDiv.style.display = 'block';
+                } else {
+                    // หากไม่มี div ให้ใช้ alert แบบเดิม
+                    alert('เกิดข้อผิดพลาด: ' + error.message);
+                }
             }
         }
 
@@ -669,10 +760,7 @@
             const savedSection = document.getElementById('savedCalculationsSection');
             const welcomeMessage = document.getElementById('welcomeMessage');
 
-            if (!loginForm || !userInfo || !saveBtn || !savedSection || !welcomeMessage) {
-                console.warn('Some UI elements not found for auth update.');
-                return;
-            }
+            if (!loginForm || !userInfo || !saveBtn || !savedSection || !welcomeMessage) return;
 
             if (loggedIn && currentUser) {
                 loginForm.style.display = 'none';
@@ -688,7 +776,6 @@
                 savedSection.style.display = 'none';
                 clearSession();
             }
-
             document.getElementById('email').value = '';
             document.getElementById('password').value = '';
         }
@@ -737,20 +824,12 @@
             try {
                 let calculations = [];
                 if (USE_SUPABASE && supabase) {
-                    const { data, error } = await supabase
-                        .from('loan_calculations')
-                        .select('*')
-                        .eq('user_id', currentUser.id)
-                        .order('created_at', { ascending: false })
-                        .limit(10);
+                    const { data, error } = await supabase.from('loan_calculations').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(10);
                     if (error) throw error;
                     calculations = data;
                 } else {
                     const savedData = JSON.parse(localStorage.getItem('loan_calculations') || '[]');
-                    calculations = savedData
-                        .filter(calc => calc.user_id === currentUser.id)
-                        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-                        .slice(0, 10);
+                    calculations = savedData.filter(calc => calc.user_id === currentUser.id).sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 10);
                 }
                 displaySavedCalculations(calculations);
             } catch (error) {
@@ -779,12 +858,12 @@
                     </div>
                     <div style="display: flex; gap: 10px; margin-top: 10px;">
                         <button class="btn-secondary" onclick='loadCalculation(${JSON.stringify(calc)})' style="padding: 5px 10px; font-size: 12px; flex: 1;">โหลดข้อมูล</button>
-                        <button class="btn-danger" onclick="deleteCalculation(${calc.id || null})" style="padding: 5px 10px; font-size: 12px; flex: 1;">ลบ</button>
+                        <button class="btn-danger" onclick="deleteCalculation(${calc.id || 'null'})" style="padding: 5px 10px; font-size: 12px; flex: 1;">ลบ</button>
                     </div>
                 </div>
             `).join('');
         }
-
+        
         function loadCalculation(calculation) {
              if (calculation) {
                 document.getElementById('housePrice').value = calculation.house_price;
@@ -814,8 +893,8 @@
                 alert('เกิดข้อผิดพลาด: ' + error.message);
             }
         }
-
-        // API Integration & Export Functions
+        
+        // --- UPDATED: API fetch function for promotions ---
         async function fetchLatestRates() {
             const statusDiv = document.getElementById('apiStatus');
             const rateUpdateElement = document.getElementById('rateUpdateTime');
@@ -823,22 +902,19 @@
             
             statusDiv.style.display = 'block';
             statusDiv.className = 'api-status status-loading';
-            statusDiv.textContent = '🔄 กำลังอัพเดทอัตราดอกเบี้ย...';
+            statusDiv.textContent = '🔄 กำลังอัพเดทโปรโมชั่นจากธนาคาร...';
 
             try {
-                const rates = await mockBankAPI.getRates();
-                bankData.forEach((bank, index) => {
-                    if (rates[index]) bank.rate = parseFloat(rates[index].rate);
-                });
+                bankPromotions = await mockBankAPI.updatePromotions();
                 statusDiv.className = 'api-status status-success';
-                statusDiv.textContent = '✅ อัพเดทอัตราดอกเบี้ยสำเร็จ!';
+                statusDiv.textContent = '✅ อัพเดทโปรโมชั่นสำเร็จ!';
                 rateUpdateElement.textContent = `อัพเดทล่าสุด: ${new Date().toLocaleString('th-TH')}`;
-                calculateLoan();
+                calculateLoan(); // Recalculate with new promotions
                 setTimeout(() => { statusDiv.style.display = 'none'; }, 3000);
             } catch (error) {
                 statusDiv.className = 'api-status status-error';
-                statusDiv.textContent = '❌ เกิดข้อผิดพลาดในการอัพเดท';
-                console.error('Fetch rates error:', error);
+                statusDiv.textContent = '❌ เกิดข้อผิดพลาดในการอัพเดทโปรโมชั่น';
+                console.error('Fetch promotions error:', error);
                 setTimeout(() => { statusDiv.style.display = 'none'; }, 5000);
             }
         }
@@ -847,29 +923,23 @@
             try {
                 const { jsPDF } = window.jspdf;
                 const pdf = new jsPDF();
-                
-                // You might need to add a Thai-supporting font for jsPDF to render correctly
                 pdf.setFont('helvetica', 'normal');
                 pdf.setFontSize(16);
                 pdf.text('Loan Analysis Report', 20, 20);
-
                 pdf.setFontSize(12);
                 let yPos = 40;
-                
                 pdf.text('Loan Information:', 20, yPos); yPos += 10;
                 pdf.text(`House Price: ${document.getElementById('housePrice').value} Baht`, 30, yPos); yPos += 8;
                 pdf.text(`Down Payment: ${document.getElementById('downPayment').value}%`, 30, yPos); yPos += 8;
                 pdf.text(`Interest Rate: ${document.getElementById('interestRate').value}%`, 30, yPos); yPos += 8;
                 pdf.text(`Loan Term: ${document.getElementById('loanTerm').value} years`, 30, yPos); yPos += 8;
                 pdf.text(`Monthly Income: ${document.getElementById('monthlyIncome').value} Baht`, 30, yPos);
-
                 yPos += 20;
                 pdf.text('Calculation Results:', 20, yPos); yPos += 10;
                 pdf.text(`Loan Amount: ${document.getElementById('loanAmount').textContent}`, 30, yPos); yPos += 8;
                 pdf.text(`Monthly Payment: ${document.getElementById('monthlyPayment').textContent}`, 30, yPos); yPos += 8;
                 pdf.text(`Total Interest: ${document.getElementById('totalInterest').textContent}`, 30, yPos); yPos += 8;
                 pdf.text(`Total Cost: ${document.getElementById('totalCost').textContent}`, 30, yPos);
-
                 const fileName = `loan-analysis-${new Date().toISOString().split('T')[0]}.pdf`;
                 pdf.save(fileName);
             } catch (error) {
@@ -982,26 +1052,74 @@
                 if (month % 2 === 0) row.style.backgroundColor = '#f8f9fa';
             }
         }
-
+        
+        // --- ENHANCED: Bank comparison function ---
         function compareBanks(loanAmount, loanTerm) {
             const container = document.getElementById('bankComparison');
             if (!container) return;
             try {
-                container.innerHTML = bankData.map(bank => {
-                    const monthlyPayment = calculateMonthlyPayment(loanAmount, bank.rate, loanTerm);
-                    const totalInterest = (monthlyPayment * loanTerm * 12) - loanAmount;
-                    return `
-                        <div class="bank-card" style="border-left-color: ${bank.color}">
-                            <div class="bank-name">${bank.name}</div>
-                            <div><strong>อัตราดอกเบี้ย:</strong> ${bank.rate}%</div>
-                            <div><strong>ผ่อน/เดือน:</strong> ${formatNumber(monthlyPayment)} บาท</div>
-                            <div><strong>ดอกเบี้ยรวม:</strong> ${formatNumber(totalInterest)} บาท</div>
+                container.innerHTML = '';
+
+                Object.keys(bankPromotions).forEach(bankName => {
+                    const promos = bankPromotions[bankName];
+                    const selectedPromo = selectedPromotions[bankName] || promos[0];
+                    const calculation = calculateTieredMonthlyPayment(loanAmount, selectedPromo.rates, loanTerm);
+
+                    const bankCard = document.createElement('div');
+                    bankCard.className = 'enhanced-bank-card';
+                    bankCard.style.borderLeftColor = selectedPromo.color;
+                    
+                    const rateBreakdownHtml = selectedPromo.rates.map(rate => `
+                        <div class="rate-year">
+                            <span class="year-label">ปีที่ ${rate.year}${rate.year === selectedPromo.rates[selectedPromo.rates.length - 1].year && selectedPromo.rates.length > 1 ? ' เป็นต้นไป' : ''}</span>
+                            <span class="year-rate">${rate.rate}%</span>
                         </div>
+                        <div style="font-size: 11px; color: #6c757d; text-align: right; margin-bottom: 5px;">
+                            ${rate.description}
+                        </div>
+                    `).join('');
+                    
+                    let promoSelectorHtml = '';
+                    if (promos.length > 1) {
+                        promoSelectorHtml = `<select onchange="selectPromotion('${bankName}', this.value)" style="width: 100%; padding: 5px; border-radius: 5px; border: 1px solid #ced4da; margin-top: 10px;">
+                            ${promos.map((p, index) => `<option value="${index}" ${p.name === selectedPromo.name ? 'selected' : ''}>${p.name}</option>`).join('')}
+                        </select>`;
+                    }
+
+                    bankCard.innerHTML = `
+                        <div class="bank-header">
+                            <div class="bank-name">${bankName}</div>
+                            <div class="selected-promotion">${selectedPromo.name}</div>
+                        </div>
+                        <div class="rate-breakdown">
+                            <div style="font-weight: 600; margin-bottom: 8px; color: #495057;">โครงสร้างดอกเบี้ย:</div>
+                            ${rateBreakdownHtml}
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin: 10px 0;">
+                            <div><strong>ผ่อน/เดือน:</strong><br>${formatNumber(calculation.monthlyPayment)} บาท</div>
+                            <div><strong>ดอกเบี้ยรวม:</strong><br>${formatNumber(calculation.totalInterest)} บาท</div>
+                        </div>
+                        <div class="total-summary">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span><strong>ต้นทุนเฉลี่ย/ปี:</strong></span>
+                                <span><strong>${((calculation.totalInterest / loanAmount) * 100 / loanTerm).toFixed(2)}%</strong></span>
+                            </div>
+                        </div>
+                         <div style="font-size: 11px; color: #6c757d; margin-top: 10px; font-style: italic;">
+                            ${selectedPromo.conditions}
+                        </div>
+                        ${promoSelectorHtml}
                     `;
-                }).join('');
+                    container.appendChild(bankCard);
+                });
             } catch (error) {
                 console.error('Error comparing banks:', error);
             }
+        }
+        
+        function selectPromotion(bankName, promoIndex) {
+            selectedPromotions[bankName] = bankPromotions[bankName][parseInt(promoIndex)];
+            calculateLoan(); // Recalculate and re-render
         }
 
         // Session Management
