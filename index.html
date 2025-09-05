@@ -127,7 +127,7 @@
       <h1>🏠 เครื่องมือวิเคราะห์สินเชื่อบ้าน</h1>
       <div>Login-only + Admin Gate — ผู้ใช้ทั่วไปเห็น/คำนวณได้ แต่แก้โปรได้เฉพาะ Admin</div>
     </div>
-    <div class="main-grid">
+<div class="main-grid" style="grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));">
       <div class="card">
         <h2>📊 ข้อมูลสินเชื่อ</h2>
         <div class="input-group"><label>ราคาบ้าน (บาท)</label><input id="housePrice" type="number" value="5000000"></div>
@@ -150,6 +150,31 @@
         <div class="chart-container"><canvas id="paymentChart"></canvas></div>
       </div>
     </div>
+	
+	<div class="card">
+        <h2>👤 ข้อมูลผู้กู้</h2>
+        <div class="input-group">
+          <label>อายุ (ปี)</label>
+          <input id="borrowerAge" type="number" value="30">
+        </div>
+        <div class="input-group">
+          <label>เงินเดือน (บาท/เดือน)</label>
+          <input id="borrowerSalary" type="number" value="50000">
+        </div>
+        <div class="input-group">
+          <label>โบนัส (เฉลี่ยต่อปี)</label>
+          <input id="borrowerBonus" type="number" value="50000">
+        </div>
+        <div class="input-group">
+          <label>รายได้อื่นๆ (บาท/เดือน)</label>
+          <input id="borrowerOtherIncome" type="number" value="0">
+        </div>
+        <div class="input-group">
+          <label>หนี้สินในบูโร (ผ่อนชำระต่อเดือน)</label>
+          <input id="borrowerDebt" type="number" value="5000">
+        </div>
+      </div>
+ 	
     <div class="card full">
       <h2>🏦 เปรียบเทียบโปรโมชั่นธนาคาร</h2>
       <div id="promoStatus" class="notice" style="display:none"></div>
@@ -338,9 +363,61 @@
     function calcMonthly(principal, annual, years){ const r=(annual/100)/12; const n=years*12; if(r===0) return principal/n; return principal*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1); }
     function calcTiered(principal, tiers, years){ const n=years*12; let bal=principal; let totI=0; const avg=tiers.reduce((a,t)=>a+t.rate,0)/Math.max(1,tiers.length); const pay=calcMonthly(principal, avg||0, years); for(let m=1;m<=n;m++){ const yr=Math.ceil(m/12); let ra=tiers.length?tiers[tiers.length-1].rate:0; for(const t of tiers){ if(yr<=t.year){ ra=t.rate; break; } } const mr=ra/100/12; const i=bal*mr; totI+=i; const p=pay-i; bal-=p; if(bal<=0) break; } return { monthly: pay, interest: totI }; }
 
-    function calculateLoan(){
-      const house=+document.getElementById('housePrice').value||0; const dp=+document.getElementById('downPayment').value||0; const rate=+document.getElementById('interestRate').value||0; const years=+document.getElementById('loanTerm').value||30; const income=+document.getElementById('monthlyIncome').value||0; const loan=house-(house*dp/100); const pay=calcMonthly(loan, rate, years); const tot=pay*years*12; const ti=tot-loan; document.getElementById('loanAmount').textContent=fmt(loan)+' บาท'; document.getElementById('monthlyPayment').textContent=fmt(pay)+' บาท'; document.getElementById('totalInterest').textContent=fmt(ti)+' บาท'; document.getElementById('totalCost').textContent=fmt(house+ti)+' บาท'; const note=document.getElementById('debtNotice'); if(income>0){ const d=(pay/income)*100; note.style.display='block'; note.textContent=d<=30?`✅ DSR ~ ${d.toFixed(1)}% (ดี)`:d<=40?`⚠️ DSR ~ ${d.toFixed(1)}% (เริ่มตึง)`:`🚨 DSR ~ ${d.toFixed(1)}% (เสี่ยงสูง)`; } else { note.style.display='none'; } buildChart(loan,ti); buildAmort(loan,rate,years,pay); compareBanks(loan,years); }
+function calculateLoan() {
+      // Loan Data
+      const house = +document.getElementById('housePrice').value || 0;
+      const dp = +document.getElementById('downPayment').value || 0;
+      const rate = +document.getElementById('interestRate').value || 0;
+      const years = +document.getElementById('loanTerm').value || 30;
+      
+      // ========== NEW: Borrower Data ==========
+      const age = +document.getElementById('borrowerAge').value || 0;
+      const salary = +document.getElementById('borrowerSalary').value || 0;
+      const bonus = +document.getElementById('borrowerBonus').value || 0;
+      const otherIncome = +document.getElementById('borrowerOtherIncome').value || 0;
+      const existingDebt = +document.getElementById('borrowerDebt').value || 0;
 
+      // Calculate total monthly income
+      const totalMonthlyIncome = salary + (bonus / 12) + otherIncome;
+
+      // Basic Loan Calculation
+      const loan = house - (house * dp / 100);
+      const pay = calcMonthly(loan, rate, years);
+      const tot = pay * years * 12;
+      const ti = tot - loan;
+
+      // Update UI
+      document.getElementById('loanAmount').textContent = fmt(loan) + ' บาท';
+      document.getElementById('monthlyPayment').textContent = fmt(pay) + ' บาท';
+      document.getElementById('totalInterest').textContent = fmt(ti) + ' บาท';
+      document.getElementById('totalCost').textContent = fmt(house + ti) + ' บาท';
+      
+      // Update DSR Calculation
+      const note = document.getElementById('debtNotice');
+      if (totalMonthlyIncome > 0) {
+        const totalMonthlyDebt = pay + existingDebt;
+        const dsr = (totalMonthlyDebt / totalMonthlyIncome) * 100;
+        note.style.display = 'block';
+        
+        let dsrMessage = `DSR ~ ${dsr.toFixed(1)}%`;
+        if (dsr <= 40) {
+            dsrMessage = `✅ ${dsrMessage} (ความสามารถในการผ่อนสูง)`;
+        } else if (dsr <= 55) {
+            dsrMessage = `⚠️ ${dsrMessage} (ความสามารถในการผ่อนปานกลาง)`;
+        } else {
+            dsrMessage = `🚨 ${dsrMessage} (ความสามารถในการผ่อนต่ำ, เสี่ยงสูง)`;
+        }
+        note.textContent = dsrMessage;
+
+      } else {
+        note.style.display = 'none';
+      }
+
+      // Re-render charts and comparisons
+      buildChart(loan, ti);
+      buildAmort(loan, rate, years, pay);
+      compareBanks(loan, years);
+    }
     function buildChart(p,i){ const ctx=document.getElementById('paymentChart'); if(!ctx) return; if(doughnut) doughnut.destroy(); doughnut=new Chart(ctx,{type:'doughnut',data:{labels:['เงินต้น','ดอกเบี้ย'],datasets:[{data:[p,i],backgroundColor:['#667eea','#f093fb'],borderWidth:3,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}}}}); }
     function buildAmort(loan, rate, years, pay){ const tb=document.getElementById('amortizationTable'); tb.innerHTML=''; const mr=rate/100/12; let bal=loan; for(let m=1;m<=12;m++){ const i=bal*mr; const pr=pay-i; bal-=pr; const tr=document.createElement('tr'); tr.innerHTML=`<td style="text-align:center">${m}</td><td>${fmt(pay)}</td><td>${fmt(pr)}</td><td>${fmt(i)}</td><td>${fmt(Math.max(0,bal))}</td>`; tb.appendChild(tr);} }
 
