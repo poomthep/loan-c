@@ -712,6 +712,9 @@ populateFormWithRates(p.rates || []);
           const MAX_LOAN_YEARS = 35;
           const years = Math.max(1, Math.min(MAX_LOAN_YEARS, maxLoanAgeForPromo - borrowerAge));
           // --- END DYNAMIC CALCULATION ---
+
+          const c = calcTiered(loanAmount, promo.rates || [], years);
+
 		  
           const card = document.createElement('div');
           card.className = 'bank-card';
