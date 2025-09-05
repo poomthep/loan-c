@@ -547,8 +547,11 @@ function calculateLoan() {
       }catch(e){ console.error(e); showStatus('ไม่สามารถดึงโปรจากฐานข้อมูลได้', true); }
     }
 
-    function getCurrentLoanAmount(){ const house=+document.getElementById('housePrice').value||0; const dp=+document.getElementById('downPayment').value||0; return house-(house*dp/100); }
-    function showStatus(msg,isErr=false){
+function getCurrentLoanAmount() {
+  // Return the full house price because down payment is now calculated dynamically.
+  return +document.getElementById('housePrice').value || 0;
+} 
+	function showStatus(msg,isErr=false){
       const el=document.getElementById('promoStatus');
       if(el){ el.style.display='block'; el.textContent=(isErr?'❌ ':'✅ ')+msg; setTimeout(()=>{el.style.display='none'},3000); }
       toast(msg, isErr?'error':'success');
@@ -696,7 +699,12 @@ function compareBanks(loanAmount, years) {
       calculateLoan();
       fetchPromotions();
       document.getElementById('rateUpdateTime').textContent=`อัพเดทล่าสุด: ${new Date().toLocaleString('th-TH')}`;
-	['housePrice','downPayment','interestRate','loanTerm', 'borrowerAge', 'borrowerSalary', 'borrowerBonus', 'borrowerOtherIncome', 'borrowerDebt'].forEach(id=>document.getElementById(id).addEventListener('input',calculateLoan));
+		['housePrice', 'loanTerm', 'borrowerAge', 'borrowerSalary', 'borrowerBonus', 'borrowerOtherIncome', 'borrowerDebt'].forEach(id => {
+			const element = document.getElementById(id);
+			if (element) { // เพิ่มการตรวจสอบเผื่อไว้
+				element.addEventListener('input', calculateLoan);
+			}
+		});
     }
     document.addEventListener('DOMContentLoaded', start);
   </script>
