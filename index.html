@@ -762,7 +762,19 @@ function compareBanks(loanAmount, years) {
     }
 	
     function saveLoanLocal(){ 
-const item={ ts:Date.now(), house:+document.getElementById('housePrice').value||0, borrower:{ age:+document.getElementById('borrowerAge').value||0, salary:+document.getElementById('borrowerSalary').value||0 }, results:{ loan:loanAmount.textContent, pay:monthlyPayment.textContent } };
+function saveLoanLocal() {
+    const item = {
+        ts: Date.now(),
+        house: +document.getElementById('housePrice').value || 0,
+        borrower: {
+            age: +document.getElementById('borrowerAge').value || 0,
+            salary: +document.getElementById('borrowerSalary').value || 0
+        },
+        results: {
+            loan: document.getElementById('loanAmount').textContent,
+            pay: document.getElementById('monthlyPayment').textContent
+        }
+    };
 	const arr=JSON.parse(localStorage.getItem('loan_saves')||'[]'); arr.unshift(item); localStorage.setItem('loan_saves', JSON.stringify(arr)); 
 	showStatus('บันทึกข้อมูลในเครื่องแล้ว'); 
 	}
