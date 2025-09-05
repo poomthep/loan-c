@@ -48,19 +48,19 @@
     <!-- Login bar: Login-only (No signup) -->
     <div class="card blur" style="margin-bottom:14px">
       <div id="loginArea">
-        <div class="login-grid">
+        <form id="loginForm" class="login-grid" onsubmit="event.preventDefault(); login();">
           <div class="input-group" style="margin:0">
             <label style="color:#fff">อีเมล</label>
-            <input id="email" type="email" placeholder="admin@yourbank.com" />
+            <input id="email" type="email" placeholder="admin@yourbank.com" required />
           </div>
           <div class="input-group" style="margin:0">
             <label style="color:#fff">รหัสผ่าน</label>
-            <input id="password" type="password" placeholder="••••••••" />
+            <input id="password" type="password" placeholder="••••••••" required />
           </div>
-          <button class="btn" onclick="login()">เข้าสู่ระบบ</button>
-        </div>
+          <button class="btn" type="submit">เข้าสู่ระบบ</button>
+        </form>
         <div id="loginError" style="display:none;margin-top:8px;background:#ff6b6b99;padding:8px 10px;border-radius:8px">เกิดข้อผิดพลาดในการเข้าสู่ระบบ</div>
-        <div style="margin-top:6px;font-size:12px;opacity:.9">* ปิดการสมัครสมาชิก — ผู้ใช้ถูกจัดการใน Supabase เท่านั้น</div>
+        <div style="margin-top:6px;font-size:12px;opacity:.9">* ปิดการสมัครสมาชิก — ผู้ใช้จัดการใน Supabase เท่านั้น</div>
       </div>
       <div id="userArea" class="welcome" style="display:none">
         <div>
@@ -154,7 +154,10 @@
     const SUPABASE_URL = 'https://crgyqlfotaceyvoxatnq.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNyZ3lxbGZvdGFjZXl2b3hhdG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY5ODg5NzAsImV4cCI6MjA3MjU2NDk3MH0.pvSRkwkkCQNyRuG-cFadLTQjL6Cf73d4Nu7ur3YSn2U';
     const USE_SUPABASE = true; // ใช้ฐานจริงเสมอ
-    let supabaseClient = null;
+
+    // Use var to avoid TDZ / scoping surprises across bundles
+    var supabaseClient = null;
+    var promoByBank = {};      // { bank: [ {id,name,rates[],conditions,color} ] }
 
     // Auth state
     let currentUser = null;
@@ -164,43 +167,47 @@
     const fmt = n => new Intl.NumberFormat('th-TH').format(Math.round(n||0));
     let doughnut = null;
 
-    // ===== Init Supabase =====
+    // ===== Supabase helpers =====
     function initSupabase(){
-      if (USE_SUPABASE && !supabaseClient && window.supabase) {
-        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      }
+      try{
+        if (USE_SUPABASE && !supabaseClient && window.supabase) {
+          supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        }
+      }catch(e){ console.error('Supabase init error:', e); }
+    }
+    function waitForSupabase(timeout=8000){
+      return new Promise(res=>{
+        const start=Date.now();
+        (function check(){
+          if (window.supabase) return res(true);
+          if (Date.now()-start>timeout) return res(false);
+          requestAnimationFrame(check);
+        })();
+      });
     }
 
     // ===== Auth (Login-only) =====
     async function login(){
+      if(!supabaseClient){ initSupabase(); if(!supabaseClient){ showLoginError('ยังโหลดไลบรารีไม่เสร็จ'); return; }}
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
-      const err = document.getElementById('loginError');
-      err.style.display = 'none';
-      if(!email || !password){ err.textContent='กรอกอีเมลและรหัสผ่าน'; err.style.display='block'; return; }
+      if(!email || !password){ showLoginError('กรอกอีเมลและรหัสผ่าน'); return; }
       try{
         const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
         if(error) throw error;
-        currentUser = data.user;
-        await determineAdmin();
-        updateAuthUI(true);
-        await fetchPromotions();
-      }catch(e){ err.textContent = (e.message==='Invalid login credentials') ? 'อีเมลหรือรหัสผ่านไม่ถูกต้อง' : ('เกิดข้อผิดพลาด: '+e.message); err.style.display='block'; }
+        currentUser = data.user; await determineAdmin(); updateAuthUI(true); await fetchPromotions();
+      }catch(e){ showLoginError(e.message==='Invalid login credentials' ? 'อีเมลหรือรหัสผ่านไม่ถูกต้อง' : ('เกิดข้อผิดพลาด: '+e.message)); }
     }
+    function showLoginError(msg){ const err=document.getElementById('loginError'); err.textContent=msg; err.style.display='block'; }
 
     async function determineAdmin(){
-      // อ่านบทบาทจากตาราง user_roles (ตั้งใน DB)
       try{
         const { data, error } = await supabaseClient.from('user_roles').select('role').eq('user_id', currentUser.id).maybeSingle();
-        if(error) throw error;
-        isAdmin = (data && (data.role||'').toLowerCase()==='admin');
-      }catch(e){ console.warn('ตรวจบทบาทล้มเหลว:', e); isAdmin = false; }
+        if(error) throw error; isAdmin = (data && (data.role||'').toLowerCase()==='admin');
+      }catch(e){ console.warn('ตรวจบทบาทล้มเหลว:', e); isAdmin=false; }
     }
 
-    async function logout(){
-      try{ await supabaseClient.auth.signOut(); } catch(e){}
-      currentUser=null; isAdmin=false; updateAuthUI(false);
-    }
+    async function logout(){ try{ await supabaseClient.auth.signOut(); }catch(e){} currentUser=null; isAdmin=false; updateAuthUI(false); }
 
     function updateAuthUI(loggedIn){
       const loginArea = document.getElementById('loginArea');
@@ -210,47 +217,22 @@
       const adminPane = document.getElementById('promoAdmin');
       if(loggedIn && currentUser){
         loginArea.style.display='none'; userArea.style.display='flex';
-        who.textContent = currentUser.email;
-        badge.textContent = isAdmin ? 'สิทธิ์: ADMIN' : 'สิทธิ์: USER';
+        who.textContent = currentUser.email; badge.textContent = isAdmin ? 'สิทธิ์: ADMIN' : 'สิทธิ์: USER';
         adminPane.style.display = isAdmin ? 'block' : 'none';
       } else {
-        loginArea.style.display='block'; userArea.style.display='none';
-        adminPane.style.display='none';
+        loginArea.style.display='block'; userArea.style.display='none'; adminPane.style.display='none';
       }
-      // clear password
       const pwd=document.getElementById('password'); if(pwd) pwd.value='';
     }
 
     // ===== Calculations =====
-    function calcMonthly(principal, annual, years){
-      const r = (annual/100)/12; const n = years*12; if(r===0) return principal/n; return principal*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1);
-    }
-    function calcTiered(principal, tiers, years){
-      const n = years*12; let bal = principal; let totI = 0; const avg = tiers.reduce((a,t)=>a+t.rate,0)/tiers.length; const pay = calcMonthly(principal, avg, years);
-      for(let m=1;m<=n;m++){ const yr=Math.ceil(m/12); let ra=tiers[tiers.length-1].rate; for(const t of tiers){ if(yr<=t.year){ ra=t.rate; break; } } const mr=ra/100/12; const i=bal*mr; totI+=i; const p=pay-i; bal-=p; if(bal<=0) break; }
-      return { monthly: pay, interest: totI };
-    }
+    function calcMonthly(principal, annual, years){ const r=(annual/100)/12; const n=years*12; if(r===0) return principal/n; return principal*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1); }
+    function calcTiered(principal, tiers, years){ const n=years*12; let bal=principal; let totI=0; const avg=tiers.reduce((a,t)=>a+t.rate,0)/Math.max(1,tiers.length); const pay=calcMonthly(principal, avg||0, years); for(let m=1;m<=n;m++){ const yr=Math.ceil(m/12); let ra=tiers.length?tiers[tiers.length-1].rate:0; for(const t of tiers){ if(yr<=t.year){ ra=t.rate; break; } } const mr=ra/100/12; const i=bal*mr; totI+=i; const p=pay-i; bal-=p; if(bal<=0) break; } return { monthly: pay, interest: totI }; }
 
     function calculateLoan(){
-      const house=+document.getElementById('housePrice').value||0;
-      const dp=+document.getElementById('downPayment').value||0;
-      const rate=+document.getElementById('interestRate').value||0;
-      const years=+document.getElementById('loanTerm').value||30;
-      const income=+document.getElementById('monthlyIncome').value||0;
-      const loan=house - (house*dp/100);
-      const pay=calcMonthly(loan, rate, years);
-      const tot = pay*years*12; const ti = tot - loan;
-      document.getElementById('loanAmount').textContent = fmt(loan)+' บาท';
-      document.getElementById('monthlyPayment').textContent = fmt(pay)+' บาท';
-      document.getElementById('totalInterest').textContent = fmt(ti)+' บาท';
-      document.getElementById('totalCost').textContent = fmt(house+ti)+' บาท';
-      const note = document.getElementById('debtNotice');
-      if(income>0){ const d=(pay/income)*100; note.style.display='block'; note.textContent = d<=30?`✅ DSR ~ ${d.toFixed(1)}% (ดี)` : d<=40?`⚠️ DSR ~ ${d.toFixed(1)}% (เริ่มตึง)` : `🚨 DSR ~ ${d.toFixed(1)}% (เสี่ยงสูง)`; } else { note.style.display='none'; }
-      buildChart(loan, ti); buildAmort(loan, rate, years, pay); compareBanks(loan, years);
-    }
+      const house=+document.getElementById('housePrice').value||0; const dp=+document.getElementById('downPayment').value||0; const rate=+document.getElementById('interestRate').value||0; const years=+document.getElementById('loanTerm').value||30; const income=+document.getElementById('monthlyIncome').value||0; const loan=house-(house*dp/100); const pay=calcMonthly(loan, rate, years); const tot=pay*years*12; const ti=tot-loan; document.getElementById('loanAmount').textContent=fmt(loan)+' บาท'; document.getElementById('monthlyPayment').textContent=fmt(pay)+' บาท'; document.getElementById('totalInterest').textContent=fmt(ti)+' บาท'; document.getElementById('totalCost').textContent=fmt(house+ti)+' บาท'; const note=document.getElementById('debtNotice'); if(income>0){ const d=(pay/income)*100; note.style.display='block'; note.textContent=d<=30?`✅ DSR ~ ${d.toFixed(1)}% (ดี)`:d<=40?`⚠️ DSR ~ ${d.toFixed(1)}% (เริ่มตึง)`:`🚨 DSR ~ ${d.toFixed(1)}% (เสี่ยงสูง)`; } else { note.style.display='none'; } buildChart(loan,ti); buildAmort(loan,rate,years,pay); compareBanks(loan,years); }
 
     function buildChart(p,i){ const ctx=document.getElementById('paymentChart'); if(!ctx) return; if(doughnut) doughnut.destroy(); doughnut=new Chart(ctx,{type:'doughnut',data:{labels:['เงินต้น','ดอกเบี้ย'],datasets:[{data:[p,i],backgroundColor:['#667eea','#f093fb'],borderWidth:3,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}}}}); }
-
     function buildAmort(loan, rate, years, pay){ const tb=document.getElementById('amortizationTable'); tb.innerHTML=''; const mr=rate/100/12; let bal=loan; for(let m=1;m<=12;m++){ const i=bal*mr; const pr=pay-i; bal-=pr; const tr=document.createElement('tr'); tr.innerHTML=`<td style="text-align:center">${m}</td><td>${fmt(pay)}</td><td>${fmt(pr)}</td><td>${fmt(i)}</td><td>${fmt(Math.max(0,bal))}</td>`; tb.appendChild(tr);} }
 
     // ===== Promotions (Supabase) =====
@@ -258,64 +240,27 @@ const parseRates = txt => (txt||'').split('\n').map(l=>{const[a,b,c]=l.split(','
 const ratesToText = rs => (rs||[]).map(r=>`${r.year},${r.rate}${r.description?','+r.description:''}`).join('\n');
 
     async function fetchPromotions(){
-      if(!supabaseClient) return;
+      if(!supabaseClient) return; // guard
       try{
         const { data, error } = await supabaseClient.from('bank_promotions').select('id,bank_name,name,rates,conditions,color').order('bank_name',{ascending:true}).order('created_at',{ascending:false});
         if(error) throw error;
         const g={}; (data||[]).forEach(row=>{ (g[row.bank_name]=g[row.bank_name]||[]).push({id:row.id,name:row.name,rates:row.rates||[],conditions:row.conditions||'',color:row.color||'#667eea'}); });
-        promoByBank=g; renderPromoList(); compareBanks(getCurrentLoanAmount(), +document.getElementById('loanTerm').value||30);
-        document.getElementById('rateUpdateTime').textContent = `อัพเดทล่าสุด: ${new Date().toLocaleString('th-TH')}`;
+        promoByBank=g; renderPromoList(); compareBanks(getCurrentLoanAmount(), +document.getElementById('loanTerm').value||30); document.getElementById('rateUpdateTime').textContent=`อัพเดทล่าสุด: ${new Date().toLocaleString('th-TH')}`;
       }catch(e){ console.error(e); showStatus('ไม่สามารถดึงโปรจากฐานข้อมูลได้', true); }
     }
 
-    function getCurrentLoanAmount(){ const house=+document.getElementById('housePrice').value||0; const dp=+document.getElementById('downPayment').value||0; return house - (house*dp/100); }
+    function getCurrentLoanAmount(){ const house=+document.getElementById('housePrice').value||0; const dp=+document.getElementById('downPayment').value||0; return house-(house*dp/100); }
+    function showStatus(msg,isErr=false){ const el=document.getElementById('promoStatus'); el.style.display='block'; el.textContent=(isErr?'❌ ':'✅ ')+msg; setTimeout(()=>{el.style.display='none'},3000); }
 
-    function showStatus(msg,isErr=false){ const el=document.getElementById('promoStatus'); el.style.display='block'; el.textContent = (isErr?'❌ ':'✅ ')+msg; setTimeout(()=>{el.style.display='none'},3000); }
-
-    async function savePromotion(){
-      if(!isAdmin){ alert('ต้องเป็นผู้ดูแลระบบ (Admin) เท่านั้น'); return; }
-      const id=(document.getElementById('promoIdInput').value||'').trim();
-      const bank=(document.getElementById('bankNameInput').value||'').trim();
-      const name=(document.getElementById('promoNameInput').value||'').trim();
-      const rates=parseRates(document.getElementById('ratesInput').value);
-      const conditions=(document.getElementById('conditionsInput').value||'').trim();
-      const color=(document.getElementById('colorInput').value||'#667eea').trim();
-      if(!bank||!name||rates.length===0){ alert('กรอกชื่อธนาคาร/ชื่อโปร + อัตราดอกเบี้ยอย่างน้อย 1 บรรทัด'); return; }
-      try{
-        if(id){ const { error } = await supabaseClient.from('bank_promotions').update({ bank_name:bank,name,rates,conditions,color }).eq('id',id); if(error) throw error; showStatus('อัปเดตโปรเรียบร้อย'); }
-        else { const { error } = await supabaseClient.from('bank_promotions').insert([{ bank_name:bank,name,rates,conditions,color,is_public:true }]); if(error) throw error; showStatus('เพิ่มโปรเรียบร้อย'); }
-        clearPromoForm(); await fetchPromotions();
-      }catch(e){ alert('เกิดข้อผิดพลาด: '+e.message); }
-    }
-
+    async function savePromotion(){ if(!isAdmin){ alert('ต้องเป็นผู้ดูแลระบบ (Admin) เท่านั้น'); return; } const id=(document.getElementById('promoIdInput').value||'').trim(); const bank=(document.getElementById('bankNameInput').value||'').trim(); const name=(document.getElementById('promoNameInput').value||'').trim(); const rates=parseRates(document.getElementById('ratesInput').value); const conditions=(document.getElementById('conditionsInput').value||'').trim(); const color=(document.getElementById('colorInput').value||'#667eea').trim(); if(!bank||!name||rates.length===0){ alert('กรอกชื่อธนาคาร/ชื่อโปร + อัตราดอกเบี้ยอย่างน้อย 1 บรรทัด'); return; } try{ if(id){ const { error } = await supabaseClient.from('bank_promotions').update({ bank_name:bank,name,rates,conditions,color }).eq('id',id); if(error) throw error; showStatus('อัปเดตโปรเรียบร้อย'); } else { const { error } = await supabaseClient.from('bank_promotions').insert([{ bank_name:bank,name,rates,conditions,color,is_public:true }]); if(error) throw error; showStatus('เพิ่มโปรเรียบร้อย'); } clearPromoForm(); await fetchPromotions(); }catch(e){ alert('เกิดข้อผิดพลาด: '+e.message); } }
     function clearPromoForm(){ document.getElementById('promoIdInput').value=''; document.getElementById('bankNameInput').value=''; document.getElementById('promoNameInput').value=''; document.getElementById('ratesInput').value=''; document.getElementById('conditionsInput').value=''; document.getElementById('colorInput').value='#667eea'; }
 
-    function renderPromoList(){
-      const h=document.getElementById('myPromoList'); if(!h) return;
-      const flat=[]; Object.keys(promoByBank).forEach(b=>{ (promoByBank[b]||[]).forEach(p=>flat.push({bank:b,...p})) });
-      if(flat.length===0){ h.innerHTML='<p style="text-align:center;color:#666">ยังไม่มีโปรในฐานข้อมูล</p>'; return; }
-      h.innerHTML = flat.map(p=>`
-        <div style="padding:10px;border:1px solid #e9ecef;border-radius:10px;margin:6px 0;">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <div><strong>${p.bank}</strong> — ${p.name}</div>
-            ${isAdmin ? `<div style="display:flex;gap:6px">
-              <button class="btn-secondary" style="padding:6px 10px;font-size:12px" onclick='editPromotion(${JSON.stringify(p)})'>แก้ไข</button>
-              <button class="btn-danger" style="padding:6px 10px;font-size:12px" onclick="deletePromotion('${p.id}')">ลบ</button>
-            </div>` : ''}
-          </div>
-          <div style="font-size:12px;color:#555;margin-top:4px">${p.conditions||''}</div>
-          <div style="font-size:12px;margin-top:6px">${(p.rates||[]).map(r=>`ปีที่ ${r.year}: ${r.rate}% <span style=\"color:#6c757d\">${r.description||''}</span>`).join('<br>')}</div>
-        </div>`).join('');
-      // แสดง/ซ่อนปุ่มในแอดมินพาเนล
-      document.getElementById('promoAdmin').style.display = isAdmin ? 'block':'none';
-    }
-
+    function renderPromoList(){ const h=document.getElementById('myPromoList'); if(!h) return; const flat=[]; Object.keys(promoByBank||{}).forEach(b=>{ (promoByBank[b]||[]).forEach(p=>flat.push({bank:b,...p})) }); if(flat.length===0){ h.innerHTML='<p style="text-align:center;color:#666">ยังไม่มีโปรในฐานข้อมูล</p>'; return; } h.innerHTML=flat.map(p=>`<div style="padding:10px;border:1px solid #e9ecef;border-radius:10px;margin:6px 0;"><div style="display:flex;justify-content:space-between;align-items:center"><div><strong>${p.bank}</strong> — ${p.name}</div>${isAdmin?`<div style="display:flex;gap:6px"><button class="btn-secondary" style="padding:6px 10px;font-size:12px" onclick='editPromotion(${JSON.stringify(p)})'>แก้ไข</button><button class="btn-danger" style="padding:6px 10px;font-size:12px" onclick="deletePromotion('${p.id}')">ลบ</button></div>`:''}</div><div style="font-size:12px;color:#555;margin-top:4px">${p.conditions||''}</div><div style="font-size:12px;margin-top:6px">${(p.rates||[]).map(r=>`ปีที่ ${r.year}: ${r.rate}% <span style=\"color:#6c757d\">${r.description||''}</span>`).join('<br>')}</div></div>`).join(''); document.getElementById('promoAdmin').style.display=isAdmin?'block':'none'; }
     function editPromotion(p){ if(!isAdmin) return; document.getElementById('promoIdInput').value=p.id||''; document.getElementById('bankNameInput').value=p.bank||''; document.getElementById('promoNameInput').value=p.name||''; document.getElementById('ratesInput').value=ratesToText(p.rates||[]); document.getElementById('conditionsInput').value=p.conditions||''; document.getElementById('colorInput').value=p.color||'#667eea'; window.scrollTo({top:document.getElementById('promoAdmin').offsetTop-10,behavior:'smooth'}); }
-
     async function deletePromotion(id){ if(!isAdmin||!id||!confirm('ลบโปรนี้?')) return; try{ const { error } = await supabaseClient.from('bank_promotions').delete().eq('id',id); if(error) throw error; await fetchPromotions(); showStatus('ลบโปรเรียบร้อย'); }catch(e){ alert('เกิดข้อผิดพลาด: '+e.message); } }
 
     // ===== Comparison UI =====
-    function compareBanks(loanAmount, years){ const box=document.getElementById('bankComparison'); if(!box) return; box.innerHTML=''; const data=promoByBank; Object.keys(data).forEach(bank=>{ const promos=data[bank]; promos.forEach(promo=>{ const c=calcTiered(loanAmount,promo.rates,years); const card=document.createElement('div'); card.className='bank-card'; card.style.borderLeftColor=promo.color||'#667eea'; card.innerHTML=`<div class="bank-name">${bank}</div><div class="selected-promotion">${promo.name}</div><div style="margin-top:8px">${promo.rates.map(r=>`<div class='rate-year'><span>ปีที่ ${r.year}${r.year===promo.rates[promo.rates.length-1].year&&promo.rates.length>1?' เป็นต้นไป':''}</span><span>${r.rate}%</span></div><div style='text-align:right;color:#6c757d;font-size:11px'>${r.description||''}</div>`).join('')}</div><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px"><div><strong>ผ่อน/เดือน</strong><br>${fmt(c.monthly)} บาท</div><div><strong>ดอกเบี้ยรวม</strong><br>${fmt(c.interest)} บาท</div></div>`; box.appendChild(card); }); }); }
+    function compareBanks(loanAmount, years){ const box=document.getElementById('bankComparison'); if(!box) return; box.innerHTML=''; const data=promoByBank || {}; Object.keys(data).forEach(bank=>{ const promos=data[bank]; (promos||[]).forEach(promo=>{ const c=calcTiered(loanAmount,promo.rates||[],years); const card=document.createElement('div'); card.className='bank-card'; card.style.borderLeftColor=promo.color||'#667eea'; card.innerHTML=`<div class="bank-name">${bank}</div><div class="selected-promotion">${promo.name}</div><div style="margin-top:8px">${(promo.rates||[]).map(r=>`<div class='rate-year'><span>ปีที่ ${r.year}${r.year===(promo.rates[promo.rates.length-1]||{}).year&&promo.rates.length>1?' เป็นต้นไป':''}</span><span>${r.rate}%</span></div><div style='text-align:right;color:#6c757d;font-size:11px'>${r.description||''}</div>`).join('')}</div><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px"><div><strong>ผ่อน/เดือน</strong><br>${fmt(c.monthly)} บาท</div><div><strong>ดอกเบี้ยรวม</strong><br>${fmt(c.interest)} บาท</div></div>`; box.appendChild(card); }); }); }
 
     // ===== Local save (no server save) =====
     function saveLoanLocal(){ const item={ ts:Date.now(), house:+housePrice.value||0, down:+downPayment.value||0, rate:+interestRate.value||0, term:+loanTerm.value||30, income:+monthlyIncome.value||0, results:{ loan:loanAmount.textContent, pay:monthlyPayment.textContent, interest:totalInterest.textContent, total:totalCost.textContent } }; const arr=JSON.parse(localStorage.getItem('loan_saves')||'[]'); arr.unshift(item); localStorage.setItem('loan_saves', JSON.stringify(arr)); showStatus('บันทึกข้อมูลในเครื่องแล้ว'); }
@@ -323,19 +268,16 @@ const ratesToText = rs => (rs||[]).map(r=>`${r.year},${r.rate}${r.description?',
     async function refreshPromos(){ await fetchPromotions(); }
 
     // ===== Boot =====
-    async function restoreSession(){
-      const { data } = await supabaseClient.auth.getUser();
-      if(data && data.user){ currentUser=data.user; await determineAdmin(); updateAuthUI(true); }
-    }
+    async function restoreSession(){ if(!supabaseClient) return; try{ const { data } = await supabaseClient.auth.getUser(); if(data && data.user){ currentUser=data.user; await determineAdmin(); updateAuthUI(true); } }catch(e){ console.warn('restoreSession:', e); } }
 
-    function start(){
+    async function start(){
+      await waitForSupabase();
       initSupabase();
-      restoreSession();
+      await restoreSession();
       calculateLoan();
       fetchPromotions();
       document.getElementById('rateUpdateTime').textContent=`อัพเดทล่าสุด: ${new Date().toLocaleString('th-TH')}`;
       ['housePrice','downPayment','interestRate','loanTerm','monthlyIncome'].forEach(id=>document.getElementById(id).addEventListener('input',calculateLoan));
-      document.getElementById('password').addEventListener('keypress',e=>{ if(e.key==='Enter') login(); });
     }
     document.addEventListener('DOMContentLoaded', start);
   </script>
