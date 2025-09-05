@@ -57,7 +57,8 @@
   <label style="color:#fff">รหัสผ่าน</label>
   <input id="password" type="password" placeholder="••••••••" required autocomplete="current-password" />
 </div>
-          <button class="btn" type="submit">เข้าสู่ระบบ</button>
+<button class="btn" type="submit">เข้าสู่ระบบ</button>
+<button id="loginButton" class="btn" type="submit" disabled>กำลังเตรียมระบบ...</button>
         </form>
         <div id="loginError" style="display:none;margin-top:8px;background:#ff6b6b99;padding:8px 10px;border-radius:8px">เกิดข้อผิดพลาดในการเข้าสู่ระบบ</div>
         <div style="margin-top:6px;font-size:12px;opacity:.9">* ปิดการสมัครสมาชิก — ผู้ใช้จัดการใน Supabase เท่านั้น</div>
@@ -187,17 +188,20 @@
     }
 
     // ===== Auth (Login-only) =====
-    async function login(){
-      if(!supabaseClient){ initSupabase(); if(!supabaseClient){ showLoginError('ยังโหลดไลบรารีไม่เสร็จ'); return; }}
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
-      if(!email || !password){ showLoginError('กรอกอีเมลและรหัสผ่าน'); return; }
-      try{
-        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-        if(error) throw error;
-        currentUser = data.user; await determineAdmin(); updateAuthUI(true); await fetchPromotions();
-      }catch(e){ showLoginError(e.message==='Invalid login credentials' ? 'อีเมลหรือรหัสผ่านไม่ถูกต้อง' : ('เกิดข้อผิดพลาด: '+e.message)); }
-    }
+// โค้ดใหม่สำหรับฟังก์ชัน login()
+async function login(){
+  // ไม่จำเป็นต้องเช็ค supabaseClient อีกต่อไป
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  if(!email || !password){ showLoginError('กรอกอีเมลและรหัสผ่าน'); return; }
+  try{
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    if(error) throw error;
+    currentUser = data.user; await determineAdmin(); updateAuthUI(true); await fetchPromotions();
+  }catch(e){ showLoginError(e.message==='Invalid login credentials' ? 'อีเมลหรือรหัสผ่านไม่ถูกต้อง' : ('เกิดข้อผิดพลาด: '+e.message)); }
+}
+	
+	
     function showLoginError(msg){ const err=document.getElementById('loginError'); err.textContent=msg; err.style.display='block'; }
 
     async function determineAdmin(){
@@ -274,6 +278,9 @@ const ratesToText = rs => (rs||[]).map(r=>`${r.year},${r.rate}${r.description?',
       await waitForSupabase();
       initSupabase();
       await restoreSession();
+	  
+	  
+	  
       calculateLoan();
       fetchPromotions();
       document.getElementById('rateUpdateTime').textContent=`อัพเดทล่าสุด: ${new Date().toLocaleString('th-TH')}`;
