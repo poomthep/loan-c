@@ -8,6 +8,28 @@
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script defer src="./lib/supabase.min.js"></script>
   <style>
+  .analysis-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 8px;
+      font-size: 14px;
+    }
+    .analysis-value {
+      font-weight: 700;
+      color: #667eea;
+    }
+    .verdict {
+      text-align: center;
+      margin-top: 10px;
+      padding: 6px;
+      border-radius: 8px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .verdict-good { background-color: #20bf6b; }
+    .verdict-ok { background-color: #f0932b; }
+    .verdict-bad { background-color: #ff6b6b; }
     *{margin:0;padding:0;box-sizing:border-box}
     body{font-family:"Segoe UI",Tahoma,Geneva,Verdana,sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;padding:20px}
     .container{max-width:1200px;margin:0 auto}
@@ -545,8 +567,82 @@ populateFormWithRates(p.rates || []);
     
 	async function deletePromotion(id){ if(!isAdmin||!id||!confirm('ลบโปรนี้?')) return; try{ const { error } = await supabaseClient.from('bank_promotions').delete().eq('id',id); if(error) throw error; await fetchPromotions(); showStatus('ลบโปรเรียบร้อย'); }catch(e){ alert('เกิดข้อผิดพลาด: '+e.message); } }
 
-    function compareBanks(loanAmount, years){ const box=document.getElementById('bankComparison'); if(!box) return; box.innerHTML=''; const data=promoByBank || {}; Object.keys(data).forEach(bank=>{ const promos=data[bank]; (promos||[]).forEach(promo=>{ const c=calcTiered(loanAmount,promo.rates||[],years); const card=document.createElement('div'); card.className='bank-card'; card.style.borderLeftColor=promo.color||'#667eea'; card.innerHTML=`<div class="bank-name">${bank}</div><div class="selected-promotion">${promo.name}</div><div style="margin-top:8px">${(promo.rates||[]).map(r=>`<div class='rate-year'><span>ปีที่ ${r.year}${r.year===(promo.rates[promo.rates.length-1]||{}).year&&promo.rates.length>1?' เป็นต้นไป':''}</span><span>${r.rate}%</span></div><div style='text-align:right;color:#6c757d;font-size:11px'>${r.description||''}</div>`).join('')}</div><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px"><div><strong>ผ่อน/เดือน</strong><br>${fmt(c.monthly)} บาท</div><div><strong>ดอกเบี้ยรวม</strong><br>${fmt(c.interest)} บาท</div></div>`; box.appendChild(card); }); }); }
+function compareBanks(loanAmount, years) {
+      const box = document.getElementById('bankComparison');
+      if (!box) return;
+      box.innerHTML = '';
 
+      // --- Get Borrower's Data for Analysis ---
+      const salary = +document.getElementById('borrowerSalary').value || 0;
+      const bonus = +document.getElementById('borrowerBonus').value || 0;
+      const otherIncome = +document.getElementById('borrowerOtherIncome').value || 0;
+      const existingDebt = +document.getElementById('borrowerDebt').value || 0;
+      const totalMonthlyIncome = salary + (bonus / 12) + otherIncome;
+      // --- End Borrower's Data ---
+
+      const data = promoByBank || {};
+      if (Object.keys(data).length === 0) {
+        box.innerHTML = '<p style="text-align:center; color:#666; grid-column: 1 / -1;">ไม่มีข้อมูลโปรโมชัน</p>';
+        return;
+      }
+
+      Object.keys(data).forEach(bank => {
+        const promos = data[bank];
+        (promos || []).forEach(promo => {
+          const c = calcTiered(loanAmount, promo.rates || [], years);
+          const card = document.createElement('div');
+          card.className = 'bank-card';
+          card.style.borderLeftColor = promo.color || '#667eea';
+
+          // --- NEW: Per-Promotion Analysis ---
+          let analysisHtml = '';
+          if (totalMonthlyIncome > 0) {
+            const totalMonthlyDebtWithThisPromo = c.monthly + existingDebt;
+            const dsr = (totalMonthlyDebtWithThisPromo / totalMonthlyIncome) * 100;
+            
+            // Max loan estimation based on this income and 50% DSR ceiling
+            const maxAffordablePayment = (totalMonthlyIncome * 0.50) - existingDebt;
+            const estimatedMaxLoan = maxAffordablePayment > 0 ? (maxAffordablePayment * (Math.pow(1 + ((promo.rates[0]?.rate || 3) / 100) / 12, years * 12) - 1)) / (((promo.rates[0]?.rate || 3) / 100) / 12 * Math.pow(1 + ((promo.rates[0]?.rate || 3) / 100) / 12, years * 12)) : 0;
+
+            let verdict = '';
+            let verdictClass = '';
+            if (dsr <= 40) {
+              verdict = 'แนะนำ';
+              verdictClass = 'verdict-good';
+            } else if (dsr <= 55) {
+              verdict = 'เป็นไปได้';
+              verdictClass = 'verdict-ok';
+            } else {
+              verdict = 'เสี่ยงสูง';
+              verdictClass = 'verdict-bad';
+            }
+
+            analysisHtml = `
+              <hr style="margin: 10px 0;">
+              <div class="analysis-grid">
+                  <div><strong>DSR กับโปรนี้:</strong><br><span class="analysis-value">${dsr.toFixed(1)}%</span></div>
+                  <div><strong>วงเงินกู้สูงสุด (โดยประมาณ):</strong><br><span class="analysis-value">${fmt(estimatedMaxLoan)}</span></div>
+              </div>
+              <div class="verdict ${verdictClass}">${verdict}</div>
+            `;
+          }
+          // --- END: Per-Promotion Analysis ---
+
+          card.innerHTML = `
+            <div class="bank-name">${bank}</div>
+            <div class="selected-promotion">${promo.name}</div>
+            <div style="margin-top:8px">${(promo.rates||[]).map(r=>`<div class='rate-year'><span>ปีที่ ${r.year === 99 ? 'ถัดไป' : r.year}</span><span>${r.rate.toFixed(2)}%</span></div><div style='text-align:right;color:#6c757d;font-size:11px'>${r.description||''}</div>`).join('')}</div>
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px">
+              <div><strong>ผ่อน/เดือน</strong><br>${fmt(c.monthly)} บาท</div>
+              <div><strong>ดอกเบี้ยรวม</strong><br>${fmt(c.interest)} บาท</div>
+            </div>
+            ${analysisHtml} 
+          `;
+          box.appendChild(card);
+        });
+      });
+    }
+	
     function saveLoanLocal(){ const item={ ts:Date.now(), house:+housePrice.value||0, down:+downPayment.value||0, rate:+interestRate.value||0, term:+loanTerm.value||30, income:+monthlyIncome.value||0, results:{ loan:loanAmount.textContent, pay:monthlyPayment.textContent, interest:totalInterest.textContent, total:totalCost.textContent } }; const arr=JSON.parse(localStorage.getItem('loan_saves')||'[]'); arr.unshift(item); localStorage.setItem('loan_saves', JSON.stringify(arr)); showStatus('บันทึกข้อมูลในเครื่องแล้ว'); }
 
     async function refreshPromos(){ showSpinner('กำลังรีเฟรชโปร...'); await fetchPromotions(); hideSpinner(); }
@@ -564,7 +660,7 @@ populateFormWithRates(p.rates || []);
       calculateLoan();
       fetchPromotions();
       document.getElementById('rateUpdateTime').textContent=`อัพเดทล่าสุด: ${new Date().toLocaleString('th-TH')}`;
-      ['housePrice','downPayment','interestRate','loanTerm','monthlyIncome'].forEach(id=>document.getElementById(id).addEventListener('input',calculateLoan));
+	['housePrice','downPayment','interestRate','loanTerm', 'borrowerAge', 'borrowerSalary', 'borrowerBonus', 'borrowerOtherIncome', 'borrowerDebt'].forEach(id=>document.getElementById(id).addEventListener('input',calculateLoan));
     }
     document.addEventListener('DOMContentLoaded', start);
   </script>
