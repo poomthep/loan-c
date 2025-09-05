@@ -476,13 +476,6 @@
       buildAmort(loanAmount, bestRate, maxYears, monthlyPayment);
       compareBanks(loanAmount, age); // **ส่ง "อายุ" ไปแทน "ปี"**
     }
-2.3 แทนที่ฟังก์ชัน compareBanks()
-
-ฟังก์ชันนี้จะรับ "อายุ" ของผู้กู้มา แล้วคำนวณ "ระยะเวลากู้" ของแต่ละโปรโมชันแยกกัน
-
-นำโค้ดนี้ไป "แทนที่" ฟังก์ชัน compareBanks ของเดิมทั้งหมด:
-
-JavaScript
 
     function compareBanks(loanAmount, borrowerAge) {
       const box = document.getElementById('bankComparison');
