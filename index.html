@@ -612,20 +612,37 @@ const maxYears = Math.max(1, MAX_LOAN_AGE - age);
     }
 
 // โค้ดที่แก้ไขแล้ว
-async function fetchPromotions(){
-  if(!supabaseClient) return;
-  try{
-        const { data, error } = await supabaseClient.from('bank_promotions').select('id,bank_name,name,rates,conditions,color,max_loan_age').order('bank_name',{ascending:true}).order('created_at',{ascending:false});
-    if(error) throw error;
-    const g={}; (data||[]).forEach(row=>{ (g[row.bank_name]=g[row.bank_name]||[]).push({id:row.id,name:row.name,rates:row.rates||[],conditions:row.conditions||'',color:row.color||'#667eea'}); });
-        promoByBank=g; 
-        renderPromoList(); 
-    // แก้ไขโดยการดึงค่า "อายุ" จากฟอร์มมาใช้แทน
+    async function fetchPromotions() {
+      if (!supabaseClient) return;
+      try {
+        const { data, error } = await supabaseClient.from('bank_promotions').select('id,bank_name,name,rates,conditions,color,max_loan_age').order('bank_name', { ascending: true }).order('created_at', { ascending: false });
+        if (error) throw error;
+
+        const g = {};
+        (data || []).forEach(row => {
+            (g[row.bank_name] = g[row.bank_name] || []).push({
+                id: row.id,
+                name: row.name,
+                rates: row.rates || [],
+                conditions: row.conditions || '',
+                color: row.color || '#667eea',
+                // ===== เพิ่มบรรทัดนี้เข้าไป =====
+                max_loan_age: row.max_loan_age || 65 
+            });
+        });
+
+        promoByBank = g;
+        renderPromoList();
         const currentAge = +document.getElementById('borrowerAge').value;
-        compareBanks(getCurrentLoanAmount(), currentAge); 
-        document.getElementById('rateUpdateTime').textContent=`อัพเดทล่าสุด: ${new Date().toLocaleString('th-TH')}`;
-      }catch(e){ console.error(e); showStatus('ไม่สามารถดึงโปรจากฐานข้อมูลได้', true); }
-}
+        if (currentAge) { // คำนวณอีกครั้งเมื่อมีข้อมูลโปรโมชันแล้ว
+            calculateLoan();
+        }
+        document.getElementById('rateUpdateTime').textContent = `อัพเดทล่าสุด: ${new Date().toLocaleString('th-TH')}`;
+      } catch (e) {
+        console.error(e);
+        showStatus('ไม่สามารถดึงโปรจากฐานข้อมูลได้', true);
+      }
+    }
 
 function getCurrentLoanAmount() {
   // Return the full house price because down payment is now calculated dynamically.
