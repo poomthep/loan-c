@@ -205,20 +205,22 @@
       
       <div class="input-group">
         <label>โครงสร้างดอกเบี้ย</label>
-        
-        <div id="fixedRatesContainer">
-          </div>
+        <div id="fixedRatesContainer"></div>
         <button type="button" class="btn-secondary" onclick="addFixedRateYear()" style="margin-top: 6px; padding: 6px 10px; font-size: 12px;">+ เพิ่มดอกเบี้ยรายปี (คงที่)</button>
-        
         <hr style="margin: 16px 0;">
-
         <label style="font-weight: 600; margin-top: 8px;">ดอกเบี้ยปีถัดไป (หลังหมดช่วงคงที่)</label>
         <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 10px; align-items: center;">
           <input id="mrrRateInput" type="number" step="0.01" placeholder="เช่น 5.31">
           <input id="mrrDescInput" type="text" value="MRR - X.XX%" placeholder="คำอธิบาย เช่น MRR - 5.31%">
         </div>
       </div>
+
       <div class="input-group"><label>เงื่อนไข</label><input id="conditionsInput" placeholder="เช่น สำหรับผู้มีรายได้ประจำ"/></div>
+      
+      <div class="input-group">
+        <label>อายุผู้กู้สูงสุดที่ผ่อนหมด (ปี)</label>
+        <input id="maxLoanAgeInput" type="number" placeholder="เช่น 65 หรือ 70 (ถ้าไม่ระบุ จะใช้ 65)">
+      </div>
       <div class="input-group"><label>สีไฮไลต์ (Hex)</label><input id="colorInput" value="#667eea"/></div>
       <input type="hidden" id="promoIdInput"/>
       <div class="export-section">
@@ -603,6 +605,7 @@ const maxYears = Math.max(1, MAX_LOAN_AGE - age);
       document.getElementById('bankNameInput').value = '';
       document.getElementById('promoNameInput').value = '';
       document.getElementById('conditionsInput').value = '';
+	  document.getElementById('maxLoanAgeInput').value = '';
       document.getElementById('colorInput').value = '#667eea';
       // New part to clear the dynamic form
       populateFormWithRates([]);
@@ -634,29 +637,44 @@ function getCurrentLoanAmount() {
       toast(msg, isErr?'error':'success');
     }
 
-    async function savePromotion(){ 
-	if(!isAdmin){ 
-	alert('ต้องเป็นผู้ดูแลระบบ (Admin) เท่านั้น'); 
-	return; } const id=(document.getElementById('promoIdInput').value||'').trim(); 
-	const bank=(document.getElementById('bankNameInput').value||'').trim(); const name=(document.getElementById('promoNameInput').value||'').trim(); 
-	const rates = parseRatesFromForm();
-	const conditions=(document.getElementById('conditionsInput').value||'').trim(); 
-	const color=(document.getElementById('colorInput').value||'#667eea').trim(); 
-	if(!bank||!name||rates.length===0){ 
-	alert('กรอกชื่อธนาคาร/ชื่อโปร + อัตราดอกเบี้ยอย่างน้อย 1 บรรทัด'); 
-	return; } 
-	try{ if(id){ const { error } = await supabaseClient.from('bank_promotions').update({ bank_name:bank,name,rates,conditions,color }).eq('id',id); 
-	if(error) throw error; 
-	showStatus('อัปเดตโปรเรียบร้อย'); 
-	} 
-	else { const { error } = await supabaseClient.from('bank_promotions').insert([{ bank_name:bank,name,rates,conditions,color,is_public:true }]); 
-	if(error) throw error; showStatus('เพิ่มโปรเรียบร้อย'); 
-	} 
-	clearPromoForm(); 
-	await fetchPromotions(); 
-	}catch(e){ alert('เกิดข้อผิดพลาด: '+e.message); 
-	} 
-	}
+async function savePromotion() {
+      if (!isAdmin) {
+        alert('ต้องเป็นผู้ดูแลระบบ (Admin) เท่านั้น');
+        return;
+      }
+      const id = (document.getElementById('promoIdInput').value || '').trim();
+      const bank = (document.getElementById('bankNameInput').value || '').trim();
+      const name = (document.getElementById('promoNameInput').value || '').trim();
+      const rates = parseRatesFromForm();
+      const conditions = (document.getElementById('conditionsInput').value || '').trim();
+      const color = (document.getElementById('colorInput').value || '#667eea').trim();
+      // อ่านค่าอายุสูงสุดจากฟอร์ม (ถ้าไม่กรอก ให้ใช้ค่า 65)
+      const max_loan_age = parseInt(document.getElementById('maxLoanAgeInput').value, 10) || 65;
+
+      if (!bank || !name || rates.length === 0) {
+        alert('กรอกชื่อธนาคาร/ชื่อโปร + อัตราดอกเบี้ยอย่างน้อย 1 บรรทัด');
+        return;
+      }
+      
+      // สร้าง object ที่จะส่งไปบันทึก
+      const promoData = { bank_name: bank, name, rates, conditions, color, max_loan_age };
+
+      try {
+        if (id) {
+          const { error } = await supabaseClient.from('bank_promotions').update(promoData).eq('id', id);
+          if (error) throw error;
+          showStatus('อัปเดตโปรเรียบร้อย');
+        } else {
+          const { error } = await supabaseClient.from('bank_promotions').insert([{ ...promoData, is_public: true }]);
+          if (error) throw error;
+          showStatus('เพิ่มโปรเรียบร้อย');
+        }
+        clearPromoForm();
+        await fetchPromotions();
+      } catch (e) {
+        alert('เกิดข้อผิดพลาด: ' + e.message);
+      }
+    }
  
     function renderPromoList(){ 
 	const h=document.getElementById('myPromoList'); 
@@ -668,15 +686,17 @@ function getCurrentLoanAmount() {
 	h.innerHTML=flat.map(p=>`<div style="padding:10px;border:1px solid #e9ecef;border-radius:10px;margin:6px 0;"><div style="display:flex;justify-content:space-between;align-items:center"><div><strong>${p.bank}</strong> — ${p.name}</div>${isAdmin?`<div style="display:flex;gap:6px"><button class="btn-secondary" style="padding:6px 10px;font-size:12px" onclick='editPromotion(${JSON.stringify(p)})'>แก้ไข</button><button class="btn-danger" style="padding:6px 10px;font-size:12px" onclick="deletePromotion('${p.id}')">ลบ</button></div>`:''}</div><div style="font-size:12px;color:#555;margin-top:4px">${p.conditions||''}</div><div style="font-size:12px;margin-top:6px">${(p.rates||[]).map(r=>`ปีที่ ${r.year}: ${r.rate}% <span style=\"color:#6c757d\">${r.description||''}</span>`).join('<br>')}</div></div>`).join(''); 
 	document.getElementById('promoAdmin').style.display=isAdmin?'block':'none'; }
 
-    function editPromotion(p){ 
+    function editPromotion(p) {
 	if(!isAdmin) return; 
-	document.getElementById('promoIdInput').value=p.id||''; 
-	document.getElementById('bankNameInput').value=p.bank||''; 
+      document.getElementById('promoIdInput').value = p.id || '';
+      document.getElementById('bankNameInput').value = p.bank || '';
 	document.getElementById('promoNameInput').value=p.name||''; 
 	
-populateFormWithRates(p.rates || []);
+      populateFormWithRates(p.rates || []);
 
-	document.getElementById('conditionsInput').value=p.conditions||''; 
+      document.getElementById('conditionsInput').value = p.conditions || '';
+		document.getElementById('maxLoanAgeInput').value = p.max_loan_age || '';
+
 	document.getElementById('colorInput').value=p.color||'#667eea'; 
 	window.scrollTo({top:document.getElementById('promoAdmin').offsetTop-10,behavior:'smooth'}); 
 	}
