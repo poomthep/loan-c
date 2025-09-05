@@ -49,14 +49,14 @@
     <div class="card blur" style="margin-bottom:14px">
       <div id="loginArea">
         <form id="loginForm" class="login-grid" onsubmit="event.preventDefault(); login();">
-          <div class="input-group" style="margin:0">
-            <label style="color:#fff">อีเมล</label>
-            <input id="email" type="email" placeholder="admin@yourbank.com" required />
-          </div>
-          <div class="input-group" style="margin:0">
-            <label style="color:#fff">รหัสผ่าน</label>
-            <input id="password" type="password" placeholder="••••••••" required />
-          </div>
+<div class="input-group" style="margin:0">
+  <label style="color:#fff">อีเมล</label>
+  <input id="email" type="email" placeholder="admin@yourbank.com" required autocomplete="email" />
+</div>
+<div class="input-group" style="margin:0">
+  <label style="color:#fff">รหัสผ่าน</label>
+  <input id="password" type="password" placeholder="••••••••" required autocomplete="current-password" />
+</div>
           <button class="btn" type="submit">เข้าสู่ระบบ</button>
         </form>
         <div id="loginError" style="display:none;margin-top:8px;background:#ff6b6b99;padding:8px 10px;border-radius:8px">เกิดข้อผิดพลาดในการเข้าสู่ระบบ</div>
