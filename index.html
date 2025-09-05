@@ -153,7 +153,6 @@
       <div class="card">
         <h2>📊 ข้อมูลสินเชื่อ</h2>
         <div class="input-group"><label>ราคาบ้าน (บาท)</label><input id="housePrice" type="number" value="5000000"></div>
-        <div class="input-group"><label>ระยะเวลากู้ (ปี)</label> <select id="loanTerm"> <option value="10">10 ปี</option> <option value="15">15 ปี</option> <option value="20">20 ปี</option> <option value="25">25 ปี</option> <option value="30" selected>30 ปี</option> <option value="35">35 ปี</option> </select> </div>
 		<button class="btn block" onclick="calculateLoan()">🔍 วิเคราะห์สินเชื่อ</button>
         <div class="export-section"> <button class="btn-secondary" onclick="saveLoanLocal()">💾 บันทึกข้อมูล (เครื่องนี้)</button> <button class="btn-secondary" onclick="exportToPDF()">📄 Export PDF</button> <button class="btn-secondary" onclick="refreshPromos()">🔄 รีเฟรชโปรจากฐาน</button> </div>
         <div id="debtNotice" class="notice" style="display:none"></div>
@@ -418,11 +417,16 @@
 
     function calcTiered(principal, tiers, years){ const n=years*12; let bal=principal; let totI=0; const avg=tiers.reduce((a,t)=>a+t.rate,0)/Math.max(1,tiers.length); const pay=calcMonthly(principal, avg||0, years); for(let m=1;m<=n;m++){ const yr=Math.ceil(m/12); let ra=tiers.length?tiers[tiers.length-1].rate:0; for(const t of tiers){ if(yr<=t.year){ ra=t.rate; break; } } const mr=ra/100/12; const i=bal*mr; totI+=i; const p=pay-i; bal-=p; if(bal<=0) break; } return { monthly: pay, interest: totI }; }
 
-function calculateLoan() {
+ function calculateLoan() {
       // --- Get Base Data ---
       const housePrice = +document.getElementById('housePrice').value || 0;
-      const years = +document.getElementById('loanTerm').value || 30;
+      const age = +document.getElementById('borrowerAge').value || 0;
       
+      // --- Calculate Max Possible Loan Term ---
+      const MAX_LOAN_AGE = 65; // กำหนดอายุสูงสุดที่ผ่อนหมดที่ 65 ปี
+      const MAX_LOAN_YEARS = 35; // กำหนดระยะผ่อนสูงสุดที่ 35 ปี
+      const maxYears = Math.max(1, Math.min(MAX_LOAN_YEARS, MAX_LOAN_AGE - age));
+
       const salary = +document.getElementById('borrowerSalary').value || 0;
       const bonus = +document.getElementById('borrowerBonus').value || 0;
       const otherIncome = +document.getElementById('borrowerOtherIncome').value || 0;
@@ -430,24 +434,21 @@ function calculateLoan() {
       const totalMonthlyIncome = salary + (bonus / 12) + otherIncome;
 
       // --- Smart Calculation Logic ---
-      const bestRate = getBestPromoRate(); // Get best 3-year avg rate
-      let loanAmount = housePrice; // Assume 0% down first
-      let monthlyPayment = calcMonthly(loanAmount, bestRate, years);
+      const bestRate = getBestPromoRate();
+      let loanAmount = housePrice;
+      let monthlyPayment = calcMonthly(loanAmount, bestRate, maxYears);
       let totalMonthlyDebt = monthlyPayment + existingDebt;
       let dsr = totalMonthlyIncome > 0 ? (totalMonthlyDebt / totalMonthlyIncome) * 100 : 101;
       
       let requiredDownPayment = 0;
-      const DSR_CEILING = 55; // กำหนดเพดานหนี้ที่ 55%
+      const DSR_CEILING = 55;
 
-      // If DSR is too high, calculate required down payment
       if (dsr > DSR_CEILING) {
         const maxAffordablePayment = (totalMonthlyIncome * (DSR_CEILING / 100)) - existingDebt;
-        
         if (maxAffordablePayment > 0) {
-          loanAmount = calculateMaxLoan(maxAffordablePayment, bestRate, years);
+          loanAmount = calculateMaxLoan(maxAffordablePayment, bestRate, maxYears);
           monthlyPayment = maxAffordablePayment;
         } else {
-          // Cannot afford any loan
           loanAmount = 0;
           monthlyPayment = 0;
         }
@@ -462,18 +463,96 @@ function calculateLoan() {
       note.style.display = 'block';
 
       if (requiredDownPayment > 0) {
-        const downPercent = (requiredDownPayment / housePrice) * 100;
-        note.innerHTML = `🚨 ความสามารถในการกู้ไม่พอ<br>
+        const downPercent = housePrice > 0 ? (requiredDownPayment / housePrice) * 100 : 0;
+        note.innerHTML = `🚨 ความสามารถในการกู้ไม่พอ (สำหรับระยะเวลา ${maxYears} ปี)<br>
                           <strong>ต้องดาวน์อย่างน้อย: ${fmt(requiredDownPayment)} บาท (${downPercent.toFixed(1)}%)</strong>`;
       } else {
         dsr = totalMonthlyIncome > 0 ? ((monthlyPayment + existingDebt) / totalMonthlyIncome) * 100 : 0;
-        note.textContent = `✅ DSR ~ ${dsr.toFixed(1)}% (สามารถกู้ได้เต็มจำนวน)`;
+        note.textContent = `✅ DSR ~ ${dsr.toFixed(1)}% (สามารถกู้ได้เต็มจำนวนสำหรับระยะเวลา ${maxYears} ปี)`;
       }
 
-      // Re-render other components
-      buildChart(loanAmount, (monthlyPayment * years * 12) - loanAmount);
-      buildAmort(loanAmount, bestRate, years, monthlyPayment);
-      compareBanks(loanAmount, years);
+      // Re-render other components, passing age instead of years
+      buildChart(loanAmount, (monthlyPayment * maxYears * 12) - loanAmount);
+      buildAmort(loanAmount, bestRate, maxYears, monthlyPayment);
+      compareBanks(loanAmount, age); // **ส่ง "อายุ" ไปแทน "ปี"**
+    }
+2.3 แทนที่ฟังก์ชัน compareBanks()
+
+ฟังก์ชันนี้จะรับ "อายุ" ของผู้กู้มา แล้วคำนวณ "ระยะเวลากู้" ของแต่ละโปรโมชันแยกกัน
+
+นำโค้ดนี้ไป "แทนที่" ฟังก์ชัน compareBanks ของเดิมทั้งหมด:
+
+JavaScript
+
+    function compareBanks(loanAmount, borrowerAge) {
+      const box = document.getElementById('bankComparison');
+      if (!box) return;
+      box.innerHTML = '';
+
+      const salary = +document.getElementById('borrowerSalary').value || 0;
+      const bonus = +document.getElementById('borrowerBonus').value || 0;
+      const otherIncome = +document.getElementById('borrowerOtherIncome').value || 0;
+      const existingDebt = +document.getElementById('borrowerDebt').value || 0;
+      const totalMonthlyIncome = salary + (bonus / 12) + otherIncome;
+
+      const data = promoByBank || {};
+      if (Object.keys(data).length === 0) {
+        box.innerHTML = '<p style="text-align:center; color:#666; grid-column: 1 / -1;">ไม่มีข้อมูลโปรโมชัน</p>';
+        return;
+      }
+
+      Object.keys(data).forEach(bank => {
+        const promos = data[bank];
+        (promos || []).forEach(promo => {
+          
+          // --- NEW: DYNAMIC LOAN TERM CALCULATION PER PROMO ---
+          const MAX_LOAN_AGE = 65;
+          const MAX_LOAN_YEARS = 35;
+          const years = Math.max(1, Math.min(MAX_LOAN_YEARS, MAX_LOAN_AGE - borrowerAge));
+          // --- END DYNAMIC CALCULATION ---
+
+          const c = calcTiered(loanAmount, promo.rates || [], years);
+          const card = document.createElement('div');
+          card.className = 'bank-card';
+          card.style.borderLeftColor = promo.color || '#667eea';
+
+          let analysisHtml = '';
+          if (totalMonthlyIncome > 0) {
+            const totalMonthlyDebtWithThisPromo = c.monthly + existingDebt;
+            const dsr = (totalMonthlyDebtWithThisPromo / totalMonthlyIncome) * 100;
+            
+            const maxAffordablePayment = (totalMonthlyIncome * 0.50) - existingDebt;
+            const estimatedMaxLoan = maxAffordablePayment > 0 ? calculateMaxLoan(maxAffordablePayment, (promo.rates[0]?.rate || 3), years) : 0;
+
+            let verdict = '';
+            let verdictClass = '';
+            if (dsr <= 40) { verdict = 'แนะนำ'; verdictClass = 'verdict-good'; } 
+            else if (dsr <= 55) { verdict = 'เป็นไปได้'; verdictClass = 'verdict-ok'; } 
+            else { verdict = 'เสี่ยงสูง'; verdictClass = 'verdict-bad'; }
+
+            analysisHtml = `
+              <hr style="margin: 10px 0;">
+              <div class="analysis-grid">
+                  <div><strong>DSR กับโปรนี้:</strong><br><span class="analysis-value">${dsr.toFixed(1)}%</span></div>
+                  <div><strong>วงเงินกู้สูงสุด (ประมาณ):</strong><br><span class="analysis-value">${fmt(estimatedMaxLoan)}</span></div>
+              </div>
+              <div class="verdict ${verdictClass}">${verdict}</div>
+            `;
+          }
+
+          card.innerHTML = `
+            <div class="bank-name">${bank}</div>
+            <div class="selected-promotion">${promo.name}</div>
+            <div style="margin-top:8px; font-weight: bold; color: #333;">ระยะเวลากู้: ${years} ปี</div>
+            <div style="margin-top:8px">${(promo.rates||[]).map(r=>`<div class='rate-year'><span>ปีที่ ${r.year === 99 ? 'ถัดไป' : r.year}</span><span>${r.rate.toFixed(2)}%</span></div><div style='text-align:right;color:#6c757d;font-size:11px'>${r.description||''}</div>`).join('')}</div>
+            <div style="display:grid;grid-template-columns:1fr;gap:8px;margin-top:8px">
+              <div><strong>ผ่อน/เดือน</strong><br>${fmt(c.monthly)} บาท</div>
+            </div>
+            ${analysisHtml} 
+          `;
+          box.appendChild(card);
+        });
+      });
     }
 
     function buildChart(p,i){ const ctx=document.getElementById('paymentChart'); if(!ctx) return; if(doughnut) doughnut.destroy(); doughnut=new Chart(ctx,{type:'doughnut',data:{labels:['เงินต้น','ดอกเบี้ย'],datasets:[{data:[p,i],backgroundColor:['#667eea','#f093fb'],borderWidth:3,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}}}}); }
@@ -682,7 +761,11 @@ function compareBanks(loanAmount, years) {
       });
     }
 	
-    function saveLoanLocal(){ const item={ ts:Date.now(), house:+housePrice.value||0, down:+downPayment.value||0, rate:+interestRate.value||0, term:+loanTerm.value||30, income:+monthlyIncome.value||0, results:{ loan:loanAmount.textContent, pay:monthlyPayment.textContent, interest:totalInterest.textContent, total:totalCost.textContent } }; const arr=JSON.parse(localStorage.getItem('loan_saves')||'[]'); arr.unshift(item); localStorage.setItem('loan_saves', JSON.stringify(arr)); showStatus('บันทึกข้อมูลในเครื่องแล้ว'); }
+    function saveLoanLocal(){ 
+const item={ ts:Date.now(), house:+document.getElementById('housePrice').value||0, borrower:{ age:+document.getElementById('borrowerAge').value||0, salary:+document.getElementById('borrowerSalary').value||0 }, results:{ loan:loanAmount.textContent, pay:monthlyPayment.textContent } };
+	const arr=JSON.parse(localStorage.getItem('loan_saves')||'[]'); arr.unshift(item); localStorage.setItem('loan_saves', JSON.stringify(arr)); 
+	showStatus('บันทึกข้อมูลในเครื่องแล้ว'); 
+	}
 
     async function refreshPromos(){ showSpinner('กำลังรีเฟรชโปร...'); await fetchPromotions(); hideSpinner(); }
 
@@ -699,12 +782,14 @@ function compareBanks(loanAmount, years) {
       calculateLoan();
       fetchPromotions();
       document.getElementById('rateUpdateTime').textContent=`อัพเดทล่าสุด: ${new Date().toLocaleString('th-TH')}`;
-		['housePrice', 'loanTerm', 'borrowerAge', 'borrowerSalary', 'borrowerBonus', 'borrowerOtherIncome', 'borrowerDebt'].forEach(id => {
-			const element = document.getElementById(id);
-			if (element) { // เพิ่มการตรวจสอบเผื่อไว้
-				element.addEventListener('input', calculateLoan);
-			}
-		});
+
+    ['housePrice', 'borrowerAge', 'borrowerSalary', 'borrowerBonus', 'borrowerOtherIncome', 'borrowerDebt'].forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.addEventListener('input', calculateLoan);
+        }
+    });
+
     }
     document.addEventListener('DOMContentLoaded', start);
   </script>
