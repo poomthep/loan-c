@@ -254,12 +254,8 @@
     function buildAmort(loan, rate, years, pay){ const tb=document.getElementById('amortizationTable'); tb.innerHTML=''; const mr=rate/100/12; let bal=loan; for(let m=1;m<=12;m++){ const i=bal*mr; const pr=pay-i; bal-=pr; const tr=document.createElement('tr'); tr.innerHTML=`<td style="text-align:center">${m}</td><td>${fmt(pay)}</td><td>${fmt(pr)}</td><td>${fmt(i)}</td><td>${fmt(Math.max(0,bal))}</td>`; tb.appendChild(tr);} }
 
     // ===== Promotions (Supabase) =====
-    let promoByBank = {}; // { bank: [ {id,name,rates[],conditions,color} ] }
-
-    const parseRates = txt => (txt||'').split('
-').map(l=>{const[a,b,c]=l.split(',');const y=parseInt((a||'').trim(),10);const r=parseFloat((b||'').trim());const d=(c||'').trim();return (!isNaN(y)&&!isNaN(r))?{year:y,rate:r,description:d}:null}).filter(Boolean).sort((x,y)=>x.year-y.year);
-    const ratesToText = rs => (rs||[]).map(r=>`${r.year},${r.rate}${r.description?','+r.description:''}`).join('
-');
+const parseRates = txt => (txt||'').split('\n').map(l=>{const[a,b,c]=l.split(',');const y=parseInt((a||'').trim(),10);const r=parseFloat((b||'').trim());const d=(c||'').trim();return (!isNaN(y)&&!isNaN(r))?{year:y,rate:r,description:d}:null}).filter(Boolean).sort((x,y)=>x.year-y.year);
+const ratesToText = rs => (rs||[]).map(r=>`${r.year},${r.rate}${r.description?','+r.description:''}`).join('\n');
 
     async function fetchPromotions(){
       if(!supabaseClient) return;
