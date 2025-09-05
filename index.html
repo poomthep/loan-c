@@ -153,8 +153,6 @@
       <div class="card">
         <h2>📊 ข้อมูลสินเชื่อ</h2>
         <div class="input-group"><label>ราคาบ้าน (บาท)</label><input id="housePrice" type="number" value="5000000"></div>
-        <div class="input-group"><label>เงินดาวน์ (%)</label><input id="downPayment" type="number" value="20" min="0" max="100"></div>
-        <div class="input-group"><label>อัตราดอกเบี้ยเฉลี่ย (% ต่อปี)</label><input id="interestRate" type="number" value="3.5" step="0.05"></div>
         <div class="input-group"><label>ระยะเวลากู้ (ปี)</label> <select id="loanTerm"> <option value="10">10 ปี</option> <option value="15">15 ปี</option> <option value="20">20 ปี</option> <option value="25">25 ปี</option> <option value="30" selected>30 ปี</option> <option value="35">35 ปี</option> </select> </div>
 		<button class="btn block" onclick="calculateLoan()">🔍 วิเคราะห์สินเชื่อ</button>
         <div class="export-section"> <button class="btn-secondary" onclick="saveLoanLocal()">💾 บันทึกข้อมูล (เครื่องนี้)</button> <button class="btn-secondary" onclick="exportToPDF()">📄 Export PDF</button> <button class="btn-secondary" onclick="refreshPromos()">🔄 รีเฟรชโปรจากฐาน</button> </div>
@@ -165,8 +163,6 @@
         <div class="results-grid">
           <div class="result-item"><div>ยอดกู้ยืม</div><div id="loanAmount" class="value">-</div></div>
           <div class="result-item"><div>ผ่อนต่อเดือน</div><div id="monthlyPayment" class="value">-</div></div>
-          <div class="result-item"><div>ดอกเบี้ยรวม</div><div id="totalInterest" class="value">-</div></div>
-          <div class="result-item"><div>ต้นทุนรวม</div><div id="totalCost" class="value">-</div></div>
         </div>
         <div class="chart-container"><canvas id="paymentChart"></canvas></div>
       </div>
@@ -382,63 +378,104 @@
 
     // ===== Calculations =====
     function calcMonthly(principal, annual, years){ const r=(annual/100)/12; const n=years*12; if(r===0) return principal/n; return principal*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1); }
+
+// ===== NEW: Helper function to get best 3-year average rate from all promos =====
+    function getBestPromoRate() {
+      let bestRate = 100; // Start with a high number
+      if (!promoByBank || Object.keys(promoByBank).length === 0) return 3.5; // Default rate if no promos
+
+      Object.values(promoByBank).flat().forEach(promo => {
+        const rates = promo.rates || [];
+        if (rates.length > 0) {
+          let totalRate = 0;
+          for (let year = 1; year <= 3; year++) {
+            let yearRate = rates[rates.length - 1].rate; // Default to last known rate
+            for (const r of rates) {
+              if (year <= r.year) {
+                yearRate = r.rate;
+                break;
+              }
+            }
+            totalRate += yearRate;
+          }
+          const avgRate = totalRate / 3;
+          if (avgRate < bestRate) {
+            bestRate = avgRate;
+          }
+        }
+      });
+      return bestRate === 100 ? 3.5 : bestRate;
+    }
+
+    // ===== NEW: Helper function to calculate max loan from a monthly payment =====
+    function calculateMaxLoan(monthlyPayment, annualRate, years) {
+      const r = (annualRate / 100) / 12;
+      const n = years * 12;
+      if (r === 0) return monthlyPayment * n;
+      return monthlyPayment * (Math.pow(1 + r, n) - 1) / (r * Math.pow(1 + r, n));
+    }
+
+
     function calcTiered(principal, tiers, years){ const n=years*12; let bal=principal; let totI=0; const avg=tiers.reduce((a,t)=>a+t.rate,0)/Math.max(1,tiers.length); const pay=calcMonthly(principal, avg||0, years); for(let m=1;m<=n;m++){ const yr=Math.ceil(m/12); let ra=tiers.length?tiers[tiers.length-1].rate:0; for(const t of tiers){ if(yr<=t.year){ ra=t.rate; break; } } const mr=ra/100/12; const i=bal*mr; totI+=i; const p=pay-i; bal-=p; if(bal<=0) break; } return { monthly: pay, interest: totI }; }
 
 function calculateLoan() {
-      // Loan Data
-      const house = +document.getElementById('housePrice').value || 0;
-      const dp = +document.getElementById('downPayment').value || 0;
-      const rate = +document.getElementById('interestRate').value || 0;
+      // --- Get Base Data ---
+      const housePrice = +document.getElementById('housePrice').value || 0;
       const years = +document.getElementById('loanTerm').value || 30;
       
-      // ========== NEW: Borrower Data ==========
-      const age = +document.getElementById('borrowerAge').value || 0;
       const salary = +document.getElementById('borrowerSalary').value || 0;
       const bonus = +document.getElementById('borrowerBonus').value || 0;
       const otherIncome = +document.getElementById('borrowerOtherIncome').value || 0;
       const existingDebt = +document.getElementById('borrowerDebt').value || 0;
-
-      // Calculate total monthly income
       const totalMonthlyIncome = salary + (bonus / 12) + otherIncome;
 
-      // Basic Loan Calculation
-      const loan = house - (house * dp / 100);
-      const pay = calcMonthly(loan, rate, years);
-      const tot = pay * years * 12;
-      const ti = tot - loan;
-
-      // Update UI
-      document.getElementById('loanAmount').textContent = fmt(loan) + ' บาท';
-      document.getElementById('monthlyPayment').textContent = fmt(pay) + ' บาท';
-      document.getElementById('totalInterest').textContent = fmt(ti) + ' บาท';
-      document.getElementById('totalCost').textContent = fmt(house + ti) + ' บาท';
+      // --- Smart Calculation Logic ---
+      const bestRate = getBestPromoRate(); // Get best 3-year avg rate
+      let loanAmount = housePrice; // Assume 0% down first
+      let monthlyPayment = calcMonthly(loanAmount, bestRate, years);
+      let totalMonthlyDebt = monthlyPayment + existingDebt;
+      let dsr = totalMonthlyIncome > 0 ? (totalMonthlyDebt / totalMonthlyIncome) * 100 : 101;
       
-      // Update DSR Calculation
-      const note = document.getElementById('debtNotice');
-      if (totalMonthlyIncome > 0) {
-        const totalMonthlyDebt = pay + existingDebt;
-        const dsr = (totalMonthlyDebt / totalMonthlyIncome) * 100;
-        note.style.display = 'block';
-        
-        let dsrMessage = `DSR ~ ${dsr.toFixed(1)}%`;
-        if (dsr <= 40) {
-            dsrMessage = `✅ ${dsrMessage} (ความสามารถในการผ่อนสูง)`;
-        } else if (dsr <= 55) {
-            dsrMessage = `⚠️ ${dsrMessage} (ความสามารถในการผ่อนปานกลาง)`;
-        } else {
-            dsrMessage = `🚨 ${dsrMessage} (ความสามารถในการผ่อนต่ำ, เสี่ยงสูง)`;
-        }
-        note.textContent = dsrMessage;
+      let requiredDownPayment = 0;
+      const DSR_CEILING = 55; // กำหนดเพดานหนี้ที่ 55%
 
+      // If DSR is too high, calculate required down payment
+      if (dsr > DSR_CEILING) {
+        const maxAffordablePayment = (totalMonthlyIncome * (DSR_CEILING / 100)) - existingDebt;
+        
+        if (maxAffordablePayment > 0) {
+          loanAmount = calculateMaxLoan(maxAffordablePayment, bestRate, years);
+          monthlyPayment = maxAffordablePayment;
+        } else {
+          // Cannot afford any loan
+          loanAmount = 0;
+          monthlyPayment = 0;
+        }
+        requiredDownPayment = housePrice - loanAmount;
+      }
+      
+      // --- Update UI ---
+      document.getElementById('loanAmount').textContent = fmt(loanAmount) + ' บาท';
+      document.getElementById('monthlyPayment').textContent = fmt(monthlyPayment) + ' บาท';
+
+      const note = document.getElementById('debtNotice');
+      note.style.display = 'block';
+
+      if (requiredDownPayment > 0) {
+        const downPercent = (requiredDownPayment / housePrice) * 100;
+        note.innerHTML = `🚨 ความสามารถในการกู้ไม่พอ<br>
+                          <strong>ต้องดาวน์อย่างน้อย: ${fmt(requiredDownPayment)} บาท (${downPercent.toFixed(1)}%)</strong>`;
       } else {
-        note.style.display = 'none';
+        dsr = totalMonthlyIncome > 0 ? ((monthlyPayment + existingDebt) / totalMonthlyIncome) * 100 : 0;
+        note.textContent = `✅ DSR ~ ${dsr.toFixed(1)}% (สามารถกู้ได้เต็มจำนวน)`;
       }
 
-      // Re-render charts and comparisons
-      buildChart(loan, ti);
-      buildAmort(loan, rate, years, pay);
-      compareBanks(loan, years);
+      // Re-render other components
+      buildChart(loanAmount, (monthlyPayment * years * 12) - loanAmount);
+      buildAmort(loanAmount, bestRate, years, monthlyPayment);
+      compareBanks(loanAmount, years);
     }
+
     function buildChart(p,i){ const ctx=document.getElementById('paymentChart'); if(!ctx) return; if(doughnut) doughnut.destroy(); doughnut=new Chart(ctx,{type:'doughnut',data:{labels:['เงินต้น','ดอกเบี้ย'],datasets:[{data:[p,i],backgroundColor:['#667eea','#f093fb'],borderWidth:3,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}}}}); }
     function buildAmort(loan, rate, years, pay){ const tb=document.getElementById('amortizationTable'); tb.innerHTML=''; const mr=rate/100/12; let bal=loan; for(let m=1;m<=12;m++){ const i=bal*mr; const pr=pay-i; bal-=pr; const tr=document.createElement('tr'); tr.innerHTML=`<td style="text-align:center">${m}</td><td>${fmt(pay)}</td><td>${fmt(pr)}</td><td>${fmt(i)}</td><td>${fmt(Math.max(0,bal))}</td>`; tb.appendChild(tr);} }
 
