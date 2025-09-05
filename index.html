@@ -156,20 +156,40 @@
       <div id="bankComparison" class="bank-comparison"></div>
       <div id="rateUpdateTime" style="text-align:center;color:#666;margin-top:6px"></div>
     </div>
-    <div class="card full" id="promoAdmin" style="display:none">
+
+<div class="card full" id="promoAdmin" style="display:none">
       <h2>🛠️ เพิ่ม/แก้ไข โปรธนาคาร (Admin เท่านั้น)</h2>
       <div class="input-group"><label>ชื่อธนาคาร</label><input id="bankNameInput" placeholder="เช่น กสิกรไทย"/></div>
       <div class="input-group"><label>ชื่อโปรโมชัน</label><input id="promoNameInput" placeholder="เช่น บ้านใหม่ ดอกเบี้ยพิเศษ"/></div>
-      <div class="input-group"><label>โครงสร้างดอกเบี้ย (บรรทัดละช่วง: ปี,อัตรา%,คำอธิบาย)</label> <textarea id="ratesInput" rows="4" style="width:100%;padding:12px;border:2px solid #e1e5e9;border-radius:10px" placeholder="1,1.99,MRR-5.31%&#10;2,2.99,MRR-4.31%&#10;3,3.99,MRR-3.31%"></textarea> </div>
+      
+      <div class="input-group">
+        <label>โครงสร้างดอกเบี้ย</label>
+        
+        <div id="fixedRatesContainer">
+          </div>
+        <button type="button" class="btn-secondary" onclick="addFixedRateYear()" style="margin-top: 6px; padding: 6px 10px; font-size: 12px;">+ เพิ่มดอกเบี้ยรายปี (คงที่)</button>
+        
+        <hr style="margin: 16px 0;">
+
+        <label style="font-weight: 600; margin-top: 8px;">ดอกเบี้ยปีถัดไป (หลังหมดช่วงคงที่)</label>
+        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 10px; align-items: center;">
+          <input id="mrrRateInput" type="number" step="0.01" placeholder="เช่น 5.31">
+          <input id="mrrDescInput" type="text" value="MRR - X.XX%" placeholder="คำอธิบาย เช่น MRR - 5.31%">
+        </div>
+      </div>
       <div class="input-group"><label>เงื่อนไข</label><input id="conditionsInput" placeholder="เช่น สำหรับผู้มีรายได้ประจำ"/></div>
       <div class="input-group"><label>สีไฮไลต์ (Hex)</label><input id="colorInput" value="#667eea"/></div>
       <input type="hidden" id="promoIdInput"/>
-      <div class="export-section"> <button class="btn-secondary" onclick="savePromotion()">💾 บันทึก/เพิ่มโปร</button> <button class="btn-secondary btn-danger" onclick="clearPromoForm()">🧹 ล้างฟอร์ม</button> </div>
+      <div class="export-section">
+        <button class="btn-secondary" onclick="savePromotion()">💾 บันทึก/เพิ่มโปร</button>
+        <button class="btn-secondary btn-danger" onclick="clearPromoForm()">🧹 ล้างฟอร์ม</button>
+      </div>
       <div style="margin-top:14px">
         <h3 style="text-align:center;margin-bottom:8px">โปรทั้งหมด (แก้ไข/ลบ ได้เฉพาะ Admin)</h3>
         <div id="myPromoList"></div>
       </div>
     </div>
+
     <div class="card full">
       <h2>📋 ตารางการชำระหนี้ (12 เดือนแรก)</h2>
       <table class="amortization">
@@ -199,6 +219,25 @@
     // ===== Utils =====
     const fmt = n => new Intl.NumberFormat('th-TH').format(Math.round(n||0));
     let doughnut = null;
+	
+	// ===== NEW: Functions for dynamic form =====
+    function addFixedRateYear(year = '', rate = '') {
+      const container = document.getElementById('fixedRatesContainer');
+      const rateDiv = document.createElement('div');
+      rateDiv.className = 'fixed-rate-row';
+      rateDiv.style.display = 'grid';
+      rateDiv.style.gridTemplateColumns = '1fr 1fr auto';
+      rateDiv.style.gap = '10px';
+      rateDiv.style.marginBottom = '8px';
+      
+      rateDiv.innerHTML = `
+        <input type="number" class="fixed-rate-year-input" placeholder="ปีที่" value="${year}">
+        <input type="number" step="0.01" class="fixed-rate-rate-input" placeholder="อัตราดอกเบี้ย %" value="${rate}">
+        <button type="button" class="btn-danger" onclick="this.parentElement.remove()" style="padding: 6px 10px;">ลบ</button>
+      `;
+      container.appendChild(rateDiv);
+    }
+
 
     function setLibUIReady(ready){
       const btn=document.getElementById('loginBtn');
@@ -307,8 +346,65 @@
 
     // ===== Promotions (Supabase) =====
     // ##### แก้ไข SyntaxError โดยใช้ '\n' แทนการขึ้นบรรทัดใหม่ #####
-    const parseRates = txt => (txt||'').split('\n').map(l=>{const[a,b,c]=l.split(',');const y=parseInt((a||'').trim(),10);const r=parseFloat((b||'').trim());const d=(c||'').trim();return (!isNaN(y)&&!isNaN(r))?{year:y,rate:r,description:d}:null}).filter(Boolean).sort((x,y)=>x.year-y.year);
-    const ratesToText = rs => (rs||[]).map(r=>`${r.year},${r.rate}${r.description?','+r.description:''}`).join('\n');
+   
+	const y=parseInt((a||'').trim(),10);
+	const r=parseFloat((b||'').trim());const d=(c||'').trim();
+	return (!isNaN(y)&&!isNaN(r))?{year:y,rate:r,description:d}:null}).filter(Boolean).sort((x,y)=>x.year-y.year);
+    
+// ===== NEW: Replaces old parseRates and ratesToText functions =====
+    function parseRatesFromForm() {
+      const rates = [];
+      // Get fixed rates
+      document.querySelectorAll('.fixed-rate-row').forEach(row => {
+        const year = parseInt(row.querySelector('.fixed-rate-year-input').value, 10);
+        const rate = parseFloat(row.querySelector('.fixed-rate-rate-input').value);
+        if (!isNaN(year) && !isNaN(rate)) {
+          rates.push({ year, rate, description: 'ดอกเบี้ยคงที่' });
+        }
+      });
+
+      // Get MRR rate for subsequent years
+      const mrrRateValue = parseFloat(document.getElementById('mrrRateInput').value);
+      const mrrDesc = document.getElementById('mrrDescInput').value.trim();
+      if (!isNaN(mrrRateValue) && mrrDesc) {
+        // We use a conventional high number for year to represent "all subsequent years"
+        // Our calculation logic will correctly pick this up as the last tier.
+        const effectiveRate = 6.87 - mrrRateValue; // Assuming current MRR is 6.87, adjust if needed
+        rates.push({ year: 99, rate: effectiveRate, description: mrrDesc });
+      }
+
+      // Sort by year to ensure correct calculation order
+      return rates.sort((a, b) => a.year - b.year);
+    }
+
+    function populateFormWithRates(rates = []) {
+      // Clear existing fields first
+      document.getElementById('fixedRatesContainer').innerHTML = '';
+      document.getElementById('mrrRateInput').value = '';
+      document.getElementById('mrrDescInput').value = 'MRR - X.XX%';
+
+      rates.forEach(rate => {
+        if (rate.year === 99) { // This is our MRR rate convention
+           const mrrValueMatch = (rate.description || '').match(/MRR\s*-\s*([0-9.]+)/i);
+           const mrrValue = mrrValueMatch ? mrrValueMatch[1] : '';
+           document.getElementById('mrrRateInput').value = mrrValue;
+           document.getElementById('mrrDescInput').value = rate.description;
+        } else { // This is a fixed rate
+          addFixedRateYear(rate.year, rate.rate);
+        }
+      });
+    }
+    
+    // Override the old clearPromoForm
+    function clearPromoForm() {
+      document.getElementById('promoIdInput').value = '';
+      document.getElementById('bankNameInput').value = '';
+      document.getElementById('promoNameInput').value = '';
+      document.getElementById('conditionsInput').value = '';
+      document.getElementById('colorInput').value = '#667eea';
+      // New part to clear the dynamic form
+      populateFormWithRates([]);
+    }
 
     async function fetchPromotions(){
       if(!supabaseClient) return;
@@ -327,12 +423,54 @@
       toast(msg, isErr?'error':'success');
     }
 
-    async function savePromotion(){ if(!isAdmin){ alert('ต้องเป็นผู้ดูแลระบบ (Admin) เท่านั้น'); return; } const id=(document.getElementById('promoIdInput').value||'').trim(); const bank=(document.getElementById('bankNameInput').value||'').trim(); const name=(document.getElementById('promoNameInput').value||'').trim(); const rates=parseRates(document.getElementById('ratesInput').value); const conditions=(document.getElementById('conditionsInput').value||'').trim(); const color=(document.getElementById('colorInput').value||'#667eea').trim(); if(!bank||!name||rates.length===0){ alert('กรอกชื่อธนาคาร/ชื่อโปร + อัตราดอกเบี้ยอย่างน้อย 1 บรรทัด'); return; } try{ if(id){ const { error } = await supabaseClient.from('bank_promotions').update({ bank_name:bank,name,rates,conditions,color }).eq('id',id); if(error) throw error; showStatus('อัปเดตโปรเรียบร้อย'); } else { const { error } = await supabaseClient.from('bank_promotions').insert([{ bank_name:bank,name,rates,conditions,color,is_public:true }]); if(error) throw error; showStatus('เพิ่มโปรเรียบร้อย'); } clearPromoForm(); await fetchPromotions(); }catch(e){ alert('เกิดข้อผิดพลาด: '+e.message); } }
-    function clearPromoForm(){ document.getElementById('promoIdInput').value=''; document.getElementById('bankNameInput').value=''; document.getElementById('promoNameInput').value=''; document.getElementById('ratesInput').value=''; document.getElementById('conditionsInput').value=''; document.getElementById('colorInput').value='#667eea'; }
+    async function savePromotion(){ 
+	if(!isAdmin){ 
+	alert('ต้องเป็นผู้ดูแลระบบ (Admin) เท่านั้น'); 
+	return; } const id=(document.getElementById('promoIdInput').value||'').trim(); 
+	const bank=(document.getElementById('bankNameInput').value||'').trim(); const name=(document.getElementById('promoNameInput').value||'').trim(); 
+	const rates = parseRatesFromForm();
+	const conditions=(document.getElementById('conditionsInput').value||'').trim(); 
+	const color=(document.getElementById('colorInput').value||'#667eea').trim(); 
+	if(!bank||!name||rates.length===0){ 
+	alert('กรอกชื่อธนาคาร/ชื่อโปร + อัตราดอกเบี้ยอย่างน้อย 1 บรรทัด'); 
+	return; } 
+	try{ if(id){ const { error } = await supabaseClient.from('bank_promotions').update({ bank_name:bank,name,rates,conditions,color }).eq('id',id); 
+	if(error) throw error; 
+	showStatus('อัปเดตโปรเรียบร้อย'); 
+	} 
+	else { const { error } = await supabaseClient.from('bank_promotions').insert([{ bank_name:bank,name,rates,conditions,color,is_public:true }]); 
+	if(error) throw error; showStatus('เพิ่มโปรเรียบร้อย'); 
+	} 
+	clearPromoForm(); 
+	await fetchPromotions(); 
+	}catch(e){ alert('เกิดข้อผิดพลาด: '+e.message); 
+	} 
+	}
+ 
+    function renderPromoList(){ 
+	const h=document.getElementById('myPromoList'); 
+	if(!h) return; const flat=[]; 
+	Object.keys(promoByBank||{}).forEach(b=>{ (promoByBank[b]||[]).forEach(p=>flat.push({bank:b,...p})) }); 
+	if(flat.length===0){ h.innerHTML='<p style="text-align:center;color:#666">ยังไม่มีโปรในฐานข้อมูล</p>'; 
+	return; 
+	} 
+	h.innerHTML=flat.map(p=>`<div style="padding:10px;border:1px solid #e9ecef;border-radius:10px;margin:6px 0;"><div style="display:flex;justify-content:space-between;align-items:center"><div><strong>${p.bank}</strong> — ${p.name}</div>${isAdmin?`<div style="display:flex;gap:6px"><button class="btn-secondary" style="padding:6px 10px;font-size:12px" onclick='editPromotion(${JSON.stringify(p)})'>แก้ไข</button><button class="btn-danger" style="padding:6px 10px;font-size:12px" onclick="deletePromotion('${p.id}')">ลบ</button></div>`:''}</div><div style="font-size:12px;color:#555;margin-top:4px">${p.conditions||''}</div><div style="font-size:12px;margin-top:6px">${(p.rates||[]).map(r=>`ปีที่ ${r.year}: ${r.rate}% <span style=\"color:#6c757d\">${r.description||''}</span>`).join('<br>')}</div></div>`).join(''); 
+	document.getElementById('promoAdmin').style.display=isAdmin?'block':'none'; }
 
-    function renderPromoList(){ const h=document.getElementById('myPromoList'); if(!h) return; const flat=[]; Object.keys(promoByBank||{}).forEach(b=>{ (promoByBank[b]||[]).forEach(p=>flat.push({bank:b,...p})) }); if(flat.length===0){ h.innerHTML='<p style="text-align:center;color:#666">ยังไม่มีโปรในฐานข้อมูล</p>'; return; } h.innerHTML=flat.map(p=>`<div style="padding:10px;border:1px solid #e9ecef;border-radius:10px;margin:6px 0;"><div style="display:flex;justify-content:space-between;align-items:center"><div><strong>${p.bank}</strong> — ${p.name}</div>${isAdmin?`<div style="display:flex;gap:6px"><button class="btn-secondary" style="padding:6px 10px;font-size:12px" onclick='editPromotion(${JSON.stringify(p)})'>แก้ไข</button><button class="btn-danger" style="padding:6px 10px;font-size:12px" onclick="deletePromotion('${p.id}')">ลบ</button></div>`:''}</div><div style="font-size:12px;color:#555;margin-top:4px">${p.conditions||''}</div><div style="font-size:12px;margin-top:6px">${(p.rates||[]).map(r=>`ปีที่ ${r.year}: ${r.rate}% <span style=\"color:#6c757d\">${r.description||''}</span>`).join('<br>')}</div></div>`).join(''); document.getElementById('promoAdmin').style.display=isAdmin?'block':'none'; }
-    function editPromotion(p){ if(!isAdmin) return; document.getElementById('promoIdInput').value=p.id||''; document.getElementById('bankNameInput').value=p.bank||''; document.getElementById('promoNameInput').value=p.name||''; document.getElementById('ratesInput').value=ratesToText(p.rates||[]); document.getElementById('conditionsInput').value=p.conditions||''; document.getElementById('colorInput').value=p.color||'#667eea'; window.scrollTo({top:document.getElementById('promoAdmin').offsetTop-10,behavior:'smooth'}); }
-    async function deletePromotion(id){ if(!isAdmin||!id||!confirm('ลบโปรนี้?')) return; try{ const { error } = await supabaseClient.from('bank_promotions').delete().eq('id',id); if(error) throw error; await fetchPromotions(); showStatus('ลบโปรเรียบร้อย'); }catch(e){ alert('เกิดข้อผิดพลาด: '+e.message); } }
+    function editPromotion(p){ 
+	if(!isAdmin) return; 
+	document.getElementById('promoIdInput').value=p.id||''; 
+	document.getElementById('bankNameInput').value=p.bank||''; 
+	document.getElementById('promoNameInput').value=p.name||''; 
+	
+populateFormWithRates(p.rates || []);
+
+	document.getElementById('conditionsInput').value=p.conditions||''; 
+	document.getElementById('colorInput').value=p.color||'#667eea'; 
+	window.scrollTo({top:document.getElementById('promoAdmin').offsetTop-10,behavior:'smooth'}); 
+	}
+    
+	async function deletePromotion(id){ if(!isAdmin||!id||!confirm('ลบโปรนี้?')) return; try{ const { error } = await supabaseClient.from('bank_promotions').delete().eq('id',id); if(error) throw error; await fetchPromotions(); showStatus('ลบโปรเรียบร้อย'); }catch(e){ alert('เกิดข้อผิดพลาด: '+e.message); } }
 
     function compareBanks(loanAmount, years){ const box=document.getElementById('bankComparison'); if(!box) return; box.innerHTML=''; const data=promoByBank || {}; Object.keys(data).forEach(bank=>{ const promos=data[bank]; (promos||[]).forEach(promo=>{ const c=calcTiered(loanAmount,promo.rates||[],years); const card=document.createElement('div'); card.className='bank-card'; card.style.borderLeftColor=promo.color||'#667eea'; card.innerHTML=`<div class="bank-name">${bank}</div><div class="selected-promotion">${promo.name}</div><div style="margin-top:8px">${(promo.rates||[]).map(r=>`<div class='rate-year'><span>ปีที่ ${r.year}${r.year===(promo.rates[promo.rates.length-1]||{}).year&&promo.rates.length>1?' เป็นต้นไป':''}</span><span>${r.rate}%</span></div><div style='text-align:right;color:#6c757d;font-size:11px'>${r.description||''}</div>`).join('')}</div><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px"><div><strong>ผ่อน/เดือน</strong><br>${fmt(c.monthly)} บาท</div><div><strong>ดอกเบี้ยรวม</strong><br>${fmt(c.interest)} บาท</div></div>`; box.appendChild(card); }); }); }
 
