@@ -347,10 +347,6 @@
     // ===== Promotions (Supabase) =====
     // ##### แก้ไข SyntaxError โดยใช้ '\n' แทนการขึ้นบรรทัดใหม่ #####
    
-	const y=parseInt((a||'').trim(),10);
-	const r=parseFloat((b||'').trim());const d=(c||'').trim();
-	return (!isNaN(y)&&!isNaN(r))?{year:y,rate:r,description:d}:null}).filter(Boolean).sort((x,y)=>x.year-y.year);
-    
 // ===== NEW: Replaces old parseRates and ratesToText functions =====
     function parseRatesFromForm() {
       const rates = [];
