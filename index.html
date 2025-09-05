@@ -536,8 +536,7 @@
           card.innerHTML = `
             <div class="bank-name">${bank}</div>
             <div class="selected-promotion">${promo.name}</div>
-            <div style="margin-top:8px; font-weight: bold; color: #333;">ระยะเวลากู้: ${years} ปี</div>
-            <div style="margin-top:8px">${(promo.rates||[]).map(r=>`<div class='rate-year'><span>ปีที่ ${r.year === 99 ? 'ถัดไป' : r.year}</span><span>${r.rate.toFixed(2)}%</span></div><div style='text-align:right;color:#6c757d;font-size:11px'>${r.description||''}</div>`).join('')}</div>
+            <div style="margin-top:8px; font-weight: bold; color: #333;">ระยะเวลากู้: ${years} ปี (ผ่อนได้ถึงอายุ ${maxLoanAgeForPromo})</div>
             <div style="display:grid;grid-template-columns:1fr;gap:8px;margin-top:8px">
               <div><strong>ผ่อน/เดือน</strong><br>${fmt(c.monthly)} บาท</div>
             </div>
@@ -609,15 +608,21 @@
       populateFormWithRates([]);
     }
 
-    async function fetchPromotions(){
-      if(!supabaseClient) return;
-      try{
-        const { data, error } = await supabaseClient.from('bank_promotions').select('id,bank_name,name,rates,conditions,color').order('bank_name',{ascending:true}).order('created_at',{ascending:false});
-        if(error) throw error;
-        const g={}; (data||[]).forEach(row=>{ (g[row.bank_name]=g[row.bank_name]||[]).push({id:row.id,name:row.name,rates:row.rates||[],conditions:row.conditions||'',color:row.color||'#667eea'}); });
-        promoByBank=g; renderPromoList(); compareBanks(getCurrentLoanAmount(), +document.getElementById('loanTerm').value||30); document.getElementById('rateUpdateTime').textContent=`อัพเดทล่าสุด: ${new Date().toLocaleString('th-TH')}`;
+// โค้ดที่แก้ไขแล้ว
+async function fetchPromotions(){
+  if(!supabaseClient) return;
+  try{
+        const { data, error } = await supabaseClient.from('bank_promotions').select('id,bank_name,name,rates,conditions,color,max_loan_age').order('bank_name',{ascending:true}).order('created_at',{ascending:false});
+    if(error) throw error;
+    const g={}; (data||[]).forEach(row=>{ (g[row.bank_name]=g[row.bank_name]||[]).push({id:row.id,name:row.name,rates:row.rates||[],conditions:row.conditions||'',color:row.color||'#667eea'}); });
+        promoByBank=g; 
+        renderPromoList(); 
+    // แก้ไขโดยการดึงค่า "อายุ" จากฟอร์มมาใช้แทน
+        const currentAge = +document.getElementById('borrowerAge').value;
+        compareBanks(getCurrentLoanAmount(), currentAge); 
+        document.getElementById('rateUpdateTime').textContent=`อัพเดทล่าสุด: ${new Date().toLocaleString('th-TH')}`;
       }catch(e){ console.error(e); showStatus('ไม่สามารถดึงโปรจากฐานข้อมูลได้', true); }
-    }
+}
 
 function getCurrentLoanAmount() {
   // Return the full house price because down payment is now calculated dynamically.
@@ -678,7 +683,7 @@ populateFormWithRates(p.rates || []);
     
 	async function deletePromotion(id){ if(!isAdmin||!id||!confirm('ลบโปรนี้?')) return; try{ const { error } = await supabaseClient.from('bank_promotions').delete().eq('id',id); if(error) throw error; await fetchPromotions(); showStatus('ลบโปรเรียบร้อย'); }catch(e){ alert('เกิดข้อผิดพลาด: '+e.message); } }
 
-function compareBanks(loanAmount, years) {
+    function compareBanks(loanAmount, borrowerAge) {
       const box = document.getElementById('bankComparison');
       if (!box) return;
       box.innerHTML = '';
@@ -700,7 +705,14 @@ function compareBanks(loanAmount, years) {
       Object.keys(data).forEach(bank => {
         const promos = data[bank];
         (promos || []).forEach(promo => {
-          const c = calcTiered(loanAmount, promo.rates || [], years);
+		
+          // --- DYNAMIC LOAN TERM CALCULATION PER PROMO ---
+          // ใช้ promo.max_loan_age ที่ดึงมาจาก DB
+          const maxLoanAgeForPromo = promo.max_loan_age || 65; 
+          const MAX_LOAN_YEARS = 35;
+          const years = Math.max(1, Math.min(MAX_LOAN_YEARS, maxLoanAgeForPromo - borrowerAge));
+          // --- END DYNAMIC CALCULATION ---
+		  
           const card = document.createElement('div');
           card.className = 'bank-card';
           card.style.borderLeftColor = promo.color || '#667eea';
@@ -742,8 +754,8 @@ function compareBanks(loanAmount, years) {
           card.innerHTML = `
             <div class="bank-name">${bank}</div>
             <div class="selected-promotion">${promo.name}</div>
-            <div style="margin-top:8px">${(promo.rates||[]).map(r=>`<div class='rate-year'><span>ปีที่ ${r.year === 99 ? 'ถัดไป' : r.year}</span><span>${r.rate.toFixed(2)}%</span></div><div style='text-align:right;color:#6c757d;font-size:11px'>${r.description||''}</div>`).join('')}</div>
-            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px">
+            <div style="margin-top:8px; font-weight: bold; color: #333;">ระยะเวลากู้: ${years} ปี (ผ่อนได้ถึงอายุ ${maxLoanAgeForPromo})</div>
+             <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px">
               <div><strong>ผ่อน/เดือน</strong><br>${fmt(c.monthly)} บาท</div>
               <div><strong>ดอกเบี้ยรวม</strong><br>${fmt(c.interest)} บาท</div>
             </div>
