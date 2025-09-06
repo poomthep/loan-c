@@ -181,8 +181,8 @@
 
       <div class="grid-column">
         <div class="card">
-          <h2 class="card-header active" onclick="toggleCard(this)">💰 ผลการวิเคราะห์ (ดอกเบี้ยเฉลี่ย)</h2>
-          <div class="card-content">
+          <h2 class="card-header" onclick="toggleCard(this)">💰 ผลการวิเคราะห์ (ดอกเบี้ยเฉลี่ย)</h2>
+          <div class="card-content collapsed">
             <div class="results-grid" style="grid-template-columns: 1fr 1fr;">
               <div class="result-item"><div>ยอดกู้ยืม</div><div id="loanAmount" class="value">-</div></div>
               <div class="result-item"><div>ผ่อนต่อเดือน</div><div id="monthlyPayment" class="value">-</div></div>
@@ -202,8 +202,8 @@
       </div>
 
       <div class="card full-width">
-        <h2 class="card-header active" onclick="toggleCard(this)">🏦 เปรียบเทียบโปรโมชั่นธนาคาร</h2>
-        <div class="card-content">
+        <h2 class="card-header" onclick="toggleCard(this)">🏦 เปรียบเทียบโปรโมชั่นธนาคาร</h2>
+        <div class="card-content collapsed">
           <div id="promoStatus" class="notice" style="display:none"></div>
           <div id="bankComparison" class="bank-comparison"></div>
           <div id="rateUpdateTime" style="text-align:center;color:#666;margin-top:6px"></div>
@@ -267,6 +267,7 @@
       <div class="spinner"></div>
       <div class="spinner-label">กำลังทำงาน...</div>
     </div>
+
 
   <script>
 // ===== Config =====
