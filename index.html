@@ -245,6 +245,33 @@
 .verdict-good { background-color: #20bf6b; }
 .verdict-ok { background-color: #f0932b; }
 .verdict-bad { background-color: #ff6b6b; }
+
+/* ========== STYLES FOR COLLAPSIBLE CARDS ========== */
+.card-header {
+    cursor: pointer;
+    position: relative;
+    padding-right: 25px; /* เว้นที่ให้ลูกศร */
+    user-select: none; /* ป้องกันการเลือกข้อความตอนดับเบิ้ลคลิก */
+}
+
+.card-header::after {
+    content: '▲'; /* ลูกศรชี้ขึ้น (collapsed) */
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.8em;
+    color: #999;
+    transition: transform 0.2s ease-in-out;
+}
+
+.card-header.active::after {
+    transform: translateY(-50%) rotate(180deg); /* หมุนลูกศรลง (expanded) */
+}
+
+.card-content.collapsed {
+    display: none;
+}
 	
   </style>
 
@@ -440,6 +467,15 @@ let isAdmin = false;
 // ===== Utils =====
 const fmt = n => new Intl.NumberFormat('th-TH').format(Math.round(n || 0));
 let doughnut = null;
+
+// ===== NEW: Function to toggle collapsible cards =====
+function toggleCard(headerElement) {
+    headerElement.classList.toggle('active');
+    const content = headerElement.nextElementSibling;
+    if (content && content.classList.contains('card-content')) {
+        content.classList.toggle('collapsed');
+    }
+}
 
 function addFixedRateYear(year = 0, rate = '') {
       const container = document.getElementById('fixedRatesContainer');
