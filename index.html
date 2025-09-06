@@ -8,6 +8,23 @@
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script defer src="./lib/supabase.min.js"></script>
   <style>
+  .main-content-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px; /* This ensures equal spacing */
+}
+
+.grid-column {
+    display: flex;
+    flex-direction: column;
+    gap: 22px; /* This ensures equal spacing for cards in the same column */
+}
+
+.full-width {
+    grid-column: 1 / -1; /* Makes card span both columns */
+}
+  
+  
   .analysis-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
