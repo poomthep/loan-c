@@ -58,6 +58,16 @@
     .verdict-good { background-color: #20bf6b; }
     .verdict-ok { background-color: #f0932b; }
     .verdict-bad { background-color: #ff6b6b; }
+	
+	.rate-details {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+    }
+    .rate-description {
+        color: #6c757d;
+        font-size: 11px;
+    }
 
     /* ========== สไตล์การจัดวาง Grid ========== */
     .main-content-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
@@ -870,10 +880,10 @@ function compareBanks(loanAmount, borrowerAge) {
     const box = document.getElementById('bankComparison');
     if (!box) return;
     box.innerHTML = '';
-    const salary = +document.getElementById('borrowerSalary').value || 0;
-    const bonus = +document.getElementById('borrowerBonus').value || 0;
-    const otherIncome = +document.getElementById('borrowerOtherIncome').value || 0;
-    const existingDebt = +document.getElementById('borrowerDebt').value || 0;
+    const salary = getNumericValue('borrowerSalary');
+    const bonus = getNumericValue('borrowerBonus');
+    const otherIncome = getNumericValue('borrowerOtherIncome');
+    const existingDebt = getNumericValue('borrowerDebt');
     const totalMonthlyIncome = salary + (bonus / 12) + otherIncome;
     const data = promoByBank || {};
     if (Object.keys(data).length === 0) {
@@ -901,28 +911,39 @@ function compareBanks(loanAmount, borrowerAge) {
                 else if (dsr <= 55) { verdict = 'เป็นไปได้'; verdictClass = 'verdict-ok'; }
                 else { verdict = 'เสี่ยงสูง'; verdictClass = 'verdict-bad'; }
                 analysisHtml = `
-              <hr style="margin: 10px 0;">
-              <div class="analysis-grid">
-                  <div><strong>DSR กับโปรนี้:</strong><br><span class="analysis-value">${dsr.toFixed(1)}%</span></div>
-                  <div><strong>วงเงินกู้สูงสุด (ประมาณ):</strong><br><span class="analysis-value">${fmt(estimatedMaxLoan)}</span></div>
-              </div>
-              <div class="verdict ${verdictClass}">${verdict}</div>
-            `;
+                    <hr style="margin: 10px 0;">
+                    <div class="analysis-grid">
+                        <div><strong>DSR กับโปรนี้:</strong><br><span class="analysis-value">${dsr.toFixed(1)}%</span></div>
+                        <div><strong>วงเงินกู้สูงสุด (ประมาณ):</strong><br><span class="analysis-value">${fmt(estimatedMaxLoan)}</span></div>
+                    </div>
+                    <div class="verdict ${verdictClass}">${verdict}</div>
+                `;
             }
+
+            // --- NEW: Improved HTML Structure for rates ---
+            const ratesHtml = (promo.rates || []).map(r => `
+                <div class='rate-year'>
+                    <span>ปีที่ ${r.year === 99 ? 'ถัดไป' : r.year}</span>
+                    <div class="rate-details">
+                        <span>${r.rate.toFixed(2)}%</span>
+                        <span class="rate-description">${r.description || ''}</span>
+                    </div>
+                </div>`
+            ).join('');
+
             card.innerHTML = `
-            <div class="bank-name">${bank}</div>
-            <div class="selected-promotion">${promo.name}</div>
-            <div style="margin-top:8px; font-weight: bold; color: #333;">ระยะเวลากู้: ${years} ปี (ผ่อนได้ถึงอายุ ${maxLoanAgeForPromo})</div>
-            <div style="margin-top:8px">${(promo.rates || []).map(r => `<div class='rate-year'><span>ปีที่ ${r.year === 99 ? 'ถัดไป' : r.year}</span><span>${r.rate.toFixed(2)}%</span></div><div style='text-align:right;color:#6c757d;font-size:11px'>${r.description || ''}</div>`).join('')}</div>
-            <div style="display:grid;grid-template-columns:1fr;gap:8px;margin-top:8px">
-              <div><strong>ผ่อน/เดือน</strong><br>${fmt(c.monthly)} บาท</div>
-            </div>
-            ${analysisHtml} 
-          `;
+                <div class="bank-name">${bank}</div>
+                <div class="selected-promotion">${promo.name}</div>
+                <div style="margin-top:8px; font-weight: bold; color: #333;">ระยะเวลากู้: ${years} ปี (ผ่อนได้ถึงอายุ ${maxLoanAgeForPromo})</div>
+                <div style="margin-top:8px">${ratesHtml}</div>
+                <div style="margin-top: 12px;"><strong>ผ่อน/เดือน</strong><br>${fmt(c.monthly)} บาท</div>
+                ${analysisHtml} 
+            `;
             box.appendChild(card);
         });
     });
 }
+
 function buildChart(p, i) {
     const ctx = document.getElementById('paymentChart');
     if (!ctx) return;
