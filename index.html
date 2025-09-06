@@ -170,7 +170,7 @@
         }
     }
 
-    @media (max-width: 600px) {
+@media (max-width: 600px) {
         body {
             padding: 10px;
         }
@@ -184,13 +184,24 @@
             padding: 15px;
             border-radius: 15px;
         }
-        .btn {
-            padding: 14px;
-        }
         .results-grid,
         .bank-comparison,
         .analysis-grid {
             grid-template-columns: 1fr;
+        }
+        
+        /* ===== โค้ดแก้ไขและเพิ่มเติมสำหรับปุ่ม ===== */
+        .btn, .btn-secondary, .btn-danger {
+            padding: 14px 18px; /* เพิ่ม padding ให้ปุ่มใหญ่ขึ้น */
+            font-size: 1rem;     /* กำหนดขนาดฟอนต์ให้เท่ากัน */
+            width: auto;         /* ทำให้ปุ่มยืดตามเนื้อหาได้ */
+            flex-grow: 1;        /* ทำให้ปุ่มใน flex container ขยายเท่ากัน */
+        }
+        .export-section .btn-secondary {
+             flex-grow: 1; /* ทำให้ปุ่ม export ขยายเท่ากัน */
+        }
+        .btn.block {
+            width: 100%; /* ทำให้ปุ่ม .block ยังคงเต็มความกว้าง */
         }
     }
   </style>
@@ -557,8 +568,8 @@ function renderBankList() {
         <div style="padding:10px;border-bottom:1px solid #e9ecef;display:flex;justify-content:space-between;align-items:center;">
           <div><strong>${bank.bank_name}</strong> <span style="color:#555;">(MRR: ${bank.current_mrr}%)</span></div>
           <div style="display:flex;gap:6px">
-            <button class="btn-secondary" style="padding:6px 10px;font-size:12px" onclick='editBank(${JSON.stringify(bank)})'>แก้ไข</button>
-            <button class="btn-danger" style="padding:6px 10px;font-size:12px" onclick="deleteBank('${bank.id}', '${bank.bank_name}')">ลบ</button>
+            <button class="btn-secondary"  onclick='editBank(${JSON.stringify(bank)})'>แก้ไข</button>
+            <button class="btn-danger"  onclick="deleteBank('${bank.id}', '${bank.bank_name}')">ลบ</button>
           </div>
         </div>
     `).join('');
@@ -788,8 +799,8 @@ function renderPromoList() {
               <div><strong>${p.bank_name}</strong> — ${p.name}</div>
               ${isAdmin ? `
                 <div style="display:flex;gap:6px">
-                  <button class="btn-secondary" style="padding:6px 10px;font-size:12px" onclick='editPromotion(${JSON.stringify(p)})'>แก้ไข</button>
-                  <button class="btn-danger" style="padding:6px 10px;font-size:12px" onclick="deletePromotion('${p.id}')">ลบ</button>
+                  <button class="btn-secondary"  onclick='editPromotion(${JSON.stringify(p)})'>แก้ไข</button>
+                  <button class="btn-danger"  onclick="deletePromotion('${p.id}')">ลบ</button>
                 </div>` : ''}
             </div>
             <div style="font-size:12px;color:#555;margin-top:4px">
