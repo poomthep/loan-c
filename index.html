@@ -191,18 +191,34 @@
         }
         
         /* ===== โค้ดแก้ไขและเพิ่มเติมสำหรับปุ่ม ===== */
-        .btn, .btn-secondary, .btn-danger {
-            padding: 14px 18px; /* เพิ่ม padding ให้ปุ่มใหญ่ขึ้น */
-            font-size: 1rem;     /* กำหนดขนาดฟอนต์ให้เท่ากัน */
-            width: auto;         /* ทำให้ปุ่มยืดตามเนื้อหาได้ */
-            flex-grow: 1;        /* ทำให้ปุ่มใน flex container ขยายเท่ากัน */
-        }
-        .export-section .btn-secondary {
-             flex-grow: 1; /* ทำให้ปุ่ม export ขยายเท่ากัน */
-        }
-        .btn.block {
-            width: 100%; /* ทำให้ปุ่ม .block ยังคงเต็มความกว้าง */
-        }
+.btn,
+    .btn-secondary,
+    .btn-danger {
+        color: #fff;
+        border: none;
+        padding: 12px 18px;
+        border-radius: 10px;
+        font-weight: 700; /* กำหนดความหนาให้สม่ำเสมอ */
+        cursor: pointer;
+        width: 100%;
+        /* ===== เพิ่มบรรทัดนี้ ===== */
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); /* เพิ่มเงาให้ตัวหนังสือคมชัดขึ้น */
+    }
+
+    .btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .btn.block {
+        width: 100%;
+    }
+
+    .btn-secondary {
+        background: linear-gradient(135deg, #20bf6b 0%, #01a3a4 100%);
+    }
+
+    .btn-danger {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
     }
   </style>
 
