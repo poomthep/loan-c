@@ -160,24 +160,26 @@
     </div>
 
     <div class="main-content-grid">
+		<div class="main-content-grid" id="mainContent" style="display: none;">
+		</div>
       
-      <div class="grid-column">
-        <div class="card">
-          <h2 class="card-header active" onclick="toggleCard(this)">📊 ข้อมูลสินเชื่อและผู้กู้</h2>
-          <div class="card-content">
-            <div class="input-group"><label>ราคาบ้าน (บาท)</label><input id="housePrice" type="number" value="5000000"></div>
-            <hr style="margin: 16px 0;">
-            <div class="input-group"><label>อายุ (ปี)</label><input id="borrowerAge" type="number" value="30"></div>
-            <div class="input-group"><label>เงินเดือน (บาท/เดือน)</label><input id="borrowerSalary" type="number" value="50000"></div>
-            <div class="input-group"><label>โบนัส (เฉลี่ยต่อปี)</label><input id="borrowerBonus" type="number" value="50000"></div>
-            <div class="input-group"><label>รายได้อื่นๆ (บาท/เดือน)</label><input id="borrowerOtherIncome" type="number" value="0"></div>
-            <div class="input-group"><label>หนี้สินในบูโร (ผ่อนชำระต่อเดือน)</label><input id="borrowerDebt" type="number" value="5000"></div>
-            <button class="btn block" onclick="calculateLoan()">🔍 วิเคราะห์สินเชื่อ</button>
-            <div class="export-section"><button class="btn btn-secondary" onclick="saveLoanLocal()">💾 บันทึกข้อมูล</button><button class="btn btn-secondary" onclick="exportToPDF()">📄 Export PDF</button><button class="btn btn-secondary" onclick="refreshPromos()">🔄 รีเฟรชโปร</button></div>
-            <div id="debtNotice" class="notice" style="display:none"></div>
-          </div>
-        </div>
-      </div>
+		  <div class="grid-column">
+			<div class="card">
+			  <h2 class="card-header active" onclick="toggleCard(this)">📊 ข้อมูลสินเชื่อและผู้กู้</h2>
+			  <div class="card-content">
+				<div class="input-group"><label>ราคาบ้าน (บาท)</label><input id="housePrice" type="number" value="5000000"></div>
+				<hr style="margin: 16px 0;">
+				<div class="input-group"><label>อายุ (ปี)</label><input id="borrowerAge" type="number" value="30"></div>
+				<div class="input-group"><label>เงินเดือน (บาท/เดือน)</label><input id="borrowerSalary" type="number" value="50000"></div>
+				<div class="input-group"><label>โบนัส (เฉลี่ยต่อปี)</label><input id="borrowerBonus" type="number" value="50000"></div>
+				<div class="input-group"><label>รายได้อื่นๆ (บาท/เดือน)</label><input id="borrowerOtherIncome" type="number" value="0"></div>
+				<div class="input-group"><label>หนี้สินในบูโร (ผ่อนชำระต่อเดือน)</label><input id="borrowerDebt" type="number" value="5000"></div>
+				<button class="btn block" onclick="calculateLoan()">🔍 วิเคราะห์สินเชื่อ</button>
+				<div class="export-section"><button class="btn btn-secondary" onclick="saveLoanLocal()">💾 บันทึกข้อมูล</button><button class="btn btn-secondary" onclick="exportToPDF()">📄 Export PDF</button><button class="btn btn-secondary" onclick="refreshPromos()">🔄 รีเฟรชโปร</button></div>
+				<div id="debtNotice" class="notice" style="display:none"></div>
+			  </div>
+			</div>
+		  </div>
 
       <div class="grid-column">
         <div class="card">
@@ -411,18 +413,23 @@ async function determineAdmin() {
     } catch (e) { console.warn('ตรวจบทบาทล้มเหลว:', e); isAdmin = false; }
 }
 async function logout() { try { await supabaseClient.auth.signOut(); } catch (e) { } currentUser = null; isAdmin = false; updateAuthUI(false); }
+
 function updateAuthUI(loggedIn) {
     const loginArea = document.getElementById('loginArea');
     const userArea = document.getElementById('userArea');
-    const who = document.getElementById('who');
-    const badge = document.getElementById('roleBadge');
+    const mainContent = document.getElementById('mainContent'); // อ้างอิงถึงส่วนเนื้อหาหลัก
     const adminPane = document.getElementById('promoAdmin');
     const bankPane = document.getElementById('bankAdmin');
+    
     if (loggedIn && currentUser) {
+        // --- เมื่อล็อกอินสำเร็จ ---
         loginArea.style.display = 'none';
         userArea.style.display = 'flex';
+        mainContent.style.display = 'grid'; // แสดงเนื้อหาหลัก
+
         who.textContent = currentUser.email;
         badge.textContent = isAdmin ? 'สิทธิ์: ADMIN' : 'สิทธิ์: USER';
+        
         if (isAdmin) {
             adminPane.style.display = 'block';
             bankPane.style.display = 'block';
@@ -431,12 +438,15 @@ function updateAuthUI(loggedIn) {
             bankPane.style.display = 'none';
         }
     } else {
+        // --- เมื่อยังไม่ได้ล็อกอิน หรือล็อกเอาท์ ---
         loginArea.style.display = 'block';
         userArea.style.display = 'none';
+        mainContent.style.display = 'none'; // ซ่อนเนื้อหาหลัก
         adminPane.style.display = 'none';
         bankPane.style.display = 'none';
     }
-    const pwd = document.getElementById('password'); if (pwd) pwd.value = '';
+    const pwd = document.getElementById('password');
+    if (pwd) pwd.value = '';
 }
 
 // ===== NEW: Bank Management Functions =====
