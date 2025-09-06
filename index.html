@@ -91,6 +91,71 @@
     .toast.info{background:linear-gradient(135deg,#667eea,#764ba2)}
     .toast.success{background:linear-gradient(135deg,#20bf6b,#01a3a4)}
     .toast.error{background:linear-gradient(135deg,#ff6b6b,#ee5a52)}
+	
+	/* ========== RESPONSIVE STYLES FOR MOBILE ========== */
+
+/* For tablets and smaller devices (under 900px) */
+@media (max-width: 900px) {
+    body {
+        padding: 10px;
+    }
+
+    .main-content-grid {
+        grid-template-columns: 1fr; /* Change to a single column layout */
+    }
+
+    .login-grid {
+        grid-template-columns: 1fr; /* Stack login fields vertically */
+    }
+    
+    .welcome {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .header h1 {
+        font-size: 1.8rem;
+    }
+    
+    .card {
+        padding: 18px;
+    }
+}
+
+/* For mobile phones (under 600px) */
+@media (max-width: 600px) {
+    .header h1 {
+        font-size: 1.5rem;
+    }
+
+    .card {
+        padding: 15px;
+        border-radius: 15px;
+    }
+
+    .input-group input, .input-group select, .btn {
+        padding: 14px;
+        font-size: 16px;
+    }
+
+    .results-grid {
+        grid-template-columns: 1fr; /* Stack result items */
+    }
+
+    .bank-comparison {
+        grid-template-columns: 1fr; /* Stack bank cards */
+    }
+
+    /* Make admin form inputs stack nicely */
+    .fixed-rate-row,
+    .mrr-form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .analysis-grid {
+        grid-template-columns: 1fr;
+    }
+}
   </style>
   <script>
     (function(){
