@@ -7,7 +7,6 @@
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script defer src="./lib/supabase.min.js"></script>
-  <style>
 <style>
     /* ========== สไตล์พื้นฐาน ========== */
     * {
@@ -57,16 +56,15 @@
         color: #444;
         font-weight: 600;
     }
-.input-group input,
+    .input-group input,
     .input-group select {
         width: 100%;
         padding: 12px;
         border: 2px solid #e1e5e9;
         border-radius: 10px;
         font-size: 16px;
-        /* ===== โค้ดสำหรับแก้ไข ===== */
-        background-color: #ffffff; /* กำหนดพื้นหลังให้เป็นสีขาวทึบ */
-        box-shadow: none;         /* ลบเงาที่อาจติดมาโดยไม่ตั้งใจ */
+        background-color: #ffffff;
+        box-shadow: none;
     }
     .btn {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -275,7 +273,6 @@
     }
 
     /* ========== สไตล์สำหรับมือถือ (RESPONSIVE) ========== */
-    /* สำหรับแท็บเล็ตและอุปกรณ์ขนาดเล็ก (ต่ำกว่า 900px) */
     @media (max-width: 900px) {
         body {
             padding: 10px;
@@ -296,7 +293,6 @@
         }
     }
 
-    /* สำหรับโทรศัพท์มือถือ (ต่ำกว่า 600px) */
     @media (max-width: 600px) {
         .header h1 {
             font-size: 1.5rem;
@@ -317,10 +313,9 @@
             grid-template-columns: 1fr;
         }
         .fixed-rate-row {
-            grid-template-columns: 1fr; /* Stack fixed-rate inputs */
+            grid-template-columns: 1fr;
         }
     }
-  </style>
   </style>
   <script>
     (function(){
