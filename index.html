@@ -414,18 +414,19 @@ async function logout() { try { await supabaseClient.auth.signOut(); } catch (e)
 function updateAuthUI(loggedIn) {
     const loginArea = document.getElementById('loginArea');
     const userArea = document.getElementById('userArea');
-    const mainContent = document.getElementById('mainContent'); // อ้างอิงถึงส่วนเนื้อหาหลัก
+    const mainContent = document.getElementById('mainContent');
     const adminPane = document.getElementById('promoAdmin');
     const bankPane = document.getElementById('bankAdmin');
-    
+    const who = document.getElementById('who');
+    const badge = document.getElementById('roleBadge'); // <-- เพิ่มบรรทัดนี้
+
     if (loggedIn && currentUser) {
-        // --- เมื่อล็อกอินสำเร็จ ---
         loginArea.style.display = 'none';
         userArea.style.display = 'flex';
-        mainContent.style.display = 'grid'; // แสดงเนื้อหาหลัก
+        mainContent.style.display = 'grid';
 
-        who.textContent = currentUser.email;
-        badge.textContent = isAdmin ? 'สิทธิ์: ADMIN' : 'สิทธิ์: USER';
+        if (who) who.textContent = currentUser.email;
+        if (badge) badge.textContent = isAdmin ? 'สิทธิ์: ADMIN' : 'สิทธิ์: USER';
         
         if (isAdmin) {
             adminPane.style.display = 'block';
@@ -435,10 +436,9 @@ function updateAuthUI(loggedIn) {
             bankPane.style.display = 'none';
         }
     } else {
-        // --- เมื่อยังไม่ได้ล็อกอิน หรือล็อกเอาท์ ---
         loginArea.style.display = 'block';
         userArea.style.display = 'none';
-        mainContent.style.display = 'none'; // ซ่อนเนื้อหาหลัก
+        mainContent.style.display = 'none';
         adminPane.style.display = 'none';
         bankPane.style.display = 'none';
     }
