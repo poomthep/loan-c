@@ -145,139 +145,83 @@
         <div style="display:flex;gap:10px"> <button class="btn-secondary" onclick="logout()">ออกจากระบบ</button> <button class="btn-secondary" onclick="refreshPromos()">รีเฟรชโปร</button> </div>
       </div>
     </div>
-    <div class="header">
+<div class="header">
       <h1>🏠 เครื่องมือวิเคราะห์สินเชื่อบ้าน</h1>
       <div>Login-only + Admin Gate — ผู้ใช้ทั่วไปเห็น/คำนวณได้ แต่แก้โปรได้เฉพาะ Admin</div>
     </div>
 
-<div class="main-grid">
-      <div class="card">
-        <h2>📊 ข้อมูลสินเชื่อและผู้กู้</h2>
-        
-        <div class="input-group">
-            <label>ราคาบ้าน (บาท)</label>
-            <input id="housePrice" type="number" value="5000000">
-        </div>
-
-        <hr style="margin: 16px 0;">
-
-        <div class="input-group">
-          <label>อายุ (ปี)</label>
-          <input id="borrowerAge" type="number" value="30">
-        </div>
-        <div class="input-group">
-          <label>เงินเดือน (บาท/เดือน)</label>
-          <input id="borrowerSalary" type="number" value="50000">
-        </div>
-        <div class="input-group">
-          <label>โบนัส (เฉลี่ยต่อปี)</label>
-          <input id="borrowerBonus" type="number" value="50000">
-        </div>
-        <div class="input-group">
-          <label>รายได้อื่นๆ (บาท/เดือน)</label>
-          <input id="borrowerOtherIncome" type="number" value="0">
-        </div>
-        <div class="input-group">
-          <label>หนี้สินในบูโร (ผ่อนชำระต่อเดือน)</label>
-          <input id="borrowerDebt" type="number" value="5000">
-        </div>
-
-        <button class="btn block" onclick="calculateLoan()">🔍 วิเคราะห์สินเชื่อ</button>
-        <div class="export-section">
-            <button class="btn-secondary" onclick="saveLoanLocal()">💾 บันทึกข้อมูล (เครื่องนี้)</button>
-            <button class="btn-secondary" onclick="exportToPDF()">📄 Export PDF</button>
-            <button class="btn-secondary" onclick="refreshPromos()">🔄 รีเฟรชโปรจากฐาน</button>
-        </div>
-        <div id="debtNotice" class="notice" style="display:none"></div>
+    <div class="card blur" style="margin-bottom: 22px;">
+      <div id="loginArea">
+        <form id="loginForm" class="login-grid" onsubmit="event.preventDefault(); login();" autocomplete="on">
+          <div class="input-group" style="margin:0"> <label style="color:#fff">อีเมล</label> <input id="email" name="email" type="email" placeholder="admin@yourbank.com" required autocomplete="username email" autocapitalize="none" spellcheck="false" inputmode="email"> </div>
+          <div class="input-group" style="margin:0"> <label style="color:#fff">รหัสผ่าน</label> <input id="password" name="password" type="password" placeholder="••••••••" required autocomplete="current-password"> </div>
+          <button class="btn" id="loginBtn" type="submit" disabled="">เข้าสู่ระบบ</button>
+        </form>
+        <div id="libStatus" style="margin-top:8px;background:#fff3cd;color:#8a6d3b;border:1px solid #ffeaa7;padding:8px 10px;border-radius:8px">กำลังโหลดไลบรารี Supabase...</div>
+        <div id="loginError" style="display:none;margin-top:8px;background:#ff6b6b99;padding:8px 10px;border-radius:8px">เกิดข้อผิดพลาดในการเข้าสู่ระบบ</div>
+        <div style="margin-top:6px;font-size:12px;opacity:.9">* ปิดการสมัครสมาชิก — ผู้ใช้จัดการใน Supabase เท่านั้น</div>
       </div>
-      <div class="card">
-        <h2>💰 ผลการวิเคราะห์ (ดอกเบี้ยเฉลี่ย)</h2>
-        <div class="results-grid" style="grid-template-columns: 1fr 1fr;">
-          <div class="result-item"><div>ยอดกู้ยืม</div><div id="loanAmount" class="value">-</div></div>
-          <div class="result-item"><div>ผ่อนต่อเดือน</div><div id="monthlyPayment" class="value">-</div></div>
+      <div id="userArea" class="welcome" style="display:none">
+        <div>
+          <div style="font-weight:700">ยินดีต้อนรับ <span id="who"></span></div>
+          <div id="roleBadge" style="font-size:12px;opacity:.9"></div>
         </div>
-        <div class="chart-container"><canvas id="paymentChart"></canvas></div>
-      </div>
-    </div>
-	
-    <div class="card full">
-      <h2>🏦 เปรียบเทียบโปรโมชั่นธนาคาร</h2>
-      <div id="promoStatus" class="notice" style="display:none"></div>
-      <div id="bankComparison" class="bank-comparison"></div>
-      <div id="rateUpdateTime" style="text-align:center;color:#666;margin-top:6px"></div>
-    </div>
-
-<div class="card full" id="bankAdmin" style="display:none">
-      <h2>🏦 จัดการข้อมูลธนาคารและ MRR</h2>
-      <div class="input-group"><label>ชื่อธนาคาร</label><input id="bankNameMasterInput" placeholder="เช่น ธนาคารกรุงเทพ"/></div>
-      <div class="input-group"><label>MRR ปัจจุบัน (%)</label><input id="bankMrrMasterInput" type="number" step="0.01" placeholder="เช่น 7.30"/></div>
-      <input type="hidden" id="bankIdInput"/>
-      <div class="export-section">
-        <button class="btn-secondary" onclick="saveBank()">💾 บันทึกข้อมูลธนาคาร</button>
-        <button class="btn-secondary btn-danger" onclick="clearBankForm()">🧹 ล้างฟอร์ม</button>
-      </div>
-      <div style="margin-top:14px">
-        <h3 style="text-align:center;margin-bottom:8px">รายชื่อธนาคารในระบบ</h3>
-        <div id="bankMasterList"></div>
+        <div style="display:flex;gap:10px"> <button class="btn-secondary" onclick="logout()">ออกจากระบบ</button> <button class="btn-secondary" onclick="refreshPromos()">รีเฟรชโปร</button> </div>
       </div>
     </div>
 
-<div class="card full" id="promoAdmin" style="display:none">
-      <h2>🛠️ เพิ่ม/แก้ไข โปรธนาคาร (Admin เท่านั้น)</h2>
+    <div class="main-content-grid">
       
-      <div class="input-group">
-        <label>เลือกธนาคาร</label>
-        <select id="bankNameSelect" onchange="handleBankSelectionChange()">
-          <option value="">-- กรุณาเลือกธนาคาร --</option>
-        </select>
-      </div>
-      
-      <div class="input-group"><label>ชื่อโปรโมชัน</label><input id="promoNameInput" placeholder="เช่น บ้านใหม่ ดอกเบี้ยพิเศษ"/></div>
-      
-      <div class="input-group">
-        <label>โครงสร้างดอกเบี้ย</label>
-        <div id="fixedRatesContainer"></div>
-        <button type="button" class="btn-secondary" onclick="addFixedRateYear()" style="margin-top: 6px; padding: 6px 10px; font-size: 12px;">+ เพิ่มดอกเบี้ยรายปี (คงที่)</button>
-        
-        <hr style="margin: 16px 0;">
-        <label style="font-weight: 600; margin-top: 8px;">ดอกเบี้ยปีถัดไป (อ้างอิง MRR)</label>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: flex-end;">
-            <div>
-                <label style="font-size: 12px;">MRR ของธนาคาร (%)</label>
-                <input id="promoMrrDisplay" type="text" disabled style="background-color: #e9ecef; font-weight: bold;">
-            </div>
-            <div>
-                <label style="font-size: 12px;">ส่วนต่างที่จะลบจาก MRR (%)</label>
-                <input id="promoMrrSubtractInput" type="number" step="0.01" placeholder="เช่น 2.20">
-            </div>
+      <div class="grid-column">
+        <div class="card">
+          <h2>📊 ข้อมูลสินเชื่อและผู้กู้</h2>
+          <div class="input-group"><label>ราคาบ้าน (บาท)</label><input id="housePrice" type="number" value="5000000"></div>
+          <hr style="margin: 16px 0;">
+          <div class="input-group"><label>อายุ (ปี)</label><input id="borrowerAge" type="number" value="30"></div>
+          <div class="input-group"><label>เงินเดือน (บาท/เดือน)</label><input id="borrowerSalary" type="number" value="50000"></div>
+          <div class="input-group"><label>โบนัส (เฉลี่ยต่อปี)</label><input id="borrowerBonus" type="number" value="50000"></div>
+          <div class="input-group"><label>รายได้อื่นๆ (บาท/เดือน)</label><input id="borrowerOtherIncome" type="number" value="0"></div>
+          <div class="input-group"><label>หนี้สินในบูโร (ผ่อนชำระต่อเดือน)</label><input id="borrowerDebt" type="number" value="5000"></div>
+          <button class="btn block" onclick="calculateLoan()">🔍 วิเคราะห์สินเชื่อ</button>
+          <div class="export-section"><button class="btn-secondary" onclick="saveLoanLocal()">💾 บันทึกข้อมูล (เครื่องนี้)</button><button class="btn-secondary" onclick="exportToPDF()">📄 Export PDF</button><button class="btn-secondary" onclick="refreshPromos()">🔄 รีเฟรชโปรจากฐาน</button></div>
+          <div id="debtNotice" class="notice" style="display:none"></div>
         </div>
       </div>
 
-      <div class="input-group"><label>เงื่อนไข</label><input id="conditionsInput" placeholder="เช่น สำหรับผู้มีรายได้ประจำ"/></div>
-      <div class="input-group">
-        <label>อายุผู้กู้สูงสุดที่ผ่อนหมด (ปี)</label>
-        <input id="maxLoanAgeInput" type="number" placeholder="เช่น 65 หรือ 70 (ถ้าไม่ระบุ จะใช้ 65)">
+      <div class="grid-column">
+        <div class="card">
+          <h2>💰 ผลการวิเคราะห์ (ดอกเบี้ยเฉลี่ย)</h2>
+          <div class="results-grid" style="grid-template-columns: 1fr 1fr;">
+            <div class="result-item"><div>ยอดกู้ยืม</div><div id="loanAmount" class="value">-</div></div>
+            <div class="result-item"><div>ผ่อนต่อเดือน</div><div id="monthlyPayment" class="value">-</div></div>
+          </div>
+          <div class="chart-container"><canvas id="paymentChart"></canvas></div>
+        </div>
+        <div class="card">
+          <h2>📋 ตารางการชำระหนี้ (12 เดือนแรก)</h2>
+          <table class="amortization">
+            <thead><tr><th width="10%">งวด</th><th width="22%">ยอดผ่อน</th><th width="22%">เงินต้น</th><th width="22%">ดอกเบี้ย</th><th width="24%">เงินต้นคงเหลือ</th></tr></thead>
+            <tbody id="amortizationTable"></tbody>
+          </table>
+        </div>
       </div>
-      <div class="input-group"><label>สีไฮไลต์ (Hex)</label><input id="colorInput" value="#667eea"/></div>
-      <input type="hidden" id="promoIdInput"/>
-      <div class="export-section">
-        <button class="btn-secondary" onclick="savePromotion()">💾 บันทึก/เพิ่มโปร</button>
-        <button class="btn-secondary btn-danger" onclick="clearPromoForm()">🧹 ล้างฟอร์ม</button>
-      </div>
-      <div style="margin-top:14px">
-        <h3 style="text-align:center;margin-bottom:8px">โปรทั้งหมด (แก้ไข/ลบ ได้เฉพาะ Admin)</h3>
-        <div id="myPromoList"></div>
-      </div>
-    </div>
 
-    <div class="card full">
-      <h2>📋 ตารางการชำระหนี้ (12 เดือนแรก)</h2>
-      <table class="amortization">
-        <thead><tr><th width="10%">งวด</th><th width="22%">ยอดผ่อน</th><th width="22%">เงินต้น</th><th width="22%">ดอกเบี้ย</th><th width="24%">เงินต้นคงเหลือ</th></tr></thead>
-        <tbody id="amortizationTable"></tbody>
-      </table>
+      <div class="card full-width">
+        <h2>🏦 เปรียบเทียบโปรโมชั่นธนาคาร</h2>
+        <div id="promoStatus" class="notice" style="display:none"></div>
+        <div id="bankComparison" class="bank-comparison"></div>
+        <div id="rateUpdateTime" style="text-align:center;color:#666;margin-top:6px"></div>
+      </div>
+
+      <div class="card full-width" id="bankAdmin" style="display:none">
+        <h2>🏦 จัดการข้อมูลธนาคารและ MRR</h2>
+        </div>
+      
+      <div class="card full-width" id="promoAdmin" style="display:none">
+        <h2>🛠️ เพิ่ม/แก้ไข โปรธนาคาร (Admin เท่านั้น)</h2>
+        </div>
     </div>
-  </div>
+  
   <div id="toastContainer"></div>
   <div id="globalSpinner" class="spinner-overlay" role="status" aria-live="polite" aria-label="กำลังทำงาน">
     <div class="spinner"></div>
