@@ -292,17 +292,31 @@ let isAdmin = false;
 const fmt = n => new Intl.NumberFormat('th-TH').format(Math.round(n || 0));
 let doughnut = null;
 
-function addFixedRateYear(year = '', rate = '') {
-    const container = document.getElementById('fixedRatesContainer');
-    const rateDiv = document.createElement('div');
-    rateDiv.className = 'fixed-rate-row';
-    rateDiv.style.display = 'grid';
-    rateDiv.style.gridTemplateColumns = '1fr 1fr auto';
-    rateDiv.style.gap = '10px';
-    rateDiv.style.marginBottom = '8px';
-    rateDiv.innerHTML = `<input type="number" class="fixed-rate-year-input" placeholder="ปีที่" value="${year}"><input type="number" step="0.01" class="fixed-rate-rate-input" placeholder="อัตราดอกเบี้ย %" value="${rate}"><button type="button" class="btn-danger" onclick="this.parentElement.remove()" style="padding: 6px 10px;">ลบ</button>`;
-    container.appendChild(rateDiv);
-}
+function addFixedRateYear(year = 0, rate = '') {
+      const container = document.getElementById('fixedRatesContainer');
+      
+      // --- NEW LOGIC ---
+      // นับจำนวนแถวดอกเบี้ยคงที่ที่มีอยู่แล้วเพื่อกำหนดปีถัดไป
+      const nextYear = year > 0 ? year : container.getElementsByClassName('fixed-rate-row').length + 1;
+      // --- END NEW LOGIC ---
+
+      const rateDiv = document.createElement('div');
+      rateDiv.className = 'fixed-rate-row';
+      rateDiv.style.display = 'grid';
+      rateDiv.style.gridTemplateColumns = '1fr 2fr auto'; // ปรับสัดส่วนให้สวยงาม
+      rateDiv.style.gap = '10px';
+      rateDiv.style.marginBottom = '8px';
+      rateDiv.style.alignItems = 'center';
+      
+      // เปลี่ยนจาก input type="number" เป็นช่องที่แสดง "ปีที่" และซ่อนค่าตัวเลขไว้
+      rateDiv.innerHTML = `
+        <input type="text" class="fixed-rate-year-display" value="ปีที่ ${nextYear}" disabled style="background-color: #e9ecef; text-align: center;">
+        <input type="hidden" class="fixed-rate-year-input" value="${nextYear}">
+        <input type="number" step="0.01" class="fixed-rate-rate-input" placeholder="อัตราดอกเบี้ย %" value="${rate}">
+        <button type="button" class="btn-danger" onclick="this.parentElement.remove()" style="padding: 6px 10px;">ลบ</button>
+      `;
+      container.appendChild(rateDiv);
+    }
 
 // ===== UI Helpers =====
 function setLibUIReady(ready) {
