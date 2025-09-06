@@ -59,10 +59,16 @@
     .verdict-ok { background-color: #f0932b; }
     .verdict-bad { background-color: #ff6b6b; }
 	
-	.rate-details {
+.rate-year {
         display: flex;
-        flex-direction: column;
-        align-items: flex-end;
+        justify-content: space-between;
+        align-items: center; /* เพิ่ม: จัดให้อยู่กึ่งกลางแนวตั้ง */
+        margin-bottom: 4px; /* เพิ่ม: ระยะห่างระหว่างบรรทัด */
+    }
+    .rate-details {
+        display: flex;
+        align-items: baseline; /* จัดให้ตัวเลขและตัวหนังสือเล็กๆ เรียงสวยงาม */
+        gap: 8px; /* เพิ่ม: ระยะห่างระหว่างตัวเลข % และคำอธิบาย */
     }
     .rate-description {
         color: #6c757d;
