@@ -273,6 +273,7 @@
     }
 
     /* ========== สไตล์สำหรับมือถือ (RESPONSIVE) ========== */
+/* สำหรับแท็บเล็ตและอุปกรณ์ขนาดเล็ก (ต่ำกว่า 900px) */
     @media (max-width: 900px) {
         body {
             padding: 10px;
@@ -283,13 +284,17 @@
         }
         .welcome {
             flex-direction: column;
-            align-items: flex-start;
+            align-items: stretch; /* ปรับให้ปุ่มยืดเต็มความกว้าง */
         }
         .header h1 {
             font-size: 1.8rem;
         }
         .card {
             padding: 18px;
+        }
+        /* ===== เพิ่มโค้ดแก้ไขตรงนี้ ===== */
+        .card.blur {
+            margin-bottom: 22px; /* รักษาระยะห่างด้านล่าง */
         }
     }
 
