@@ -655,33 +655,56 @@ async function fetchPromotions() {
         showStatus('ไม่สามารถดึงโปรจากฐานข้อมูลได้', true);
     }
 }
-function renderPromoList() {
-    const h = document.getElementById('myPromoList');
-    if (!h) return;
-    const flat = [];
-    Object.keys(promoByBank || {}).forEach(b => {
-        (promoByBank[b] || []).forEach(p => flat.push({ bank_name: b, ...p }))
-    });
 
-    if (flat.length === 0) {
+function renderPromoList() {
+      const h = document.getElementById('myPromoList');
+      if (!h) return;
+      
+      const flat = [];
+      // แปลงข้อมูลจาก promoByBank ให้อยู่ในรูปแบบที่ใช้งานง่าย
+      Object.keys(promoByBank || {}).forEach(bankName => {
+        (promoByBank[bankName] || []).forEach(promo => {
+          flat.push({ ...promo, bank_name: bankName });
+        });
+      });
+
+      if (flat.length === 0) {
         h.innerHTML = '<p style="text-align:center;color:#666">ยังไม่มีโปรในฐานข้อมูล</p>';
         return;
-    }
-    h.innerHTML = flat.map(p => {
-        const ratesText = (p.rates || []).map(r => `ปีที่ ${r.year === 99 ? 'ถัดไป' : r.year}: ${r.rate.toFixed(2)}% <span style="color:#6c757d; font-size:11px">(${r.description || ''})</span>`).join('<br>');
-        return `<div style="padding:10px;border:1px solid #e9ecef;border-radius:10px;margin:6px 0;">
+      }
+
+      // สร้าง HTML สำหรับแต่ละโปรโมชัน
+      h.innerHTML = flat.map(p => {
+        // สร้างข้อความสำหรับดอกเบี้ยแต่ละรายการ
+        const ratesText = (p.rates || [])
+          .map(r => {
+            const yearText = r.year === 99 ? 'ปีถัดไป' : `ปีที่ ${r.year}`;
+            const rateValue = r.rate ? r.rate.toFixed(2) : 'N/A';
+            const descriptionText = r.description ? `<span style="color:#6c757d; font-size:11px">(${r.description})</span>` : '';
+            return `${yearText}: ${rateValue}% ${descriptionText}`;
+          })
+          .join('<br>');
+
+        // สร้าง HTML สำหรับการ์ดโปรโมชัน
+        return `
+          <div style="padding:10px;border:1px solid #e9ecef;border-radius:10px;margin:6px 0;">
             <div style="display:flex;justify-content:space-between;align-items:center">
               <div><strong>${p.bank_name}</strong> — ${p.name}</div>
-              ${isAdmin ? `<div style="display:flex;gap:6px">
+              ${isAdmin ? `
+                <div style="display:flex;gap:6px">
                   <button class="btn-secondary" style="padding:6px 10px;font-size:12px" onclick='editPromotion(${JSON.stringify(p)})'>แก้ไข</button>
                   <button class="btn-danger" style="padding:6px 10px;font-size:12px" onclick="deletePromotion('${p.id}')">ลบ</button>
                 </div>` : ''}
             </div>
-            <div style="font-size:12px;color:#555;margin-top:4px">${p.conditions || ''} (ผ่อนได้ถึงอายุ ${p.max_loan_age} ปี)</div>
-            <div style="font-size:12px;margin-top:6px">${ratesText}</div>
+            <div style="font-size:12px;color:#555;margin-top:4px">
+              ${p.conditions || ''} (ผ่อนได้ถึงอายุ ${p.max_loan_age || 'N/A'} ปี)
+            </div>
+            <div style="font-size:12px;margin-top:6px; line-height: 1.6;">
+              ${ratesText}
+            </div>
           </div>`;
-    }).join('');
-}
+      }).join('');
+    }
 
 // ===== Core Calculation Functions =====
 function calcMonthly(principal, annual, years) {
