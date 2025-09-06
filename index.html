@@ -149,26 +149,18 @@
       <h1>🏠 เครื่องมือวิเคราะห์สินเชื่อบ้าน</h1>
       <div>Login-only + Admin Gate — ผู้ใช้ทั่วไปเห็น/คำนวณได้ แต่แก้โปรได้เฉพาะ Admin</div>
     </div>
-<div class="main-grid" style="grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));">
+
+<div class="main-grid">
       <div class="card">
-        <h2>📊 ข้อมูลสินเชื่อ</h2>
-        <div class="input-group"><label>ราคาบ้าน (บาท)</label><input id="housePrice" type="number" value="5000000"></div>
-		<button class="btn block" onclick="calculateLoan()">🔍 วิเคราะห์สินเชื่อ</button>
-        <div class="export-section"> <button class="btn-secondary" onclick="saveLoanLocal()">💾 บันทึกข้อมูล (เครื่องนี้)</button> <button class="btn-secondary" onclick="exportToPDF()">📄 Export PDF</button> <button class="btn-secondary" onclick="refreshPromos()">🔄 รีเฟรชโปรจากฐาน</button> </div>
-        <div id="debtNotice" class="notice" style="display:none"></div>
-      </div>
-      <div class="card">
-        <h2>💰 ผลการวิเคราะห์ (ดอกเบี้ยเฉลี่ย)</h2>
-        <div class="results-grid">
-          <div class="result-item"><div>ยอดกู้ยืม</div><div id="loanAmount" class="value">-</div></div>
-          <div class="result-item"><div>ผ่อนต่อเดือน</div><div id="monthlyPayment" class="value">-</div></div>
+        <h2>📊 ข้อมูลสินเชื่อและผู้กู้</h2>
+        
+        <div class="input-group">
+            <label>ราคาบ้าน (บาท)</label>
+            <input id="housePrice" type="number" value="5000000">
         </div>
-        <div class="chart-container"><canvas id="paymentChart"></canvas></div>
-      </div>
-    </div>
-	
-	<div class="card">
-        <h2>👤 ข้อมูลผู้กู้</h2>
+
+        <hr style="margin: 16px 0;">
+
         <div class="input-group">
           <label>อายุ (ปี)</label>
           <input id="borrowerAge" type="number" value="30">
@@ -189,8 +181,25 @@
           <label>หนี้สินในบูโร (ผ่อนชำระต่อเดือน)</label>
           <input id="borrowerDebt" type="number" value="5000">
         </div>
+
+        <button class="btn block" onclick="calculateLoan()">🔍 วิเคราะห์สินเชื่อ</button>
+        <div class="export-section">
+            <button class="btn-secondary" onclick="saveLoanLocal()">💾 บันทึกข้อมูล (เครื่องนี้)</button>
+            <button class="btn-secondary" onclick="exportToPDF()">📄 Export PDF</button>
+            <button class="btn-secondary" onclick="refreshPromos()">🔄 รีเฟรชโปรจากฐาน</button>
+        </div>
+        <div id="debtNotice" class="notice" style="display:none"></div>
       </div>
- 	
+      <div class="card">
+        <h2>💰 ผลการวิเคราะห์ (ดอกเบี้ยเฉลี่ย)</h2>
+        <div class="results-grid" style="grid-template-columns: 1fr 1fr;">
+          <div class="result-item"><div>ยอดกู้ยืม</div><div id="loanAmount" class="value">-</div></div>
+          <div class="result-item"><div>ผ่อนต่อเดือน</div><div id="monthlyPayment" class="value">-</div></div>
+        </div>
+        <div class="chart-container"><canvas id="paymentChart"></canvas></div>
+      </div>
+    </div>
+	
     <div class="card full">
       <h2>🏦 เปรียบเทียบโปรโมชั่นธนาคาร</h2>
       <div id="promoStatus" class="notice" style="display:none"></div>
