@@ -165,13 +165,37 @@
 			<div class="card">
 			  <h2 class="card-header active" onclick="toggleCard(this)">📊 ข้อมูลสินเชื่อและผู้กู้</h2>
 			  <div class="card-content">
-				<div class="input-group"><label>ราคาบ้าน (บาท)</label><input id="housePrice" type="number" value="5000000"></div>
-				<hr style="margin: 16px 0;">
-				<div class="input-group"><label>อายุ (ปี)</label><input id="borrowerAge" type="number" value="30"></div>
-				<div class="input-group"><label>เงินเดือน (บาท/เดือน)</label><input id="borrowerSalary" type="number" value="50000"></div>
-				<div class="input-group"><label>โบนัส (เฉลี่ยต่อปี)</label><input id="borrowerBonus" type="number" value="50000"></div>
-				<div class="input-group"><label>รายได้อื่นๆ (บาท/เดือน)</label><input id="borrowerOtherIncome" type="number" value="0"></div>
-				<div class="input-group"><label>หนี้สินในบูโร (ผ่อนชำระต่อเดือน)</label><input id="borrowerDebt" type="number" value="5000"></div>
+
+					<div class="input-group">
+						<label>ราคาบ้าน (บาท)</label>
+						<input id="housePrice" type="text" inputmode="numeric" value="5,000,000" oninput="formatNumberInput(this)">
+					</div>
+
+					<div class="input-group">
+						<label>อายุ (ปี)</label>
+						<input id="borrowerAge" type="number" value="30">
+					</div>
+
+					<div class="input-group">
+						<label>เงินเดือน (บาท/เดือน)</label>
+						<input id="borrowerSalary" type="text" inputmode="numeric" value="50,000" oninput="formatNumberInput(this)">
+					</div>
+
+					<div class="input-group">
+						<label>โบนัส (เฉลี่ยต่อปี)</label>
+						<input id="borrowerBonus" type="text" inputmode="numeric" value="50,000" oninput="formatNumberInput(this)">
+					</div>
+
+					<div class="input-group">
+						<label>รายได้อื่นๆ (บาท/เดือน)</label>
+						<input id="borrowerOtherIncome" type="text" inputmode="numeric" value="0" oninput="formatNumberInput(this)">
+					</div>
+
+					<div class="input-group">
+						<label>หนี้สินในบูโร (ผ่อนชำระต่อเดือน)</label>
+						<input id="borrowerDebt" type="text" inputmode="numeric" value="5,000" oninput="formatNumberInput(this)">
+					</div>
+
 				<button class="btn block" onclick="calculateLoan()">🔍 วิเคราะห์สินเชื่อ</button>
 				<div class="export-section"><button class="btn btn-secondary" onclick="saveLoanLocal()">💾 บันทึกข้อมูล</button><button class="btn btn-secondary" onclick="exportToPDF()">📄 Export PDF</button><button class="btn btn-secondary" onclick="refreshPromos()">🔄 รีเฟรชโปร</button></div>
 				<div id="debtNotice" class="notice" style="display:none"></div>
@@ -285,6 +309,22 @@ let isAdmin = false;
 // ===== Utils =====
 const fmt = n => new Intl.NumberFormat('th-TH').format(Math.round(n || 0));
 let doughnut = null;
+
+// ===== NEW: Number formatting functions for inputs =====
+function formatNumberInput(inputElement) {
+    let value = inputElement.value.replace(/,/g, ''); // เอา comma ที่มีอยู่ออกก่อน
+    if (!isNaN(value) && value.length > 0) {
+        let formattedValue = parseFloat(value).toLocaleString('en-US');
+        inputElement.value = formattedValue;
+    }
+}
+
+function getNumericValue(elementId) {
+    const el = document.getElementById(elementId);
+    if (!el) return 0;
+    // เอา comma ออกก่อนแปลงเป็นตัวเลข
+    return parseFloat(el.value.replace(/,/g, '')) || 0;
+}
 
 // ===== NEW: Function to toggle collapsible cards =====
 function toggleCard(headerElement) {
@@ -778,15 +818,19 @@ function calcTiered(principal, tiers, years) {
     }
     return { monthly: pay, interest: totI };
 }
+
 function calculateLoan() {
-    const housePrice = +document.getElementById('housePrice').value || 0;
-    const age = +document.getElementById('borrowerAge').value || 0;
+    // --- ใช้ getNumericValue() เพื่อดึงค่าที่ไม่มี comma ---
+    const housePrice = getNumericValue('housePrice');
+    const age = getNumericValue('borrowerAge'); // ใช้อันนี้กับช่องอายุได้ด้วย
+    const salary = getNumericValue('borrowerSalary');
+    const bonus = getNumericValue('borrowerBonus');
+    const otherIncome = getNumericValue('borrowerOtherIncome');
+    const existingDebt = getNumericValue('borrowerDebt');
+
+    // --- ส่วนที่เหลือของฟังก์ชันเหมือนเดิมทั้งหมด ---
     const MAX_LOAN_AGE = 65;
     const maxYears = Math.max(1, MAX_LOAN_AGE - age);
-    const salary = +document.getElementById('borrowerSalary').value || 0;
-    const bonus = +document.getElementById('borrowerBonus').value || 0;
-    const otherIncome = +document.getElementById('borrowerOtherIncome').value || 0;
-    const existingDebt = +document.getElementById('borrowerDebt').value || 0;
     const totalMonthlyIncome = salary + (bonus / 12) + otherIncome;
     const bestRate = getBestPromoRate();
     let loanAmount = housePrice;
@@ -821,6 +865,7 @@ function calculateLoan() {
     buildAmort(loanAmount, bestRate, maxYears, monthlyPayment);
     compareBanks(loanAmount, age);
 }
+
 function compareBanks(loanAmount, borrowerAge) {
     const box = document.getElementById('bankComparison');
     if (!box) return;
