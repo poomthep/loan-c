@@ -293,9 +293,16 @@
         }
     }
 
+/* สำหรับโทรศัพท์มือถือ (ต่ำกว่า 600px) */
     @media (max-width: 600px) {
+        body {
+            padding: 15px; /* เพิ่มระยะห่างรอบนอก */
+        }
         .header h1 {
-            font-size: 1.5rem;
+            font-size: 1.6rem; /* ลดขนาดฟอนต์หัวข้อหลัก */
+        }
+        .header div {
+            font-size: 0.8rem; /* ลดขนาดฟอนต์หัวข้อรอง */
         }
         .card {
             padding: 15px;
@@ -313,7 +320,16 @@
             grid-template-columns: 1fr;
         }
         .fixed-rate-row {
-            grid-template-columns: 1fr;
+            grid-template-columns: 1fr; /* Stack fixed-rate inputs */
+        }
+        .welcome {
+            /* ทำให้ปุ่มเรียงต่อกันในแนวตั้งและกว้างขึ้น */
+            align-items: stretch; 
+        }
+        .welcome > div:last-child {
+            display: flex;
+            flex-direction: column; /* เรียงปุ่มแนวตั้ง */
+            gap: 10px;
         }
     }
   </style>
