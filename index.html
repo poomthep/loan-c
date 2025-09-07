@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>เครื่องมือวิเคราะห์สินเชื่อบ้าน — Login-only (No Signup) + Admin Gate</title>
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -16,155 +16,666 @@
         font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         min-height: 100vh;
-        padding: 20px;
+        padding: 10px;
+        font-size: 14px;
     }
     .container { max-width: 1200px; margin: 0 auto; width: 100%; }
-    .header { color: #fff; text-align: center; margin-bottom: 18px; }
-    .header h1 { font-size: 2.2rem; margin-bottom: 6px; text-shadow: 2px 2px 4px rgba(0, 0, 0, .25); }
-    .card { background: rgba(255, 255, 255, .96); border-radius: 20px; padding: 22px; box-shadow: 0 15px 35px rgba(0, 0, 0, .1); border: 1px solid rgba(255, 255, 255, .2); }
+    .header { color: #fff; text-align: center; margin-bottom: 15px; }
+    .header h1 { font-size: 1.8rem; margin-bottom: 5px; text-shadow: 2px 2px 4px rgba(0, 0, 0, .25); }
+    .header div { font-size: 0.8rem; }
+    .card { background: rgba(255, 255, 255, .96); border-radius: 15px; padding: 15px; box-shadow: 0 15px 35px rgba(0, 0, 0, .1); border: 1px solid rgba(255, 255, 255, .2); margin-bottom: 15px; }
     .blur { background: rgba(255, 255, 255, .12); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, .25); color: #fff; }
-    .input-group { margin-bottom: 14px; }
-    .input-group label { display: block; margin-bottom: 6px; color: #444; font-weight: 600; }
-    .input-group input, .input-group select { width: 100%; padding: 12px; border: 2px solid #e1e5e9; border-radius: 10px; font-size: 16px; background-color: #ffffff; box-shadow: none; }
+    .input-group { margin-bottom: 12px; }
+    .input-group label { display: block; margin-bottom: 5px; color: #444; font-weight: 600; font-size: 13px; }
+    .input-group input, .input-group select { 
+        width: 100%; 
+        padding: 14px 12px; 
+        border: 2px solid #e1e5e9; 
+        border-radius: 10px; 
+        font-size: 16px; 
+        background-color: #ffffff; 
+        box-shadow: none;
+        -webkit-appearance: none;
+        appearance: none;
+    }
+
+    /* ปรับปรุง input สำหรับ iOS */
+    .input-group input[type="number"], 
+    .input-group input[type="text"], 
+    .input-group input[type="email"], 
+    .input-group input[type="password"] {
+        border-radius: 10px;
+        -webkit-border-radius: 10px;
+    }
 
     /* --- Universal Button Styles --- */
-    .btn, .btn-secondary, .btn-danger { color: #fff; border: none; padding: 12px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); transition: transform 0.1s ease; }
-    .btn:active, .btn-secondary:active, .btn-danger:active { transform: scale(0.98); }
+    .btn, .btn-secondary, .btn-danger { 
+        color: #fff; 
+        border: none; 
+        padding: 14px 18px; 
+        border-radius: 10px; 
+        font-weight: 700; 
+        cursor: pointer; 
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); 
+        transition: all 0.2s ease;
+        font-size: 14px;
+        min-height: 44px; /* ขนาดขั้นต่ำสำหรับ touch */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .btn:active, .btn-secondary:active, .btn-danger:active { 
+        transform: scale(0.98); 
+        opacity: 0.8;
+    }
     .btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
     .btn.block { width: 100%; }
     .btn-secondary { background: linear-gradient(135deg, #20bf6b 0%, #01a3a4 100%); }
     .btn-danger { background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%); }
-    .btn-admin { padding: 6px 12px; font-size: 0.8rem; }
-    .btn-add-rate { font-size: 0.8rem; padding: 8px 12px; width: auto; }
+    .btn-admin { padding: 8px 12px; font-size: 12px; min-height: 36px; }
+    .btn-add-rate { font-size: 12px; padding: 10px 14px; width: auto; }
 
-    .export-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-top: 10px; }
-    .results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
-    .result-item { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: #fff; border-radius: 15px; padding: 18px; text-align: center; }
-    .result-item .value { font-size: 1.4rem; font-weight: 800; }
-    .chart-container { position: relative; height: 300px; margin-top: 14px; }
-    .bank-comparison { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-top: 12px; }
-    .bank-card { background: #fff; border-radius: 14px; padding: 16px; border: 1px solid #e9ecef; box-shadow: 0 5px 15px rgba(0, 0, 0, .05); border-left: 5px solid #667eea; }
-    .login-grid { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: end; }
-    .welcome { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .welcome-buttons { display: flex; gap: 10px; }
+    .export-section { 
+        display: grid; 
+        grid-template-columns: 1fr; 
+        gap: 8px; 
+        margin-top: 10px; 
+    }
+    
+    .results-grid { 
+        display: grid; 
+        grid-template-columns: 1fr; 
+        gap: 10px; 
+        margin-top: 10px; 
+    }
+    
+    .result-item { 
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); 
+        color: #fff; 
+        border-radius: 12px; 
+        padding: 15px; 
+        text-align: center; 
+    }
+    .result-item .value { font-size: 1.2rem; font-weight: 800; }
+    
+    .chart-container { position: relative; height: 250px; margin-top: 14px; }
+    
+    .bank-comparison { 
+        display: grid; 
+        grid-template-columns: 1fr; 
+        gap: 12px; 
+        margin-top: 12px; 
+    }
+    
+    .bank-card { 
+        background: #fff; 
+        border-radius: 12px; 
+        padding: 15px; 
+        border: 1px solid #e9ecef; 
+        box-shadow: 0 3px 10px rgba(0, 0, 0, .05); 
+        border-left: 4px solid #667eea; 
+    }
+    
+    .login-grid { 
+        display: grid; 
+        grid-template-columns: 1fr; 
+        gap: 12px; 
+        align-items: stretch; 
+    }
+    
+    .welcome { 
+        display: flex; 
+        flex-direction: column; 
+        gap: 10px; 
+    }
+    
+    .welcome-buttons { 
+        display: flex; 
+        gap: 8px; 
+        flex-wrap: wrap;
+    }
+    
+    .welcome-buttons .btn { 
+        flex: 1; 
+        min-width: 120px;
+    }
 
     /* --- Collapsible Card Styles --- */
-    .card-header { cursor: pointer; position: relative; padding-right: 25px; user-select: none; }
-    .card-header::after { content: '▲'; position: absolute; right: 5px; top: 50%; transform: translateY(-50%); font-size: 0.8em; color: #999; transition: transform 0.2s ease-in-out; }
-    .card-header.active::after { transform: translateY(-50%) rotate(180deg); }
-    .card-content.collapsed { display: none; }
+    .card-header { 
+        cursor: pointer; 
+        position: relative; 
+        padding: 12px 0; 
+        user-select: none; 
+        font-size: 16px;
+        font-weight: 600;
+        color: #333;
+        border-bottom: 1px solid #eee;
+        margin-bottom: 15px;
+    }
+    .card-header::after { 
+        content: '▼'; 
+        position: absolute; 
+        right: 5px; 
+        top: 50%; 
+        transform: translateY(-50%); 
+        font-size: 0.8em; 
+        color: #999; 
+        transition: transform 0.2s ease-in-out; 
+    }
+    .card-header.active::after { 
+        transform: translateY(-50%) rotate(180deg); 
+    }
+    .card-content.collapsed { 
+        display: none; 
+    }
     
-    .verdict { text-align: center; margin-top: 10px; padding: 6px; border-radius: 8px; font-weight: 700; color: #fff; }
+    .verdict { 
+        text-align: center; 
+        margin-top: 10px; 
+        padding: 8px; 
+        border-radius: 8px; 
+        font-weight: 700; 
+        color: #fff; 
+        font-size: 13px;
+    }
     .verdict-good { background-color: #20bf6b; }
     .verdict-ok { background-color: #f0932b; }
     .verdict-bad { background-color: #ff6b6b; }
-	
-.rate-year {
+
+    .rate-year {
         display: flex;
         justify-content: space-between;
-        align-items: center; /* เพิ่ม: จัดให้อยู่กึ่งกลางแนวตั้ง */
-        margin-bottom: 4px; /* เพิ่ม: ระยะห่างระหว่างบรรทัด */
+        align-items: center;
+        margin-bottom: 5px;
+        padding: 8px 0;
+        border-bottom: 1px solid #f0f0f0;
     }
     .rate-details {
         display: flex;
-        align-items: baseline; /* จัดให้ตัวเลขและตัวหนังสือเล็กๆ เรียงสวยงาม */
-        gap: 8px; /* เพิ่ม: ระยะห่างระหว่างตัวเลข % และคำอธิบาย */
+        align-items: baseline;
+        gap: 6px;
     }
     .rate-description {
         color: #6c757d;
-        font-size: 11px;
+        font-size: 10px;
     }
 
-    /* ========== สไตล์การจัดวาง Grid ========== */
-    .main-content-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
-    .grid-column { display: flex; flex-direction: column; gap: 22px; }
-    .full-width { grid-column: 1 / -1; }
-
-    /* ========== สไตล์สำหรับมือถือ (RESPONSIVE) ========== */
-    @media (max-width: 900px) {
-        body { padding: 10px; }
-        .main-content-grid, .login-grid { grid-template-columns: 1fr; }
-        .header h1 { font-size: 1.8rem; }
-        .card { padding: 18px; }
+    /* ========== การจัดวาง Grid สำหรับมือถือ ========== */
+    .main-content-grid { 
+        display: grid; 
+        grid-template-columns: 1fr; 
+        gap: 15px; 
+    }
+    
+    .grid-column { 
+        display: flex; 
+        flex-direction: column; 
+        gap: 15px; 
+    }
+    
+    .full-width { 
+        grid-column: 1 / -1; 
     }
 
-    @media (max-width: 600px) {
-        .header h1 { font-size: 1.6rem; }
-        .header div { font-size: 0.8rem; }
-        .card { padding: 15px; border-radius: 15px; }
-        .results-grid, .bank-comparison { grid-template-columns: 1fr; }
-        .welcome-buttons .btn { flex-grow: 1; }
+    .form-section { 
+        border: 1px solid #ddd; 
+        border-radius: 10px; 
+        padding: 12px; 
+        margin-bottom: 15px; 
     }
-	
-	.form-section { border: 1px solid #ddd; border-radius: 10px; padding: 15px; margin-bottom: 20px; }
-    .form-section legend { font-weight: 600; padding: 0 10px; }
+    .form-section legend { 
+        font-weight: 600; 
+        padding: 0 8px; 
+        font-size: 13px;
+    }
 
-/* ========== CHECKBOX GROUP STYLES ========== */
-.checkbox-group {
-    display: flex; /* ใช้ Flexbox เพื่อจัดเรียง */
-    flex-wrap: wrap; /* ให้ขึ้นบรรทัดใหม่ได้เมื่อพื้นที่ไม่พอ */
-    gap: 12px 20px; /* เว้นช่องว่างระหว่าง checkbox-label */
-}
+    /* ========== CHECKBOX GROUP STYLES ========== */
+    .checkbox-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
 
-.checkbox-group label {
-    display: flex; /* ทำให้ label เองก็เป็น flex เพื่อจัด checkbox และ text */
-    align-items: center; /* จัดให้อยู่ตรงกลางแนวตั้ง */
-    gap: 6px; /* ระยะห่างระหว่าง checkbox กับข้อความ */
-    white-space: nowrap; /* ป้องกันข้อความใน label ไม่ให้ขึ้นบรรทัดใหม่ */
-    cursor: pointer; /* เพิ่ม cursor เพื่อบอกว่าเป็น clickable */
-}
+    .checkbox-group label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        padding: 8px;
+        border: 1px solid #e1e5e9;
+        border-radius: 8px;
+        background: #f8f9fa;
+        transition: all 0.2s ease;
+    }
 
-/* ถ้าต้องการให้ช่อง input-group ที่มี checkbox-group อยู่ข้างใน มีการจัดวางที่เหมาะสมบนมือถือ */
-.input-group > .checkbox-group {
-    flex-direction: row; /* จัดเรียงเป็นแถว */
-}
+    .checkbox-group label:hover {
+        background: #e9ecef;
+    }
 
-/* เพิ่มเติม: สำหรับกรณีที่มี input-group ซ้อน input-group และมี checkbox */
-.input-group input[type="checkbox"] {
-    margin: 0; /* ลบ margin เริ่มต้นของ checkbox ออก */
-    width: 18px; /* กำหนดขนาดของ checkbox */
-    height: 18px;
-}
+    .checkbox-group input[type="checkbox"] {
+        margin: 0;
+        width: 18px;
+        height: 18px;
+        min-width: 18px;
+    }
 
-.income-rule-grid { display: grid; grid-template-columns: auto auto auto; gap: 10px 20px; align-items: center; }
-    .mrr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-	
-	/* ========== STYLES FOR REQUIRED FIELDS AND VALIDATION ========== */
-.required {
-    color: red;
-    margin-left: 4px;
-}
+    .income-rule-grid { 
+        display: grid; 
+        grid-template-columns: 1fr auto; 
+        gap: 8px 12px; 
+        align-items: center; 
+    }
+    
+    .mrr-grid { 
+        display: grid; 
+        grid-template-columns: 1fr; 
+        gap: 10px; 
+    }
 
-.input-error {
-    border-color: red !important; /* ทำให้ขอบเป็นสีแดง */
-    background-color: #fff5f5 !important; /* ทำให้พื้นหลังเป็นสีแดงจางๆ */
-}
+    /* ========== STYLES FOR REQUIRED FIELDS AND VALIDATION ========== */
+    .required {
+        color: red;
+        margin-left: 4px;
+    }
 
-#toastContainer {
-    position: fixed;
-    top: 16px;
-    right: 16px;
-    z-index: 10000;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-.toast {
-    opacity: 0;
-    transform: translateY(-8px);
-    transition: all .25s ease;
-    padding: 10px 14px;
-    border-radius: 10px;
-    color: #fff;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, .15);
-}
-.toast.show { opacity: 1; transform: translateY(0); }
-.toast.hide { opacity: 0; transform: translateY(-8px); }
-.toast.info { background: linear-gradient(135deg, #667eea, #764ba2); }
-.toast.success { background: linear-gradient(135deg, #20bf6b, #01a3a4); }
-.toast.error { background: linear-gradient(135deg, #ff6b6b, #ee5a52); }
+    .input-error {
+        border-color: red !important;
+        background-color: #fff5f5 !important;
+    }
 
-  </style>
+    /* Toast สำหรับมือถือ */
+    #toastContainer {
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        z-index: 10000;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .toast {
+        opacity: 0;
+        transform: translateY(-8px);
+        transition: all .25s ease;
+        padding: 12px 16px;
+        border-radius: 10px;
+        color: #fff;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, .15);
+        font-size: 14px;
+        text-align: center;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.hide { opacity: 0; transform: translateY(-8px); }
+    .toast.info { background: linear-gradient(135deg, #667eea, #764ba2); }
+    .toast.success { background: linear-gradient(135deg, #20bf6b, #01a3a4); }
+    .toast.error { background: linear-gradient(135deg, #ff6b6b, #ee5a52); }
+
+    /* Spinner overlay */
+    #globalSpinner {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        flex-direction: column;
+    }
+
+    .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    .spinner-label {
+        color: #fff;
+        margin-top: 15px;
+        font-size: 16px;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    /* ========== ปรับปรุงตารางสำหรับมือถือ ========== */
+    .amortization {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+        overflow-x: auto;
+        display: block;
+        white-space: nowrap;
+    }
+
+    .amortization thead,
+    .amortization tbody {
+        display: table;
+        width: 100%;
+        table-layout: fixed;
+    }
+
+    .amortization th,
+    .amortization td {
+        padding: 8px 4px;
+        border: 1px solid #ddd;
+        text-align: center;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .amortization th {
+        background: #f8f9fa;
+        font-weight: 600;
+        position: sticky;
+        top: 0;
+    }
+
+    /* Fixed Rate Row Styles */
+    .fixed-rate-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr auto;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 8px;
+        padding: 8px;
+        border: 1px solid #e1e5e9;
+        border-radius: 8px;
+        background: #f8f9fa;
+    }
+
+    .fixed-rate-year-display {
+        font-size: 13px !important;
+        padding: 8px !important;
+    }
+
+    .fixed-rate-rate-input {
+        padding: 8px !important;
+        font-size: 14px !important;
+    }
+
+    /* Bank name and analysis styles */
+    .bank-name {
+        font-size: 16px;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 5px;
+    }
+
+    .selected-promotion {
+        font-size: 13px;
+        color: #666;
+        margin-bottom: 8px;
+    }
+
+    .analysis-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+        margin-top: 10px;
+    }
+
+    .analysis-value {
+        font-weight: 700;
+        color: #667eea;
+        font-size: 14px;
+    }
+
+    /* Promo list styles */
+    .promo-list-item {
+        border: 1px solid #e9ecef;
+        border-radius: 10px;
+        padding: 12px;
+        margin-bottom: 10px;
+        background: #f8f9fa;
+    }
+
+    .promo-list-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 8px;
+        gap: 10px;
+    }
+
+    .promo-list-deadline {
+        font-size: 12px;
+        color: #dc3545;
+        margin-bottom: 5px;
+    }
+
+    .promo-list-conditions {
+        font-size: 12px;
+        color: #6c757d;
+        margin-bottom: 8px;
+    }
+
+    .promo-list-rates {
+        font-size: 12px;
+        line-height: 1.4;
+    }
+
+    /* ========== สไตล์สำหรับมือถือโดยเฉพาะ ========== */
+    @media (max-width: 768px) {
+        body { 
+            padding: 8px; 
+            font-size: 14px;
+        }
+        
+        .container {
+            max-width: 100%;
+        }
+        
+        .header h1 { 
+            font-size: 1.6rem; 
+            line-height: 1.2;
+        }
+        
+        .header div { 
+            font-size: 0.75rem; 
+            line-height: 1.3;
+        }
+        
+        .card { 
+            padding: 12px; 
+            border-radius: 12px; 
+            margin-bottom: 12px;
+        }
+        
+        .card-header {
+            font-size: 15px;
+            padding: 10px 0;
+        }
+        
+        .input-group {
+            margin-bottom: 10px;
+        }
+        
+        .input-group label {
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+        
+        .input-group input, .input-group select {
+            padding: 12px 10px;
+            font-size: 16px; /* ป้องกัน zoom ใน iOS */
+        }
+        
+        .btn, .btn-secondary, .btn-danger {
+            padding: 12px 16px;
+            font-size: 14px;
+            min-height: 44px;
+        }
+        
+        .export-section {
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+        
+        .welcome-buttons {
+            flex-direction: column;
+        }
+        
+        .welcome-buttons .btn {
+            width: 100%;
+        }
+        
+        .bank-card {
+            padding: 12px;
+        }
+        
+        .bank-name {
+            font-size: 15px;
+        }
+        
+        .result-item {
+            padding: 12px;
+        }
+        
+        .result-item .value {
+            font-size: 1.1rem;
+        }
+        
+        .chart-container {
+            height: 200px;
+        }
+        
+        /* ปรับปรุงการแสดงผลของ Fixed Rate */
+        .mrr-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .income-rule-grid {
+            grid-template-columns: 1fr;
+            gap: 5px;
+        }
+        
+        .income-rule-grid label {
+            font-size: 12px;
+            margin-bottom: 2px;
+        }
+        
+        .income-rule-grid input {
+            margin-bottom: 8px;
+        }
+        
+        /* ปรับปรุงรายการธนาคาร */
+        #bankMasterList > div {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+            padding: 8px;
+        }
+        
+        #bankMasterList > div > div:last-child {
+            align-self: stretch;
+            display: flex;
+            gap: 6px;
+        }
+        
+        #bankMasterList > div > div:last-child .btn {
+            flex: 1;
+            padding: 6px 8px;
+            font-size: 11px;
+        }
+    }
+
+    /* สำหรับหน้าจอเล็กมาก (< 480px) */
+    @media (max-width: 480px) {
+        .header h1 {
+            font-size: 1.4rem;
+        }
+        
+        .export-section {
+            grid-template-columns: 1fr;
+        }
+        
+        .promo-list-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .fixed-rate-row {
+            grid-template-columns: 1fr;
+            gap: 6px;
+        }
+        
+        .checkbox-group {
+            gap: 6px;
+        }
+        
+        .checkbox-group label {
+            padding: 6px;
+            font-size: 13px;
+        }
+    }
+
+    /* ปรับปรุงการแสดงผลเมื่อหมุนหน้าจอ */
+    @media (orientation: landscape) and (max-height: 500px) {
+        .header {
+            margin-bottom: 10px;
+        }
+        
+        .header h1 {
+            font-size: 1.4rem;
+            margin-bottom: 3px;
+        }
+        
+        .header div {
+            font-size: 0.7rem;
+        }
+        
+        .card {
+            margin-bottom: 10px;
+        }
+        
+        .chart-container {
+            height: 180px;
+        }
+    }
+
+    /* ซ่อน scrollbar ใน webkit browsers */
+    ::-webkit-scrollbar {
+        width: 3px;
+        height: 3px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: rgba(0,0,0,0.2);
+        border-radius: 3px;
+    }
+
+    /* Focus styles สำหรับ accessibility */
+    .btn:focus,
+    .input-group input:focus,
+    .input-group select:focus {
+        outline: 2px solid #667eea;
+        outline-offset: 2px;
+    }
+
+    /* Loading state สำหรับปุ่ม */
+    .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none !important;
+    }
+
+</style>
 
   <script>
     (function(){
@@ -221,82 +732,108 @@
     
     <div class="header">
       <h1>🏠 เครื่องมือวิเคราะห์สินเชื่อบ้าน</h1>
-      <div>Login-only + Admin Gate — ผู้ใช้ทั่วไปเห็น/คำนวณได้ แต่แก้โปรได้เฉพาะ Admin</div>
+      <div>Login-only + Admin Gate — ผู้ใช้ทั่วไปเห็น/คำนวดได้ แต่แก้โปรได้เฉพาะ Admin</div>
     </div>
 
-    <div class="card blur" style="margin-bottom: 22px;">
+    <div class="card blur">
       <div id="loginArea">
         <form id="loginForm" class="login-grid" onsubmit="event.preventDefault(); login();" autocomplete="on">
-          <div class="input-group" style="margin:0"> <label style="color:#fff">อีเมล</label> <input id="email" name="email" type="email" placeholder="admin@yourbank.com" required autocomplete="username email" autocapitalize="none" spellcheck="false" inputmode="email"> </div>
-          <div class="input-group" style="margin:0"> <label style="color:#fff">รหัสผ่าน</label> <input id="password" name="password" type="password" placeholder="••••••••" required autocomplete="current-password"> </div>
+          <div class="input-group"> 
+            <label style="color:#fff">อีเมล</label> 
+            <input id="email" name="email" type="email" placeholder="admin@yourbank.com" required autocomplete="username email" autocapitalize="none" spellcheck="false" inputmode="email"> 
+          </div>
+          <div class="input-group"> 
+            <label style="color:#fff">รหัสผ่าน</label> 
+            <input id="password" name="password" type="password" placeholder="••••••••" required autocomplete="current-password"> 
+          </div>
           <button class="btn" id="loginBtn" type="submit" disabled>เข้าสู่ระบบ</button>
         </form>
-        <div id="libStatus" style="margin-top:8px;background:#fff3cd;color:#8a6d3b;border:1px solid #ffeaa7;padding:8px 10px;border-radius:8px">กำลังโหลดไลบรารี Supabase...</div>
-        <div id="loginError" style="display:none;margin-top:8px;background:#ff6b6b99;padding:8px 10px;border-radius:8px">เกิดข้อผิดพลาดในการเข้าสู่ระบบ</div>
-        <div style="margin-top:6px;font-size:12px;opacity:.9">* ปิดการสมัครสมาชิก — ผู้ใช้จัดการใน Supabase เท่านั้น</div>
+        <div id="libStatus" style="margin-top:8px;background:#fff3cd;color:#8a6d3b;border:1px solid #ffeaa7;padding:8px 10px;border-radius:8px;font-size:12px;">กำลังโหลดไลบรารี Supabase...</div>
+        <div id="loginError" style="display:none;margin-top:8px;background:#ff6b6b99;padding:8px 10px;border-radius:8px;font-size:12px;">เกิดข้อผิดพลาดในการเข้าสู่ระบบ</div>
+        <div style="margin-top:6px;font-size:11px;opacity:.9">* ปิดการสมัครสมาชิก — ผู้ใช้จัดการใน Supabase เท่านั้น</div>
       </div>
       <div id="userArea" class="welcome" style="display:none">
         <div>
           <div style="font-weight:700">ยินดีต้อนรับ <span id="who"></span></div>
-          <div id="roleBadge" style="font-size:12px;opacity:.9"></div>
+          <div id="roleBadge" style="font-size:11px;opacity:.9"></div>
         </div>
-        <div class="welcome-buttons"> <button class="btn btn-secondary" onclick="logout()">ออกจากระบบ</button> <button class="btn btn-secondary" onclick="refreshPromos()">รีเฟรชโปร</button> </div>
+        <div class="welcome-buttons"> 
+          <button class="btn btn-secondary" onclick="logout()">ออกจากระบบ</button> 
+          <button class="btn btn-secondary" onclick="refreshPromos()">รีเฟรชโปร</button> 
+        </div>
       </div>
     </div>
 
     <div class="main-content-grid" id="mainContent" style="display: none;">
       
-		  <div class="grid-column">
-			<div class="card">
-			  <h2 class="card-header active" onclick="toggleCard(this)">📊 ข้อมูลสินเชื่อและผู้กู้</h2>
-			  <div class="card-content">
-				<div class="input-group">
-					<label>ราคาบ้าน (บาท)</label>
-					<input id="housePrice" type="text" inputmode="numeric" value="5,000,000" oninput="formatNumberInput(this)">
-				</div>
-				<div class="input-group">
-					<label>อายุ (ปี)</label>
-					<input id="borrowerAge" type="number" value="30">
-				</div>
-				<div class="input-group">
-					<label>เงินเดือน (บาท/เดือน)</label>
-					<input id="borrowerSalary" type="text" inputmode="numeric" value="50,000" oninput="formatNumberInput(this)">
-				</div>
-				<div class="input-group">
-					<label>โบนัส (เฉลี่ยต่อปี)</label>
-					<input id="borrowerBonus" type="text" inputmode="numeric" value="50,000" oninput="formatNumberInput(this)">
-				</div>
-				<div class="input-group">
-					<label>รายได้อื่นๆ (บาท/เดือน)</label>
-					<input id="borrowerOtherIncome" type="text" inputmode="numeric" value="0" oninput="formatNumberInput(this)">
-				</div>
-				<div class="input-group">
-					<label>หนี้สินในบูโร (ผ่อนชำระต่อเดือน)</label>
-					<input id="borrowerDebt" type="text" inputmode="numeric" value="5,000" oninput="formatNumberInput(this)">
-				</div>
-				<button class="btn block" onclick="calculateLoan()">🔍 วิเคราะห์สินเชื่อ</button>
-				<div class="export-section"><button class="btn btn-secondary" onclick="saveLoanLocal()">💾 บันทึกข้อมูล</button><button class="btn btn-secondary" onclick="exportToPDF()">📄 Export PDF</button><button class="btn btn-secondary" onclick="refreshPromos()">🔄 รีเฟรชโปร</button></div>
-				<div id="debtNotice" class="notice" style="display:none"></div>
-			  </div>
-			</div>
-		  </div>
-
-      <div class="grid-column">
-        <div class="card">
-          <h2 class="card-header" onclick="toggleCard(this)">💰 ผลการวิเคราะห์ (ดอกเบี้ยเฉลี่ย)</h2>
-          <div class="card-content collapsed">
-            <div class="results-grid" style="grid-template-columns: 1fr 1fr;">
-              <div class="result-item"><div>ยอดกู้ยืม</div><div id="loanAmount" class="value">-</div></div>
-              <div class="result-item"><div>ผ่อนต่อเดือน</div><div id="monthlyPayment" class="value">-</div></div>
-            </div>
-            <div class="chart-container"><canvas id="paymentChart"></canvas></div>
+      <div class="card">
+        <h2 class="card-header active" onclick="toggleCard(this)">📊 ข้อมูลสินเชื่อและผู้กู้</h2>
+        <div class="card-content">
+          <div class="input-group">
+            <label>ราคาบ้าน (บาท)</label>
+            <input id="housePrice" type="text" inputmode="numeric" value="5,000,000" oninput="formatNumberInput(this)">
           </div>
+          <div class="input-group">
+            <label>อายุ (ปี)</label>
+            <input id="borrowerAge" type="number" value="30">
+          </div>
+          <div class="input-group">
+            <label>เงินเดือน (บาท/เดือน)</label>
+            <input id="borrowerSalary" type="text" inputmode="numeric" value="50,000" oninput="formatNumberInput(this)">
+          </div>
+          <div class="input-group">
+            <label>โบนัส (เฉลี่ยต่อปี)</label>
+            <input id="borrowerBonus" type="text" inputmode="numeric" value="50,000" oninput="formatNumberInput(this)">
+          </div>
+          <div class="input-group">
+            <label>รายได้อื่นๆ (บาท/เดือน)</label>
+            <input id="borrowerOtherIncome" type="text" inputmode="numeric" value="0" oninput="formatNumberInput(this)">
+          </div>
+          <div class="input-group">
+            <label>หนี้สินในบูโร (ผ่อนชำระต่อเดือน)</label>
+            <input id="borrowerDebt" type="text" inputmode="numeric" value="5,000" oninput="formatNumberInput(this)">
+          </div>
+          <button class="btn block" onclick="calculateLoan()">🔍 วิเคราะห์สินเชื่อ</button>
+          <div class="export-section">
+            <button class="btn btn-secondary" onclick="saveLoanLocal()">💾 บันทึกข้อมูล</button>
+            <button class="btn btn-secondary" onclick="exportToPDF()">📄 Export PDF</button>
+            <button class="btn btn-secondary" onclick="refreshPromos()">🔄 รีเฟรชโปร</button>
+          </div>
+          <div id="debtNotice" class="notice" style="display:none"></div>
         </div>
-        <div class="card">
-          <h2 class="card-header" onclick="toggleCard(this)">📋 ตารางการชำระหนี้ (12 เดือนแรก)</h2>
-          <div class="card-content collapsed">
+      </div>
+
+      <div class="card">
+        <h2 class="card-header" onclick="toggleCard(this)">💰 ผลการวิเคราะห์ (ดอกเบี้ยเฉลี่ย)</h2>
+        <div class="card-content collapsed">
+          <div class="results-grid">
+            <div class="result-item">
+              <div>ยอดกู้ยืม</div>
+              <div id="loanAmount" class="value">-</div>
+            </div>
+            <div class="result-item">
+              <div>ผ่อนต่อเดือน</div>
+              <div id="monthlyPayment" class="value">-</div>
+            </div>
+          </div>
+          <div class="chart-container"><canvas id="paymentChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="card-header" onclick="toggleCard(this)">📋 ตารางการชำระหนี้ (12 เดือนแรก)</h2>
+        <div class="card-content collapsed">
+          <div style="overflow-x: auto;">
             <table class="amortization">
-              <thead><tr><th width="10%">งวด</th><th width="22%">ยอดผ่อน</th><th width="22%">เงินต้น</th><th width="22%">ดอกเบี้ย</th><th width="24%">เงินต้นคงเหลือ</th></tr></thead>
+              <thead>
+                <tr>
+                  <th width="10%">งวด</th>
+                  <th width="22%">ยอดผ่อน</th>
+                  <th width="22%">เงินต้น</th>
+                  <th width="22%">ดอกเบี้ย</th>
+                  <th width="24%">เงินต้นคงเหลือ</th>
+                </tr>
+              </thead>
               <tbody id="amortizationTable"></tbody>
             </table>
           </div>
@@ -308,22 +845,28 @@
         <div class="card-content collapsed">
           <div id="promoStatus" class="notice" style="display:none"></div>
           <div id="bankComparison" class="bank-comparison"></div>
-          <div id="rateUpdateTime" style="text-align:center;color:#666;margin-top:6px"></div>
+          <div id="rateUpdateTime" style="text-align:center;color:#666;margin-top:6px;font-size:12px;"></div>
         </div>
       </div>
 
       <div class="card full-width" id="bankAdmin" style="display:none">
         <h2 class="card-header" onclick="toggleCard(this)">🏦 จัดการข้อมูลธนาคารและ MRR</h2>
         <div class="card-content collapsed">
-          <div class="input-group"><label>ชื่อธนาคาร <span class="required">*</span></label><input id="bankNameMasterInput" placeholder="เช่น ธนาคารกรุงเทพ"></div>
-          <div class="input-group"><label>MRR ปัจจุบัน (%) <span class="required">*</span></label><input id="bankMrrMasterInput" type="number" step="0.01" placeholder="เช่น 7.30"></div>
+          <div class="input-group">
+            <label>ชื่อธนาคาร <span class="required">*</span></label>
+            <input id="bankNameMasterInput" placeholder="เช่น ธนาคารกรุงเทพ">
+          </div>
+          <div class="input-group">
+            <label>MRR ปัจจุบัน (%) <span class="required">*</span></label>
+            <input id="bankMrrMasterInput" type="number" step="0.01" placeholder="เช่น 7.30">
+          </div>
           <input type="hidden" id="bankIdInput">
           <div class="export-section">
             <button class="btn btn-secondary" onclick="saveBank()">💾 บันทึก</button>
             <button class="btn btn-danger" onclick="clearBankForm()">🧹 ล้างฟอร์ม</button>
           </div>
           <div style="margin-top:14px">
-            <h3 style="text-align:center;margin-bottom:8px">รายชื่อธนาคารในระบบ</h3>
+            <h3 style="text-align:center;margin-bottom:8px;font-size:14px;">รายชื่อธนาคารในระบบ</h3>
             <div id="bankMasterList"></div>
           </div>
         </div>
@@ -339,23 +882,23 @@
               <select id="promoBankName" onchange="handleBankSelectionChange()"></select>
             </div>
             <div class="input-group">
-              <label>ชื่อโปรโมชัน/แคมเปญ <span class="required">*</span></label>
+              <label>ชื่อโปรโมชั่น/แคมเปญ <span class="required">*</span></label>
               <input id="promoName" type="text" placeholder="เช่น บ้านใหม่ ดอกเบี้ยพิเศษ">
             </div>
-<div class="mrr-grid" style="grid-template-columns: 1fr 1fr 1fr;">
-    <div class="input-group">
-        <label>โปรโมชันเริ่มวันที่</label>
-        <input id="promoStartDate" type="date">
-    </div>
-    <div class="input-group">
-        <label>ยื่นกู้ภายในวันที่</label>
-        <input id="promoEndDate" type="date">
-    </div>
-    <div class="input-group">
-        <label>ทำนิติกรรมภายในวันที่</label>
-        <input id="contractEndDate" type="date">
-    </div>
-</div>
+            <div class="mrr-grid">
+              <div class="input-group">
+                <label>โปรโมชั่นเริ่มวันที่</label>
+                <input id="promoStartDate" type="date">
+              </div>
+              <div class="input-group">
+                <label>ยื่นกู้ ภายในวันที่</label>
+                <input id="promoEndDate" type="date">
+              </div>
+              <div class="input-group">
+                <label>ทำนิติกรรม ภายในวันที่</label>
+                <input id="contractEndDate" type="date">
+              </div>
+            </div>
             <div class="input-group">
               <label>ประเภทสินเชื่อ (เลือกได้หลายข้อ)</label>
               <div class="checkbox-group">
@@ -366,6 +909,7 @@
               </div>
             </div>
           </fieldset>
+          
           <fieldset class="form-section">
             <legend>เงื่อนไขผู้กู้</legend>
             <div class="mrr-grid">
@@ -373,11 +917,14 @@
                 <label>รายได้สูงสุดไม่เกิน (บาท/เดือน)</label>
                 <input id="maxIncomeThb" type="text" inputmode="numeric" oninput="formatNumberInput(this)" placeholder="เว้นว่างถ้าไม่มีกำหนด">
               </div>
-              <div class="input-group" style="justify-content: center; display: flex; align-items: center; height: 100%;">
-                <label class="checkbox-group" style="padding-top: 20px;"><input id="isFirstMortgageOnly" type="checkbox"> ต้องเป็นสัญญาแรกเท่านั้น</label>
+              <div class="input-group">
+                <label class="checkbox-group">
+                  <input id="isFirstMortgageOnly" type="checkbox"> ต้องเป็นสักการแรกเท่านั้น
+                </label>
               </div>
             </div>
           </fieldset>
+          
           <fieldset class="form-section">
             <legend>ส่วนที่ 2: อัตราดอกเบี้ย</legend>
             <div class="input-group">
@@ -388,11 +935,18 @@
             <div class="input-group">
               <label style="font-weight: 600;">ดอกเบี้ยปีถัดไป (อ้างอิง MRR)</label>
               <div class="mrr-grid">
-                <div><label>MRR ธนาคาร (%)</label><input id="promoMrrDisplay" type="text" disabled></div>
-                <div><label>ส่วนต่างที่จะลบ (%)</label><input id="promoMrrSubtractInput" type="number" step="0.01"></div>
+                <div>
+                  <label>MRR ธนาคาร (%)</label>
+                  <input id="promoMrrDisplay" type="text" disabled>
+                </div>
+                <div>
+                  <label>ส่วนต่างที่จะลบ (%)</label>
+                  <input id="promoMrrSubtractInput" type="number" step="0.01">
+                </div>
               </div>
             </div>
           </fieldset>
+          
           <fieldset class="form-section">
             <legend>ส่วนที่ 3: วงเงินและระยะเวลา</legend>
             <div class="mrr-grid">
@@ -414,16 +968,29 @@
               <input id="promoPrepaymentYears" type="number" placeholder="เช่น 3 หรือ 5">
             </div>
           </fieldset>
+          
           <fieldset class="form-section">
             <legend>ส่วนที่ 5: เกณฑ์พิจารณารายได้</legend>
-            <p style="font-size:12px; margin-bottom:10px;">ระบุเป็น % ของรายได้นั้นๆ ที่ธนาคารนำมาคำนวณ (ถ้าไม่ระบุ = 100%)</p>
+            <p style="font-size:11px; margin-bottom:10px;">ระบุเป็น % ของรายได้นั้นๆ ที่ธนาคารนำมาคำนวด (ถ้าไม่ระบุ = 100%)</p>
             <div class="income-rule-grid">
-                <label>เงินเดือนประจำ</label><input id="incomeSalary" type="number" value="100">%
-                <label>OT / ค่าล่วงเวลา</label><input id="incomeOT" type="number" value="50">%
-                <label>ค่าคอมมิชชัน</label><input id="incomeCommission" type="number" value="50">%
-                <label>โบนัส (หาร 12)</label><input id="incomeBonus" type="number" value="50">%
+              <label>เงินเดือนประจำ</label>
+              <input id="incomeSalary" type="number" value="100">
+              <span>%</span>
+              
+              <label>OT / ค่าล่วงเวลา</label>
+              <input id="incomeOT" type="number" value="50">
+              <span>%</span>
+              
+              <label>ค่าคอมมิชชั่น</label>
+              <input id="incomeCommission" type="number" value="50">
+              <span>%</span>
+              
+              <label>โบนัส (หาร 12)</label>
+              <input id="incomeBonus" type="number" value="50">
+              <span>%</span>
             </div>
           </fieldset>
+          
           <input type="hidden" id="promoIdInput">
           <div class="export-section">
             <button class="btn btn-secondary" onclick="savePromotion()">💾 บันทึก/เพิ่มโปร</button>
@@ -440,7 +1007,6 @@
       <div class="spinner"></div>
       <div class="spinner-label">กำลังทำงาน...</div>
     </div>
-</body>
 
 <script>
 // ===== Config =====
@@ -501,8 +1067,13 @@ function addFixedRateYear(year = 0, rate = '') {
 
 function showSpinner(text = 'กำลังทำงาน...') {
     const ov = document.getElementById('globalSpinner');
-    if (ov) { ov.style.display = 'flex'; const label = ov.querySelector('.spinner-label'); if (label) label.textContent = text; }
+    if (ov) { 
+        ov.style.display = 'flex'; 
+        const label = ov.querySelector('.spinner-label'); 
+        if (label) label.textContent = text; 
+    }
 }
+
 function hideSpinner() {
     const ov = document.getElementById('globalSpinner');
     if (ov) ov.style.display = 'none';
@@ -516,7 +1087,10 @@ function toast(message, type = 'info') {
     el.textContent = message;
     cont.appendChild(el);
     requestAnimationFrame(() => el.classList.add('show'));
-    setTimeout(() => { el.classList.remove('show'); el.classList.add('hide'); }, 2500);
+    setTimeout(() => { 
+        el.classList.remove('show'); 
+        el.classList.add('hide'); 
+    }, 2500);
     setTimeout(() => el.remove(), 3000);
 }
 
@@ -526,30 +1100,32 @@ function initSupabase() {
         if (USE_SUPABASE && !supabaseClient && window.supabase) {
             supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         }
-    } catch (e) { console.error('Supabase init error:', e); }
-}
-
-// ===== เพิ่มฟังก์ชันที่ขาดหายไปกลับเข้ามา =====
-function waitForSupabase(timeout = 8000) {
-    return new Promise(res => {
-        const start = Date.now();
-        (function check() {
-            if (window.supabase) return res(true);
-            if (Date.now() - start > timeout) return res(false);
-            requestAnimationFrame(check);
-        })();
-    });
+    } catch (e) { 
+        console.error('Supabase init error:', e); 
+    }
 }
 
 async function login() {
-    if (!supabaseClient) { initSupabase(); if (!supabaseClient) { showLoginError('ยังโหลดไลบรารีไม่เสร็จ'); return; } }
+    if (!supabaseClient) { 
+        initSupabase(); 
+        if (!supabaseClient) { 
+            showLoginError('ยังโหลดไลบรารีไม่เสร็จ'); 
+            return; 
+        } 
+    }
+    
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
-    if (!email || !password) { showLoginError('กรอกอีเมลและรหัสผ่าน'); return; }
+    if (!email || !password) { 
+        showLoginError('กรอกอีเมลและรหัสผ่าน'); 
+        return; 
+    }
+    
     try {
         showSpinner('กำลังเข้าสู่ระบบ...');
         const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        
         currentUser = data.user;
         await determineAdmin();
         updateAuthUI(true);
@@ -562,10 +1138,13 @@ async function login() {
         hideSpinner();
     }
 }
+
 async function logout() {
     try {
         await supabaseClient.auth.signOut();
-    } catch (e) { console.error("Logout failed:", e); }
+    } catch (e) { 
+        console.error("Logout failed:", e); 
+    }
     currentUser = null;
     isAdmin = false;
     promoByBank = {};
@@ -573,10 +1152,15 @@ async function logout() {
     updateAuthUI(false);
     document.getElementById('bankComparison').innerHTML = '';
 }
+
 function showLoginError(msg) {
     const errEl = document.getElementById('loginError');
-    if(errEl) { errEl.textContent = msg; errEl.style.display = 'block'; }
+    if(errEl) { 
+        errEl.textContent = msg; 
+        errEl.style.display = 'block'; 
+    }
 }
+
 function updateAuthUI(loggedIn) {
     const loginArea = document.getElementById('loginArea');
     const userArea = document.getElementById('userArea');
@@ -609,8 +1193,12 @@ function updateAuthUI(loggedIn) {
     const pwd = document.getElementById('password');
     if (pwd) pwd.value = '';
 }
+
 async function determineAdmin() {
-    if (!currentUser) { isAdmin = false; return; }
+    if (!currentUser) { 
+        isAdmin = false; 
+        return; 
+    }
     try {
         const { data, error } = await supabaseClient.rpc('get_my_role');
         if (error) throw error;
@@ -635,23 +1223,25 @@ async function fetchBanks() {
         toast('ไม่สามารถดึงข้อมูลธนาคารได้', 'error');
     }
 }
+
 function renderBankList() {
     const container = document.getElementById('bankMasterList');
     if (!container) return;
     if (allBanks.length === 0) {
-        container.innerHTML = '<p style="text-align:center;color:#666">ยังไม่มีข้อมูลธนาคาร</p>';
+        container.innerHTML = '<p style="text-align:center;color:#666;font-size:12px;">ยังไม่มีข้อมูลธนาคาร</p>';
         return;
     }
     container.innerHTML = allBanks.map(bank => `
-        <div style="padding:10px;border-bottom:1px solid #e9ecef;display:flex;justify-content:space-between;align-items:center;">
-          <div><strong>${bank.bank_name}</strong> <span style="color:#555;">(MRR: ${bank.current_mrr}%)</span></div>
-          <div style="display:flex;gap:6px">
+        <div style="padding:8px;border-bottom:1px solid #e9ecef;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+          <div style="flex:1;"><strong style="font-size:13px;">${bank.bank_name}</strong><br><span style="color:#555;font-size:11px;">MRR: ${bank.current_mrr}%</span></div>
+          <div style="display:flex;gap:4px;flex-direction:column;">
             <button class="btn btn-secondary btn-admin" onclick='editBank(${JSON.stringify(bank)})'>แก้ไข</button>
             <button class="btn btn-danger btn-admin" onclick="deleteBank('${bank.id}', '${bank.bank_name}')">ลบ</button>
           </div>
         </div>
     `).join('');
 }
+
 function populateBankDropdown() {
     const select = document.getElementById('promoBankName');
     if (!select) return;
@@ -663,10 +1253,11 @@ function populateBankDropdown() {
         select.appendChild(option);
     });
 }
+
 async function saveBank() {
     if (!isAdmin) return;
-	
-	    // --- Validation Logic ---
+    
+    // --- Validation Logic ---
     const requiredFields = ['bankNameMasterInput', 'bankMrrMasterInput'];
     let firstErrorField = null;
 
@@ -687,7 +1278,7 @@ async function saveBank() {
         return;
     }
     // --- End Validation Logic ---
-	
+    
     const id = document.getElementById('bankIdInput').value;
     const bank_name = document.getElementById('bankNameMasterInput').value.trim();
     const current_mrr = parseFloat(document.getElementById('bankMrrMasterInput').value);
@@ -707,14 +1298,21 @@ async function saveBank() {
         toast('บันทึกข้อมูลธนาคารสำเร็จ', 'success');
         clearBankForm();
         await fetchBanks();
-    } catch (e) { alert('เกิดข้อผิดพลาด: ' + e.message); }
+    } catch (e) { 
+        alert('เกิดข้อผิดพลาด: ' + e.message); 
+    }
 }
+
 function editBank(bank) {
     document.getElementById('bankIdInput').value = bank.id;
     document.getElementById('bankNameMasterInput').value = bank.bank_name;
     document.getElementById('bankMrrMasterInput').value = bank.current_mrr;
-    window.scrollTo({ top: document.getElementById('bankAdmin').offsetTop - 20, behavior: 'smooth' });
+    const bankAdmin = document.getElementById('bankAdmin');
+    if (bankAdmin) {
+        bankAdmin.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
 }
+
 async function deleteBank(id, name) {
     if (!isAdmin || !confirm(`คุณแน่ใจหรือไม่ว่าจะลบธนาคาร "${name}"?`)) return;
     try {
@@ -722,8 +1320,11 @@ async function deleteBank(id, name) {
         if (error) throw error;
         toast('ลบธนาคารสำเร็จ', 'success');
         await fetchBanks();
-    } catch (e) { alert('เกิดข้อผิดพลาด: ' + e.message); }
+    } catch (e) { 
+        alert('เกิดข้อผิดพลาด: ' + e.message); 
+    }
 }
+
 function clearBankForm() {
     document.getElementById('bankIdInput').value = '';
     document.getElementById('bankNameMasterInput').value = '';
@@ -743,38 +1344,40 @@ async function fetchPromotions() {
         renderPromoList();
     } catch (e) {
         console.error("Failed to fetch promotions:", e);
-        toast('ไม่สามารถดึงโปรโมชันได้', 'error');
+        toast('ไม่สามารถดึงโปรโมชั่นได้', 'error');
     }
 }
+
 function renderPromoList() {
     const h = document.getElementById('myPromoList');
     if (!h) return;
     const flatPromos = Object.values(promoByBank).flat();
     if (flatPromos.length === 0) {
-        h.innerHTML = '<p style="text-align:center;color:#666">ยังไม่มีโปรในฐานข้อมูล</p>';
+        h.innerHTML = '<p style="text-align:center;color:#666;font-size:12px;">ยังไม่มีโปรในฐานข้อมูล</p>';
         return;
     }
     h.innerHTML = flatPromos.map(p => {
-        const ratesText = (p.rates || []).map(r => `ปีที่ ${r.year === 99 ? 'ถัดไป' : r.year}: ${r.rate.toFixed(2)}% <span style="color:#6c757d; font-size:11px">(${r.description || ''})</span>`).join('<br>');
+        const ratesText = (p.rates || []).map(r => `<div class='rate-year'><span>ปีที่ ${r.year === 99 ? 'ถัดไป' : r.year}</span><div class="rate-details"><span>${r.rate.toFixed(2)}%</span><span class="rate-description">(${r.description || ''})</span></div></div>`).join('');
         const endDate = p.promo_end_date ? new Date(p.promo_end_date).toLocaleDateString('th-TH') : 'ไม่มีกำหนด';
         let conditions = [];
         if (p.max_income_thb) conditions.push(`รายได้ไม่เกิน ${fmt(p.max_income_thb)} บ.`);
-        if (p.is_first_mortgage_only) conditions.push(`ต้องเป็นสัญญาแรก`);
+        if (p.is_first_mortgage_only) conditions.push(`ต้องเป็นสักการแรก`);
 
         return `<div class="promo-list-item">
             <div class="promo-list-header">
               <div><strong>${p.bank_name}</strong> — ${p.name}</div>
-              ${isAdmin ? `<div style="display:flex;gap:6px">
+              ${isAdmin ? `<div style="display:flex;gap:4px;flex-wrap:wrap;">
                   <button class="btn btn-secondary btn-admin" onclick='editPromotion(${JSON.stringify(p)})'>แก้ไข</button>
                   <button class="btn btn-danger btn-admin" onclick="deletePromotion('${p.id}')">ลบ</button>
                 </div>` : ''}
             </div>
-            <div class="promo-list-deadline">ยื่นกู้ภายใน: ${endDate}</div>
+            <div class="promo-list-deadline">ยื่นกู้ ภายใน: ${endDate}</div>
             <div class="promo-list-conditions">${conditions.join(', ')}</div>
             <div class="promo-list-rates">${ratesText}</div>
           </div>`;
     }).join('');
 }
+
 function handleBankSelectionChange() {
     const selectedBankName = document.getElementById('promoBankName').value;
     const mrrDisplay = document.getElementById('promoMrrDisplay');
@@ -785,10 +1388,11 @@ function handleBankSelectionChange() {
         mrrDisplay.value = '';
     }
 }
+
 async function savePromotion() {
     if (!isAdmin) return;
-	
-	    // --- Validation Logic ---
+    
+    // --- Validation Logic ---
     const requiredFields = ['promoBankName', 'promoName'];
     let firstErrorField = null;
 
@@ -805,7 +1409,6 @@ async function savePromotion() {
     const rates = parseRatesFromForm();
     if (rates.length === 0) {
         alert('กรุณากำหนดโครงสร้างดอกเบี้ยอย่างน้อย 1 รายการ');
-        // อาจจะเพิ่ม highlight ให้กับส่วนดอกเบี้ยในอนาคต
         return;
     }
     
@@ -815,7 +1418,7 @@ async function savePromotion() {
         return;
     }
     // --- End Validation Logic ---
-	
+    
     const id = document.getElementById('promoIdInput').value.trim();
     const promoData = {
         bank_name: document.getElementById('promoBankName').value,
@@ -839,10 +1442,12 @@ async function savePromotion() {
             bonus: parseInt(document.getElementById('incomeBonus').value, 10) || 50,
         }
     };
+    
     if (!promoData.bank_name || !promoData.name || promoData.rates.length === 0) {
-        alert('กรุณากรอกข้อมูลโปรโมชันให้ครบถ้วน');
+        alert('กรุณากรอกข้อมูลโปรโมชั่นให้ครบถ้วน');
         return;
     }
+    
     try {
         if (id) {
             const { error } = await supabaseClient.from('bank_promotions').update(promoData).eq('id', id);
@@ -851,11 +1456,14 @@ async function savePromotion() {
             const { error } = await supabaseClient.from('bank_promotions').insert([promoData]);
             if (error) throw error;
         }
-        toast('บันทึกโปรโมชันสำเร็จ', 'success');
+        toast('บันทึกโปรโมชั่นสำเร็จ', 'success');
         clearPromoForm();
         await fetchPromotions();
-    } catch (e) { alert('เกิดข้อผิดพลาด: ' + e.message); }
+    } catch (e) { 
+        alert('เกิดข้อผิดพลาด: ' + e.message); 
+    }
 }
+
 function editPromotion(p) {
     document.getElementById('promoIdInput').value = p.id || '';
     document.getElementById('promoBankName').value = p.bank_name || '';
@@ -879,17 +1487,24 @@ function editPromotion(p) {
         document.getElementById('incomeBonus').value = p.income_rules.bonus || 50;
     }
     populateFormWithRates(p.rates || []);
-    window.scrollTo({ top: document.getElementById('promoAdmin').offsetTop - 20, behavior: 'smooth' });
+    const promoAdmin = document.getElementById('promoAdmin');
+    if (promoAdmin) {
+        promoAdmin.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
 }
+
 async function deletePromotion(id) {
-    if (!isAdmin || !id || !confirm('คุณแน่ใจหรือไม่ว่าจะลบโปรโมชันนี้?')) return;
+    if (!isAdmin || !id || !confirm('คุณแน่ใจหรือไม่ว่าจะลบโปรโมชั่นนี้?')) return;
     try {
         const { error } = await supabaseClient.from('bank_promotions').delete().eq('id', id);
         if (error) throw error;
         await fetchPromotions();
-        toast('ลบโปรโมชันเรียบร้อย');
-    } catch (e) { alert('เกิดข้อผิดพลาด: ' + e.message); }
+        toast('ลบโปรโมชั่นเรียบร้อย');
+    } catch (e) { 
+        alert('เกิดข้อผิดพลาด: ' + e.message); 
+    }
 }
+
 function clearPromoForm() {
     document.getElementById('promoIdInput').value = '';
     document.getElementById('promoBankName').value = '';
@@ -910,6 +1525,7 @@ function clearPromoForm() {
     document.getElementById('incomeBonus').value = 50;
     clearPromoFormFields();
 }
+
 function parseRatesFromForm() {
     const rates = [];
     document.querySelectorAll('.fixed-rate-row').forEach(row => {
@@ -928,6 +1544,7 @@ function parseRatesFromForm() {
     }
     return rates.sort((a, b) => a.year - b.year);
 }
+
 function populateFormWithRates(rates) {
     clearPromoFormFields();
     (rates || []).forEach(rate => {
@@ -943,6 +1560,7 @@ function populateFormWithRates(rates) {
         }
     });
 }
+
 function clearPromoFormFields() {
     document.getElementById('fixedRatesContainer').innerHTML = '';
     document.getElementById('promoMrrDisplay').value = '';
@@ -951,17 +1569,28 @@ function clearPromoFormFields() {
 
 // ===== Core Calculation Engine =====
 function runAdvancedAnalysis(promo, borrower) {
-    const analysis = { verdict: "N/A", finalLoanAmount: 0, monthlyPayment: 0, finalDSR: 0, maxTerm: 0, verdictClass: "verdict-ok", maxLoanAmount: 0 };
+    const analysis = { 
+        verdict: "N/A", 
+        finalLoanAmount: 0, 
+        monthlyPayment: 0, 
+        finalDSR: 0, 
+        maxTerm: 0, 
+        verdictClass: "verdict-ok", 
+        maxLoanAmount: 0 
+    };
+    
     if (!borrower.age || borrower.salary <= 0) {
         analysis.verdict = "กรอกข้อมูลผู้กู้";
         analysis.verdictClass = "verdict-bad";
         return analysis;
     }
+    
     const rules = promo.income_rules || { salary: 100, ot: 50, commission: 50, bonus: 50 };
     const assessableSalary = borrower.salary * (rules.salary / 100);
     const assessableBonus = (borrower.bonus / 12) * (rules.bonus / 100);
     const assessableOther = borrower.otherIncome;
     analysis.totalAssessableIncome = assessableSalary + assessableBonus + assessableOther;
+    
     if (analysis.totalAssessableIncome <= 0) return analysis;
 
     analysis.maxTerm = Math.max(1, (promo.max_loan_age || 65) - borrower.age);
@@ -1015,10 +1644,12 @@ function calculateLoan() {
         otherIncome: getNumericValue('borrowerOtherIncome'),
         debt: getNumericValue('borrowerDebt'),
     };
+    
     if (borrower.housePrice === 0 || borrower.age === 0) return;
     
     const flatPromos = Object.values(promoByBank).flat();
     let bestOutcome = { finalLoanAmount: 0, monthlyPayment: 0 };
+    
     if (flatPromos.length > 0) {
         flatPromos.forEach(promo => {
             const analysis = runAdvancedAnalysis(promo, borrower);
@@ -1038,11 +1669,13 @@ function compareBanks(borrower) {
     const box = document.getElementById('bankComparison');
     if (!box) return;
     box.innerHTML = '';
+    
     const flatPromos = Object.values(promoByBank).flat();
     if (flatPromos.length === 0) {
-        box.innerHTML = '<p style="text-align:center;color:#666">ไม่มีข้อมูลโปรโมชัน</p>';
+        box.innerHTML = '<p style="text-align:center;color:#666;font-size:12px;">ไม่มีข้อมูลโปรโมชั่น</p>';
         return;
     }
+    
     flatPromos.forEach(promo => {
         const analysis = runAdvancedAnalysis(promo, borrower);
         const card = document.createElement('div');
@@ -1051,13 +1684,13 @@ function compareBanks(borrower) {
         card.innerHTML = `
             <div class="bank-name">${promo.bank_name}</div>
             <div class="selected-promotion">${promo.name}</div>
-            <div style="margin-top:8px; font-weight: bold; color: #333;">ระยะเวลากู้: ${analysis.maxTerm} ปี (ผ่อนได้ถึงอายุ ${promo.max_loan_age || 65})</div>
-            <div style="margin-top:8px;">${(promo.rates||[]).map(r => `<div class='rate-year'><span>ปีที่ ${r.year === 99 ? 'ถัดไป' : r.year}</span><div class="rate-details"><span>${r.rate.toFixed(2)}%</span><span class="rate-description">${r.description || ''}</span></div></div>`).join('')}</div>
-            <div style="margin-top: 12px;"><strong>ผ่อน/เดือน</strong><br>${fmt(analysis.monthlyPayment)} บาท</div>
+            <div style="margin-top:8px; font-weight: bold; color: #333; font-size:13px;">ระยะเวลากู้: ${analysis.maxTerm} ปี (ผ่อนได้ถึงอายุ ${promo.max_loan_age || 65})</div>
+            <div style="margin-top:8px;">${(promo.rates||[]).map(r => `<div class='rate-year'><span style="font-size:12px;">ปีที่ ${r.year === 99 ? 'ถัดไป' : r.year}</span><div class="rate-details"><span style="font-size:13px;font-weight:600;">${r.rate.toFixed(2)}%</span><span class="rate-description">${r.description || ''}</span></div></div>`).join('')}</div>
+            <div style="margin-top: 12px; font-size:13px;"><strong>ผ่อน/เดือน</strong><br><span style="font-size:16px;font-weight:700;color:#667eea;">${fmt(analysis.monthlyPayment)} บาท</span></div>
             <hr style="margin: 10px 0;">
             <div class="analysis-grid">
-              <div><strong>DSR กับโปรนี้:</strong><br><span class="analysis-value">${analysis.finalDSR.toFixed(1)}%</span></div>
-              <div><strong>วงเงินกู้สูงสุด (ประมาณ):</strong><br><span class="analysis-value">${fmt(analysis.maxLoanAmount)}</span></div>
+              <div style="font-size:12px;"><strong>DSR กับโปรนี้:</strong><br><span class="analysis-value">${analysis.finalDSR.toFixed(1)}%</span></div>
+              <div style="font-size:12px;"><strong>วงเงินกู้สูงสุด (ประมาณ):</strong><br><span class="analysis-value">${fmt(analysis.maxLoanAmount)}</span></div>
             </div>
             <div class="verdict ${analysis.verdictClass}">${analysis.verdict}</div>
         `;
@@ -1072,12 +1705,14 @@ function calcMonthly(principal, annualRate, years) {
     if (r === 0 || n <= 0) return principal / (n || 1);
     return principal * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1);
 }
+
 function calculateMaxLoan(monthlyPayment, annualRate, years) {
     const r = (annualRate / 100) / 12;
     const n = years * 12;
     if (r === 0 || n <= 0) return monthlyPayment * (n || 1);
     return monthlyPayment * (Math.pow(1 + r, n) - 1) / (r * Math.pow(1 + r, n));
 }
+
 function calcTiered(principal, tiers, years) {
     const n = years * 12;
     let bal = principal;
@@ -1106,17 +1741,41 @@ function calcTiered(principal, tiers, years) {
     }
     return { monthly: pay, interest: totI };
 }
+
 function buildChart(p, i) {
     const ctx = document.getElementById('paymentChart');
     if (!ctx) return;
     if (doughnut) doughnut.destroy();
-    doughnut = new Chart(ctx, { type: 'doughnut', data: { labels: ['เงินต้น', 'ดอกเบี้ย'], datasets: [{ data: [p, i || 1], backgroundColor: ['#667eea', '#f093fb'], borderWidth: 3, borderColor: '#fff' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } } });
+    doughnut = new Chart(ctx, { 
+        type: 'doughnut', 
+        data: { 
+            labels: ['เงินต้น', 'ดอกเบี้ย'], 
+            datasets: [{ 
+                data: [p, i || 1], 
+                backgroundColor: ['#667eea', '#f093fb'], 
+                borderWidth: 2, 
+                borderColor: '#fff' 
+            }] 
+        }, 
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            plugins: { 
+                legend: { 
+                    position: 'bottom',
+                    labels: { font: { size: 12 } }
+                } 
+            } 
+        } 
+    });
 }
+
 function buildAmort(loan, rate, years, pay) {
     const tb = document.getElementById('amortizationTable');
     if(!tb) return;
     tb.innerHTML = '';
     if (!loan || !rate || !years || !pay) return;
+    
     const mr = rate / 100 / 12;
     let bal = loan;
     for (let m = 1; m <= 12; m++) {
@@ -1128,6 +1787,7 @@ function buildAmort(loan, rate, years, pay) {
         tb.appendChild(tr);
     }
 }
+
 function saveLoanLocal() {
     const item = {
         ts: Date.now(),
@@ -1147,13 +1807,18 @@ function saveLoanLocal() {
     toast('บันทึกข้อมูลในเครื่องแล้ว');
 }
 
+// Dummy function for PDF export
+function exportToPDF() {
+    toast('ฟีเจอร์ Export PDF กำลังพัฒนา', 'info');
+}
+
 async function refreshPromos() {
     showSpinner('กำลังรีเฟรช...');
     await fetchBanks();
     await fetchPromotions();
     calculateLoan();
     hideSpinner();
-	toast('รีเฟรชข้อมูลสำเร็จ', 'success'); 
+    toast('รีเฟรชข้อมูลสำเร็จ', 'success'); 
 }
 
 async function restoreSession() {
@@ -1165,22 +1830,33 @@ async function restoreSession() {
             await determineAdmin();
             updateAuthUI(true);
         }
-    } catch (e) { console.warn('restoreSession:', e); }
+    } catch (e) { 
+        console.warn('restoreSession:', e); 
+    }
 }
 
 // ===== App Initialization =====
 async function start() {
     showSpinner('กำลังโหลดข้อมูล...');
     try {
-        await new Promise(resolve => window.addEventListener('DOMContentLoaded', resolve));
-        // Remove the old script loaders and use the one in the head
+        await new Promise(resolve => {
+            if (document.readyState === 'loading') {
+                window.addEventListener('DOMContentLoaded', resolve);
+            } else {
+                resolve();
+            }
+        });
+        
+        // Wait for scripts to load
         if (!window.supabase) {
-             await new Promise(resolve => setTimeout(resolve, 1000)); // Wait a bit for the script in head
+             await new Promise(resolve => setTimeout(resolve, 1000));
         }
         if (!window.supabase) throw new Error('Supabase library not loaded.');
 
         initSupabase();
-        if (supabaseClient) { toast('เชื่อมต่อ Supabase สำเร็จ', 'success'); }
+        if (supabaseClient) { 
+            toast('เชื่อมต่อ Supabase สำเร็จ', 'success'); 
+        }
         
         await restoreSession();
         await fetchBanks();
@@ -1196,19 +1872,41 @@ async function start() {
         if (libStatus) libStatus.style.display = 'none';
     }
 
+    // Add event listeners for auto-calculation
     ['housePrice', 'borrowerAge', 'borrowerSalary', 'borrowerBonus', 'borrowerOtherIncome', 'borrowerDebt'].forEach(id => {
         const el = document.getElementById(id);
-        if(el) el.addEventListener('input', () => {
-             if(el.id !== 'borrowerAge') formatNumberInput(el);
-             calculateLoan();
-        });
+        if(el) {
+            el.addEventListener('input', () => {
+                if(el.id !== 'borrowerAge') formatNumberInput(el);
+                calculateLoan();
+            });
+            
+            // Add blur event to ensure formatting is applied
+            el.addEventListener('blur', () => {
+                if(el.id !== 'borrowerAge') formatNumberInput(el);
+            });
+        }
     });
+    
+    // Prevent zoom on input focus for iOS
+    if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+        const inputs = document.querySelectorAll('input[type="text"], input[type="number"], input[type="email"], input[type="password"], select');
+        inputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.style.fontSize = '16px';
+            });
+            input.addEventListener('blur', function() {
+                this.style.fontSize = '';
+            });
+        });
+    }
 }
+
+// Add touch event handlers for better mobile interaction
+document.addEventListener('touchstart', function() {}, { passive: true });
 
 start();
 
-
 </script>
-
-
+</body>
 </html>
