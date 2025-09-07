@@ -273,6 +273,23 @@
         grid-template-columns: 1fr; 
         gap: 10px; 
     }
+    
+    .income-average-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .income-average-group input:first-of-type {
+        flex: 1;
+    }
+    .income-average-group input:last-of-type {
+        width: 70px;
+        text-align: center;
+    }
+    .income-average-group span {
+        color: #555;
+        font-size: 13px;
+    }
 
     /* ========== STYLES FOR REQUIRED FIELDS AND VALIDATION ========== */
     .required {
@@ -773,12 +790,35 @@
             <input id="borrowerSalary" type="text" inputmode="numeric" value="50,000" oninput="formatNumberInput(this)">
           </div>
           <div class="input-group">
-            <label>โบนัส (เฉลี่ยต่อปี)</label>
+            <label>โบนัส</label>
             <input id="borrowerBonus" type="text" inputmode="numeric" value="50,000" oninput="formatNumberInput(this)">
           </div>
           <div class="input-group">
-            <label>รายได้อื่นๆ (บาท/เดือน)</label>
-            <input id="borrowerOtherIncome" type="text" inputmode="numeric" value="0" oninput="formatNumberInput(this)">
+            <label>OT / ค่าล่วงเวลา</label>
+            <div class="income-average-group">
+              <input id="borrowerOT" type="text" inputmode="numeric" value="0" oninput="formatNumberInput(this)">
+              <span>บาท หาร</span>
+              <input id="borrowerOTMonths" type="number" value="1">
+              <span>เดือน</span>
+            </div>
+          </div>
+          <div class="input-group">
+            <label>ค่าคอมมิชชั่น</label>
+            <div class="income-average-group">
+              <input id="borrowerCommission" type="text" inputmode="numeric" value="0" oninput="formatNumberInput(this)">
+              <span>บาท หาร</span>
+              <input id="borrowerCommissionMonths" type="number" value="1">
+              <span>เดือน</span>
+            </div>
+          </div>
+          <div class="input-group">
+            <label>รายได้อื่นๆ</label>
+            <div class="income-average-group">
+              <input id="borrowerOtherIncome" type="text" inputmode="numeric" value="0" oninput="formatNumberInput(this)">
+              <span>บาท หาร</span>
+              <input id="borrowerOtherIncomeMonths" type="number" value="1">
+              <span>เดือน</span>
+            </div>
           </div>
           <div class="input-group">
             <label>หนี้สินในบูโร (ผ่อนชำระต่อเดือน)</label>
@@ -977,6 +1017,10 @@
               
               <label>โบนัส (หาร 12)</label>
               <input id="incomeBonus" type="number" value="50">
+              <span>%</span>
+
+              <label>รายได้อื่นๆ</label>
+              <input id="incomeOther" type="number" value="50">
               <span>%</span>
             </div>
           </fieldset>
@@ -1430,6 +1474,7 @@ async function savePromotion() {
             ot: parseInt(document.getElementById('incomeOT').value, 10) || 50,
             commission: parseInt(document.getElementById('incomeCommission').value, 10) || 50,
             bonus: parseInt(document.getElementById('incomeBonus').value, 10) || 50,
+            other: parseInt(document.getElementById('incomeOther').value, 10) || 50,
         }
     };
     
@@ -1475,6 +1520,7 @@ function editPromotion(p) {
         document.getElementById('incomeOT').value = p.income_rules.ot || 50;
         document.getElementById('incomeCommission').value = p.income_rules.commission || 50;
         document.getElementById('incomeBonus').value = p.income_rules.bonus || 50;
+        document.getElementById('incomeOther').value = p.income_rules.other || 50;
     }
     populateFormWithRates(p.rates || []);
     const promoAdmin = document.getElementById('promoAdmin');
@@ -1513,6 +1559,7 @@ function clearPromoForm() {
     document.getElementById('incomeOT').value = 50;
     document.getElementById('incomeCommission').value = 50;
     document.getElementById('incomeBonus').value = 50;
+    document.getElementById('incomeOther').value = 50;
     clearPromoFormFields();
 }
 
@@ -1575,11 +1622,20 @@ function runAdvancedAnalysis(promo, borrower) {
         return analysis;
     }
     
-    const rules = promo.income_rules || { salary: 100, ot: 50, commission: 50, bonus: 50 };
+    const rules = promo.income_rules || { salary: 100, ot: 50, commission: 50, bonus: 50, other: 50 };
     const assessableSalary = borrower.salary * (rules.salary / 100);
     const assessableBonus = (borrower.bonus / 12) * (rules.bonus / 100);
-    const assessableOther = borrower.otherIncome;
-    analysis.totalAssessableIncome = assessableSalary + assessableBonus + assessableOther;
+    
+    const monthlyOT = borrower.ot / (borrower.otMonths || 1);
+    const assessableOT = monthlyOT * (rules.ot / 100);
+
+    const monthlyCommission = borrower.commission / (borrower.commissionMonths || 1);
+    const assessableCommission = monthlyCommission * (rules.commission / 100);
+    
+    const monthlyOtherIncome = borrower.otherIncome / (borrower.otherIncomeMonths || 1);
+    const assessableOther = monthlyOtherIncome * (rules.other / 100);
+
+    analysis.totalAssessableIncome = assessableSalary + assessableBonus + assessableOT + assessableCommission + assessableOther;
     
     if (analysis.totalAssessableIncome <= 0) return analysis;
 
@@ -1631,7 +1687,12 @@ function calculateLoan() {
         age: getNumericValue('borrowerAge'),
         salary: getNumericValue('borrowerSalary'),
         bonus: getNumericValue('borrowerBonus'),
+        ot: getNumericValue('borrowerOT'),
+        otMonths: getNumericValue('borrowerOTMonths') || 1,
+        commission: getNumericValue('borrowerCommission'),
+        commissionMonths: getNumericValue('borrowerCommissionMonths') || 1,
         otherIncome: getNumericValue('borrowerOtherIncome'),
+        otherIncomeMonths: getNumericValue('borrowerOtherIncomeMonths') || 1,
         debt: getNumericValue('borrowerDebt'),
     };
     
@@ -1863,17 +1924,23 @@ async function start() {
     }
 
     // Add event listeners for auto-calculation
-    ['housePrice', 'borrowerAge', 'borrowerSalary', 'borrowerBonus', 'borrowerOtherIncome', 'borrowerDebt'].forEach(id => {
+    const fieldsToWatch = [
+        'housePrice', 'borrowerAge', 'borrowerSalary', 'borrowerBonus', 
+        'borrowerOT', 'borrowerOTMonths', 
+        'borrowerCommission', 'borrowerCommissionMonths',
+        'borrowerOtherIncome', 'borrowerOtherIncomeMonths',
+        'borrowerDebt'
+    ];
+    fieldsToWatch.forEach(id => {
         const el = document.getElementById(id);
         if(el) {
             el.addEventListener('input', () => {
-                if(el.id !== 'borrowerAge') formatNumberInput(el);
+                if(el.type === 'text') formatNumberInput(el);
                 calculateLoan();
             });
             
-            // Add blur event to ensure formatting is applied
             el.addEventListener('blur', () => {
-                if(el.id !== 'borrowerAge') formatNumberInput(el);
+                if(el.type === 'text') formatNumberInput(el);
             });
         }
     });
