@@ -98,9 +98,35 @@
 	
 	.form-section { border: 1px solid #ddd; border-radius: 10px; padding: 15px; margin-bottom: 20px; }
     .form-section legend { font-weight: 600; padding: 0 10px; }
-    .checkbox-group { display: flex; flex-wrap: wrap; gap: 15px; }
-    .checkbox-group label { display: flex; align-items: center; gap: 5px; font-weight: normal; }
-    .income-rule-grid { display: grid; grid-template-columns: auto auto auto; gap: 10px 20px; align-items: center; }
+
+/* ========== CHECKBOX GROUP STYLES ========== */
+.checkbox-group {
+    display: flex; /* ใช้ Flexbox เพื่อจัดเรียง */
+    flex-wrap: wrap; /* ให้ขึ้นบรรทัดใหม่ได้เมื่อพื้นที่ไม่พอ */
+    gap: 12px 20px; /* เว้นช่องว่างระหว่าง checkbox-label */
+}
+
+.checkbox-group label {
+    display: flex; /* ทำให้ label เองก็เป็น flex เพื่อจัด checkbox และ text */
+    align-items: center; /* จัดให้อยู่ตรงกลางแนวตั้ง */
+    gap: 6px; /* ระยะห่างระหว่าง checkbox กับข้อความ */
+    white-space: nowrap; /* ป้องกันข้อความใน label ไม่ให้ขึ้นบรรทัดใหม่ */
+    cursor: pointer; /* เพิ่ม cursor เพื่อบอกว่าเป็น clickable */
+}
+
+/* ถ้าต้องการให้ช่อง input-group ที่มี checkbox-group อยู่ข้างใน มีการจัดวางที่เหมาะสมบนมือถือ */
+.input-group > .checkbox-group {
+    flex-direction: row; /* จัดเรียงเป็นแถว */
+}
+
+/* เพิ่มเติม: สำหรับกรณีที่มี input-group ซ้อน input-group และมี checkbox */
+.input-group input[type="checkbox"] {
+    margin: 0; /* ลบ margin เริ่มต้นของ checkbox ออก */
+    width: 18px; /* กำหนดขนาดของ checkbox */
+    height: 18px;
+}
+
+.income-rule-grid { display: grid; grid-template-columns: auto auto auto; gap: 10px 20px; align-items: center; }
     .mrr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 	
 	/* ========== STYLES FOR REQUIRED FIELDS AND VALIDATION ========== */
