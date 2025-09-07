@@ -86,7 +86,7 @@
     
     .results-grid { 
         display: grid; 
-        grid-template-columns: 1fr; 
+        grid-template-columns: 1fr 1fr; 
         gap: 10px; 
         margin-top: 10px; 
     }
@@ -99,8 +99,6 @@
         text-align: center; 
     }
     .result-item .value { font-size: 1.2rem; font-weight: 800; }
-    
-    .chart-container { position: relative; height: 250px; margin-top: 14px; }
     
     .bank-comparison { 
         display: grid; 
@@ -295,6 +293,22 @@
         color: #555;
         font-size: 13px;
     }
+
+    .best-offer-details {
+        font-size: 13px;
+        padding: 10px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        margin-top: 10px;
+        border: 1px solid #e9ecef;
+    }
+    .best-offer-details p {
+        margin: 0 0 5px 0;
+    }
+    .best-offer-details strong {
+        color: #333;
+    }
+
 
     /* ========== STYLES FOR REQUIRED FIELDS AND VALIDATION ========== */
     .required {
@@ -589,10 +603,6 @@
             font-size: 1.1rem;
         }
         
-        .chart-container {
-            height: 200px;
-        }
-        
         /* ปรับปรุงการแสดงผลของ Fixed Rate */
         .mrr-grid {
             grid-template-columns: 1fr;
@@ -671,10 +681,6 @@
         
         .card {
             margin-bottom: 10px;
-        }
-        
-        .chart-container {
-            height: 180px;
         }
     }
 
@@ -805,7 +811,7 @@
             <div class="card-content">
               <div class="input-group">
                 <label>ราคาบ้าน (บาท)</label>
-                <input id="housePrice" type="text" inputmode="numeric" value="5,000,000" oninput="formatNumberInput(this)">
+                <input id="housePrice" type="text" inputmode="numeric" value="1,890,000" oninput="formatNumberInput(this)">
               </div>
               <div class="input-group">
                 <label>อายุ (ปี)</label>
@@ -813,11 +819,11 @@
               </div>
               <div class="input-group">
                 <label>เงินเดือน (บาท/เดือน)</label>
-                <input id="borrowerSalary" type="text" inputmode="numeric" value="50,000" oninput="formatNumberInput(this)">
+                <input id="borrowerSalary" type="text" inputmode="numeric" value="15,000" oninput="formatNumberInput(this)">
               </div>
               <div class="input-group">
                 <label>โบนัส</label>
-                <input id="borrowerBonus" type="text" inputmode="numeric" value="50,000" oninput="formatNumberInput(this)">
+                <input id="borrowerBonus" type="text" inputmode="numeric" value="0" oninput="formatNumberInput(this)">
               </div>
               <div class="input-group">
                 <label>OT / ค่าล่วงเวลา</label>
@@ -848,7 +854,7 @@
               </div>
               <div class="input-group">
                 <label>หนี้สินในบูโร (ผ่อนชำระต่อเดือน)</label>
-                <input id="borrowerDebt" type="text" inputmode="numeric" value="5,000" oninput="formatNumberInput(this)">
+                <input id="borrowerDebt" type="text" inputmode="numeric" value="0" oninput="formatNumberInput(this)">
               </div>
               <button class="btn block" onclick="calculateLoan()">🔍 วิเคราะห์สินเชื่อ</button>
               <div class="export-section">
@@ -862,8 +868,14 @@
 
         <div id="right-column">
           <div class="card">
-            <h2 class="card-header" onclick="toggleCard(this)">💰 ผลการวิเคราะห์ (ดอกเบี้ยเฉลี่ย)</h2>
-            <div class="card-content collapsed">
+            <h2 class="card-header active" onclick="toggleCard(this)">🏆 ผลการวิเคราะห์ (ข้อเสนอที่ดีที่สุด)</h2>
+            <div class="card-content">
+              <div id="bestOfferDetails" class="best-offer-details" style="display:none;">
+                <p><strong>ธนาคาร:</strong> <span id="bestBank"></span></p>
+                <p><strong>โปรโมชั่น:</strong> <span id="bestPromo"></span></p>
+                <p><strong>ระยะเวลากู้:</strong> <span id="bestTerm"></span> ปี</p>
+                <p><strong>DSR:</strong> <span id="bestDSR"></span>%</p>
+              </div>
               <div class="results-grid">
                 <div class="result-item">
                   <div>ยอดกู้ยืม</div>
@@ -874,10 +886,18 @@
                   <div id="monthlyPayment" class="value">-</div>
                 </div>
               </div>
-              <div class="chart-container"><canvas id="paymentChart"></canvas></div>
             </div>
           </div>
     
+          <div class="card">
+            <h2 class="card-header" onclick="toggleCard(this)">🏦 เปรียบเทียบโปรโมชั่นธนาคาร</h2>
+            <div class="card-content collapsed">
+              <div id="promoStatus" class="notice" style="display:none"></div>
+              <div id="bankComparison" class="bank-comparison"></div>
+              <div id="rateUpdateTime" style="text-align:center;color:#666;margin-top:6px;font-size:12px;"></div>
+            </div>
+          </div>
+          
           <div class="card">
             <h2 class="card-header" onclick="toggleCard(this)">📋 ตารางการชำระหนี้ (12 เดือนแรก)</h2>
             <div class="card-content collapsed">
@@ -897,15 +917,7 @@
               </div>
             </div>
           </div>
-    
-          <div class="card">
-            <h2 class="card-header" onclick="toggleCard(this)">🏦 เปรียบเทียบโปรโมชั่นธนาคาร</h2>
-            <div class="card-content collapsed">
-              <div id="promoStatus" class="notice" style="display:none"></div>
-              <div id="bankComparison" class="bank-comparison"></div>
-              <div id="rateUpdateTime" style="text-align:center;color:#666;margin-top:6px;font-size:12px;"></div>
-            </div>
-          </div>
+
         </div>
       </div>
 
@@ -1088,7 +1100,6 @@ let isAdmin = false;
 
 // ===== Utils =====
 const fmt = n => new Intl.NumberFormat('th-TH').format(Math.round(n || 0));
-let doughnut = null;
 
 // ===== DOM Manipulation & UI Helpers =====
 function toggleCard(headerElement) {
@@ -1644,7 +1655,9 @@ function runAdvancedAnalysis(promo, borrower) {
         finalDSR: 0, 
         maxTerm: 0, 
         verdictClass: "verdict-ok", 
-        maxLoanAmount: 0 
+        maxLoanAmount: 0,
+        bankName: promo.bank_name,
+        promoName: promo.name
     };
     
     if (!borrower.age || borrower.salary <= 0) {
@@ -1702,7 +1715,8 @@ function runAdvancedAnalysis(promo, borrower) {
         return analysis;
     }
 
-    analysis.monthlyPayment = calcTiered(analysis.finalLoanAmount, promo.rates, analysis.maxTerm).monthly;
+    const paymentResult = calcTiered(analysis.finalLoanAmount, promo.rates, analysis.maxTerm);
+    analysis.monthlyPayment = paymentResult.monthly;
     analysis.finalDSR = analysis.totalAssessableIncome > 0 ? ((analysis.monthlyPayment + borrower.debt) / analysis.totalAssessableIncome * 100) : 0;
     
     if (analysis.finalDSR > DSR_CEILING + 5) {
@@ -1736,19 +1750,43 @@ function calculateLoan() {
     if (borrower.housePrice === 0 || borrower.age === 0) return;
     
     const flatPromos = Object.values(promoByBank).flat();
-    let bestOutcome = { finalLoanAmount: 0, monthlyPayment: 0 };
+    let bestOffer = null;
     
     if (flatPromos.length > 0) {
         flatPromos.forEach(promo => {
             const analysis = runAdvancedAnalysis(promo, borrower);
-            if (analysis.finalLoanAmount > bestOutcome.finalLoanAmount) {
-                bestOutcome = analysis;
+            if (!bestOffer || analysis.finalLoanAmount > bestOffer.analysis.finalLoanAmount) {
+                bestOffer = { promo: promo, analysis: analysis };
             }
         });
     }
-    
-    document.getElementById('loanAmount').textContent = fmt(bestOutcome.finalLoanAmount) + ' บาท';
-    document.getElementById('monthlyPayment').textContent = fmt(bestOutcome.monthlyPayment) + ' บาท';
+
+    const detailsBox = document.getElementById('bestOfferDetails');
+    const amortizationTable = document.getElementById('amortizationTable');
+
+    if (bestOffer && bestOffer.analysis.finalLoanAmount > 0) {
+        document.getElementById('loanAmount').textContent = fmt(bestOffer.analysis.finalLoanAmount) + ' บาท';
+        document.getElementById('monthlyPayment').textContent = fmt(bestOffer.analysis.monthlyPayment) + ' บาท';
+
+        document.getElementById('bestBank').textContent = bestOffer.analysis.bankName || '-';
+        document.getElementById('bestPromo').textContent = bestOffer.analysis.promoName || '-';
+        document.getElementById('bestTerm').textContent = bestOffer.analysis.maxTerm || '-';
+        document.getElementById('bestDSR').textContent = bestOffer.analysis.finalDSR.toFixed(1) || '-';
+        detailsBox.style.display = 'block';
+
+        buildAmort(
+            bestOffer.analysis.finalLoanAmount,
+            bestOffer.promo.rates,
+            bestOffer.analysis.maxTerm,
+            bestOffer.analysis.monthlyPayment
+        );
+
+    } else {
+        document.getElementById('loanAmount').textContent = '0 บาท';
+        document.getElementById('monthlyPayment').textContent = '0 บาท';
+        detailsBox.style.display = 'none';
+        if (amortizationTable) amortizationTable.innerHTML = '';
+    }
     
     compareBanks(borrower);
 }
@@ -1830,48 +1868,36 @@ function calcTiered(principal, tiers, years) {
     return { monthly: pay, interest: totI };
 }
 
-function buildChart(p, i) {
-    const ctx = document.getElementById('paymentChart');
-    if (!ctx) return;
-    if (doughnut) doughnut.destroy();
-    doughnut = new Chart(ctx, { 
-        type: 'doughnut', 
-        data: { 
-            labels: ['เงินต้น', 'ดอกเบี้ย'], 
-            datasets: [{ 
-                data: [p, i || 1], 
-                backgroundColor: ['#667eea', '#f093fb'], 
-                borderWidth: 2, 
-                borderColor: '#fff' 
-            }] 
-        }, 
-        options: { 
-            responsive: true, 
-            maintainAspectRatio: false, 
-            plugins: { 
-                legend: { 
-                    position: 'bottom',
-                    labels: { font: { size: 12 } }
-                } 
-            } 
-        } 
-    });
-}
-
-function buildAmort(loan, rate, years, pay) {
+function buildAmort(loan, tiers, years, pay) {
     const tb = document.getElementById('amortizationTable');
     if(!tb) return;
     tb.innerHTML = '';
-    if (!loan || !rate || !years || !pay) return;
+    if (!loan || !tiers || !years || !pay) return;
     
-    const mr = rate / 100 / 12;
     let bal = loan;
     for (let m = 1; m <= 12; m++) {
-        const i = bal * mr;
-        const pr = pay - i;
-        bal -= pr;
+        const yr = Math.ceil(m / 12);
+        
+        let currentRate = tiers[tiers.length - 1].rate;
+        for (const tier of tiers) {
+            if (yr <= tier.year) {
+                currentRate = tier.rate;
+                break;
+            }
+        }
+        
+        const monthlyRate = currentRate / 100 / 12;
+        const interestPayment = bal * monthlyRate;
+        const principalPayment = pay - interestPayment;
+        bal -= principalPayment;
+
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td style="text-align:center">${m}</td><td>${fmt(pay)}</td><td>${fmt(pr)}</td><td>${fmt(i)}</td><td>${fmt(Math.max(0, bal))}</td>`;
+        tr.innerHTML = `
+            <td style="text-align:center">${m}</td>
+            <td>${fmt(pay)}</td>
+            <td>${fmt(principalPayment)}</td>
+            <td>${fmt(interestPayment)}</td>
+            <td>${fmt(Math.max(0, bal))}</td>`;
         tb.appendChild(tr);
     }
 }
