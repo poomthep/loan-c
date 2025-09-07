@@ -189,37 +189,30 @@
 			<div class="card">
 			  <h2 class="card-header active" onclick="toggleCard(this)">📊 ข้อมูลสินเชื่อและผู้กู้</h2>
 			  <div class="card-content">
-
-					<div class="input-group">
-						<label>ราคาบ้าน (บาท)</label>
-						<input id="housePrice" type="text" inputmode="numeric" value="5,000,000" oninput="formatNumberInput(this)">
-					</div>
-
-					<div class="input-group">
-						<label>อายุ (ปี)</label>
-						<input id="borrowerAge" type="number" value="30">
-					</div>
-
-					<div class="input-group">
-						<label>เงินเดือน (บาท/เดือน)</label>
-						<input id="borrowerSalary" type="text" inputmode="numeric" value="50,000" oninput="formatNumberInput(this)">
-					</div>
-
-					<div class="input-group">
-						<label>โบนัส (เฉลี่ยต่อปี)</label>
-						<input id="borrowerBonus" type="text" inputmode="numeric" value="50,000" oninput="formatNumberInput(this)">
-					</div>
-
-					<div class="input-group">
-						<label>รายได้อื่นๆ (บาท/เดือน)</label>
-						<input id="borrowerOtherIncome" type="text" inputmode="numeric" value="0" oninput="formatNumberInput(this)">
-					</div>
-
-					<div class="input-group">
-						<label>หนี้สินในบูโร (ผ่อนชำระต่อเดือน)</label>
-						<input id="borrowerDebt" type="text" inputmode="numeric" value="5,000" oninput="formatNumberInput(this)">
-					</div>
-
+				<div class="input-group">
+					<label>ราคาบ้าน (บาท)</label>
+					<input id="housePrice" type="text" inputmode="numeric" value="5,000,000" oninput="formatNumberInput(this)">
+				</div>
+				<div class="input-group">
+					<label>อายุ (ปี)</label>
+					<input id="borrowerAge" type="number" value="30">
+				</div>
+				<div class="input-group">
+					<label>เงินเดือน (บาท/เดือน)</label>
+					<input id="borrowerSalary" type="text" inputmode="numeric" value="50,000" oninput="formatNumberInput(this)">
+				</div>
+				<div class="input-group">
+					<label>โบนัส (เฉลี่ยต่อปี)</label>
+					<input id="borrowerBonus" type="text" inputmode="numeric" value="50,000" oninput="formatNumberInput(this)">
+				</div>
+				<div class="input-group">
+					<label>รายได้อื่นๆ (บาท/เดือน)</label>
+					<input id="borrowerOtherIncome" type="text" inputmode="numeric" value="0" oninput="formatNumberInput(this)">
+				</div>
+				<div class="input-group">
+					<label>หนี้สินในบูโร (ผ่อนชำระต่อเดือน)</label>
+					<input id="borrowerDebt" type="text" inputmode="numeric" value="5,000" oninput="formatNumberInput(this)">
+				</div>
 				<button class="btn block" onclick="calculateLoan()">🔍 วิเคราะห์สินเชื่อ</button>
 				<div class="export-section"><button class="btn btn-secondary" onclick="saveLoanLocal()">💾 บันทึกข้อมูล</button><button class="btn btn-secondary" onclick="exportToPDF()">📄 Export PDF</button><button class="btn btn-secondary" onclick="refreshPromos()">🔄 รีเฟรชโปร</button></div>
 				<div id="debtNotice" class="notice" style="display:none"></div>
@@ -275,50 +268,51 @@
         </div>
       </div>
       
-<div class="card full-width" id="promoAdmin" style="display:none">
+      <div class="card full-width" id="promoAdmin" style="display:none">
         <h2 class="card-header" onclick="toggleCard(this)">🛠️ เพิ่ม/แก้ไข โปรธนาคาร</h2>
         <div class="card-content collapsed">
-
-			<fieldset class="form-section">
-				<legend>ส่วนที่ 1: ข้อมูลทั่วไป</legend>
-				<div class="input-group">
-					<label>เลือกธนาคาร</label>
-					<select id="promoBankName" onchange="handleBankSelectionChange()"></select>
-				</div>
-				<div class="input-group">
-					<label>ชื่อโปรโมชัน/แคมเปญ</label>
-					<input id="promoName" type="text" placeholder="เช่น บ้านใหม่ ดอกเบี้ยพิเศษ">
-				</div>
-				
-				<div class="mrr-grid">
-					<div class="input-group">
-						<label>ยื่นกู้ภายในวันที่</label>
-						<input id="promoEndDate" type="date">
-					</div>
-					<div class="input-group">
-						<label>ทำนิติกรรมภายในวันที่</label>
-						<input id="contractEndDate" type="date">
-					</div>
-				</div>
-				<div class="input-group">
-					<label>ประเภทสินเชื่อ (เลือกได้หลายข้อ)</label>
-					<div class="checkbox-group">
-						<label><input type="checkbox" name="loanType" value="บ้านใหม่"> บ้านใหม่</label>
-						<label><input type="checkbox" name="loanType" value="บ้านมือสอง"> บ้านมือสอง</label>
-						<label><input type="checkbox" name="loanType" value="รีไฟแนนซ์"> รีไฟแนนซ์</label>
-						<label><input type="checkbox" name="loanType" value="สร้างบ้าน"> สร้างบ้าน</label>
-					</div>
-				</div>
-				<div class="input-group">
-					<label>กลุ่มเป้าหมาย (ถ้ามี)</label>
-					<div class="checkbox-group">
-						<label><input type="checkbox" name="targetGroup" value="ทั่วไป"> ทั่วไป</label>
-						<label><input type="checkbox" name="targetGroup" value="วิชาชีพเฉพาะ"> วิชาชีพเฉพาะ</label>
-						<label><input type="checkbox" name="targetGroup" value="ข้าราชการ"> ข้าราชการ</label>
-					</div>
-				</div>
-			</fieldset>
-
+          <fieldset class="form-section">
+            <legend>ส่วนที่ 1: ข้อมูลทั่วไป</legend>
+            <div class="input-group">
+              <label>เลือกธนาคาร</label>
+              <select id="promoBankName" onchange="handleBankSelectionChange()"></select>
+            </div>
+            <div class="input-group">
+              <label>ชื่อโปรโมชัน/แคมเปญ</label>
+              <input id="promoName" type="text" placeholder="เช่น บ้านใหม่ ดอกเบี้ยพิเศษ">
+            </div>
+            <div class="mrr-grid">
+              <div class="input-group">
+                <label>โปรโมชันเริ่มวันที่</label>
+                <input id="promoStartDate" type="date">
+              </div>
+              <div class="input-group">
+                <label>ยื่นกู้ภายในวันที่</label>
+                <input id="promoEndDate" type="date">
+              </div>
+            </div>
+            <div class="input-group">
+              <label>ประเภทสินเชื่อ (เลือกได้หลายข้อ)</label>
+              <div class="checkbox-group">
+                <label><input type="checkbox" name="loanType" value="บ้านใหม่"> บ้านใหม่</label>
+                <label><input type="checkbox" name="loanType" value="บ้านมือสอง"> บ้านมือสอง</label>
+                <label><input type="checkbox" name="loanType" value="รีไฟแนนซ์"> รีไฟแนนซ์</label>
+                <label><input type="checkbox" name="loanType" value="สร้างบ้าน"> สร้างบ้าน</label>
+              </div>
+            </div>
+          </fieldset>
+          <fieldset class="form-section">
+            <legend>เงื่อนไขผู้กู้</legend>
+            <div class="mrr-grid">
+              <div class="input-group">
+                <label>รายได้สูงสุดไม่เกิน (บาท/เดือน)</label>
+                <input id="maxIncomeThb" type="text" inputmode="numeric" oninput="formatNumberInput(this)" placeholder="เว้นว่างถ้าไม่มีกำหนด">
+              </div>
+              <div class="input-group" style="justify-content: center; display: flex; align-items: center; height: 100%;">
+                <label class="checkbox-group" style="padding-top: 20px;"><input id="isFirstMortgageOnly" type="checkbox"> ต้องเป็นสัญญาแรกเท่านั้น</label>
+              </div>
+            </div>
+          </fieldset>
           <fieldset class="form-section">
             <legend>ส่วนที่ 2: อัตราดอกเบี้ย</legend>
             <div class="input-group">
@@ -334,25 +328,29 @@
               </div>
             </div>
           </fieldset>
-          
           <fieldset class="form-section">
             <legend>ส่วนที่ 3: วงเงินและระยะเวลา</legend>
-            <div class="input-group">
-              <label>วงเงินกู้สูงสุด (% ของราคาประเมิน)</label>
-              <input id="promoMaxLTV" type="number" placeholder="เช่น 95 หรือ 100">
+            <div class="mrr-grid">
+              <div class="input-group">
+                <label>วงเงินกู้สูงสุด (บาท)</label>
+                <input id="maxLoanAmountThb" type="text" inputmode="numeric" oninput="formatNumberInput(this)" placeholder="เว้นว่างถ้าไม่มีกำหนด">
+              </div>
+              <div class="input-group">
+                <label>วงเงินกู้สูงสุด (% LTV)</label>
+                <input id="promoMaxLTV" type="number" placeholder="เช่น 95 หรือ 100">
+              </div>
             </div>
             <div class="input-group">
-                <label>อายุผู้กู้สูงสุดที่ผ่อนหมด (ปี)</label>
-                <input id="promoMaxLoanAge" type="number" placeholder="เช่น 65 หรือ 70">
+              <label>อายุผู้กู้สูงสุดที่ผ่อนหมด (ปี)</label>
+              <input id="promoMaxLoanAge" type="number" placeholder="เช่น 65 หรือ 70">
             </div>
             <div class="input-group">
-                <label>เงื่อนไขการไถ่ถอนก่อนกำหนด (ปีที่ห้ามปิด)</label>
-                <input id="promoPrepaymentYears" type="number" placeholder="เช่น 3 หรือ 5">
+              <label>เงื่อนไขไถ่ถอนก่อนกำหนด (ปี)</label>
+              <input id="promoPrepaymentYears" type="number" placeholder="เช่น 3 หรือ 5">
             </div>
           </fieldset>
-          
           <fieldset class="form-section">
-            <legend>ส่วนที่ 5: เกณฑ์การพิจารณารายได้</legend>
+            <legend>ส่วนที่ 5: เกณฑ์พิจารณารายได้</legend>
             <p style="font-size:12px; margin-bottom:10px;">ระบุเป็น % ของรายได้นั้นๆ ที่ธนาคารนำมาคำนวณ (ถ้าไม่ระบุ = 100%)</p>
             <div class="income-rule-grid">
                 <label>เงินเดือนประจำ</label><input id="incomeSalary" type="number" value="100">%
@@ -361,14 +359,12 @@
                 <label>โบนัส (หาร 12)</label><input id="incomeBonus" type="number" value="50">%
             </div>
           </fieldset>
-          
           <input type="hidden" id="promoIdInput">
           <div class="export-section">
             <button class="btn btn-secondary" onclick="savePromotion()">💾 บันทึก/เพิ่มโปร</button>
             <button class="btn btn-danger" onclick="clearPromoForm()">🧹 ล้างฟอร์ม</button>
           </div>
           <div id="myPromoList" style="margin-top:14px;"></div>
-
         </div>
       </div>
 
@@ -379,6 +375,7 @@
       <div class="spinner"></div>
       <div class="spinner-label">กำลังทำงาน...</div>
     </div>
+</body>
 
 <script>
 // ===== Config =====
@@ -412,9 +409,7 @@ function formatNumberInput(inputElement) {
         inputElement.value = '';
         return;
     }
-    if (!isNaN(value)) {
-        inputElement.value = parseFloat(value).toLocaleString('en-US');
-    }
+    inputElement.value = parseFloat(value).toLocaleString('en-US');
 }
 
 function getNumericValue(elementId) {
@@ -658,17 +653,21 @@ function renderPromoList() {
     h.innerHTML = flatPromos.map(p => {
         const ratesText = (p.rates || []).map(r => `ปีที่ ${r.year === 99 ? 'ถัดไป' : r.year}: ${r.rate.toFixed(2)}% <span style="color:#6c757d; font-size:11px">(${r.description || ''})</span>`).join('<br>');
         const endDate = p.promo_end_date ? new Date(p.promo_end_date).toLocaleDateString('th-TH') : 'ไม่มีกำหนด';
-        return `<div style="padding:10px;border:1px solid #e9ecef;border-radius:10px;margin:6px 0;">
-            <div style="display:flex;justify-content:space-between;align-items:center">
+        let conditions = [];
+        if (p.max_income_thb) conditions.push(`รายได้ไม่เกิน ${fmt(p.max_income_thb)} บ.`);
+        if (p.is_first_mortgage_only) conditions.push(`ต้องเป็นสัญญาแรก`);
+
+        return `<div class="promo-list-item">
+            <div class="promo-list-header">
               <div><strong>${p.bank_name}</strong> — ${p.name}</div>
               ${isAdmin ? `<div style="display:flex;gap:6px">
                   <button class="btn btn-secondary btn-admin" onclick='editPromotion(${JSON.stringify(p)})'>แก้ไข</button>
                   <button class="btn btn-danger btn-admin" onclick="deletePromotion('${p.id}')">ลบ</button>
                 </div>` : ''}
             </div>
-            <div style="font-size:12px;color:red;margin-top:4px;font-weight:bold;">ยื่นกู้ภายใน: ${endDate}</div>
-            <div style="font-size:12px;color:#555;margin-top:4px">${p.conditions || ''} (ผ่อนได้ถึงอายุ ${p.max_loan_age} ปี)</div>
-            <div style="font-size:12px;margin-top:6px; line-height: 1.6;">${ratesText}</div>
+            <div class="promo-list-deadline">ยื่นกู้ภายใน: ${endDate}</div>
+            <div class="promo-list-conditions">${conditions.join(', ')}</div>
+            <div class="promo-list-rates">${ratesText}</div>
           </div>`;
     }).join('');
 }
@@ -688,8 +687,12 @@ async function savePromotion() {
     const promoData = {
         bank_name: document.getElementById('promoBankName').value,
         name: document.getElementById('promoName').value.trim(),
+        promo_start_date: document.getElementById('promoStartDate').value || null,
         promo_end_date: document.getElementById('promoEndDate').value || null,
         contract_end_date: document.getElementById('contractEndDate').value || null,
+        max_income_thb: getNumericValue('maxIncomeThb') || null,
+        is_first_mortgage_only: document.getElementById('isFirstMortgageOnly').checked,
+        max_loan_amount_thb: getNumericValue('maxLoanAmountThb') || null,
         loan_types: Array.from(document.querySelectorAll('[name="loanType"]:checked')).map(el => el.value),
         target_groups: Array.from(document.querySelectorAll('[name="targetGroup"]:checked')).map(el => el.value),
         max_loan_ltv: parseInt(document.getElementById('promoMaxLTV').value, 10) || 100,
@@ -725,8 +728,12 @@ function editPromotion(p) {
     document.getElementById('promoBankName').value = p.bank_name || '';
     handleBankSelectionChange();
     document.getElementById('promoName').value = p.name || '';
+    document.getElementById('promoStartDate').value = p.promo_start_date ? p.promo_start_date.split('T')[0] : '';
     document.getElementById('promoEndDate').value = p.promo_end_date ? p.promo_end_date.split('T')[0] : '';
     document.getElementById('contractEndDate').value = p.contract_end_date ? p.contract_end_date.split('T')[0] : '';
+    document.getElementById('maxIncomeThb').value = p.max_income_thb ? p.max_income_thb.toLocaleString('en-US') : '';
+    document.getElementById('isFirstMortgageOnly').checked = p.is_first_mortgage_only || false;
+    document.getElementById('maxLoanAmountThb').value = p.max_loan_amount_thb ? p.max_loan_amount_thb.toLocaleString('en-US') : '';
     document.querySelectorAll('[name="loanType"]').forEach(el => el.checked = (p.loan_types || []).includes(el.value));
     document.querySelectorAll('[name="targetGroup"]').forEach(el => el.checked = (p.target_groups || []).includes(el.value));
     document.getElementById('promoMaxLTV').value = p.max_loan_ltv || '';
@@ -754,8 +761,12 @@ function clearPromoForm() {
     document.getElementById('promoIdInput').value = '';
     document.getElementById('promoBankName').value = '';
     document.getElementById('promoName').value = '';
+    document.getElementById('promoStartDate').value = '';
     document.getElementById('promoEndDate').value = '';
     document.getElementById('contractEndDate').value = '';
+    document.getElementById('maxIncomeThb').value = '';
+    document.getElementById('isFirstMortgageOnly').checked = false;
+    document.getElementById('maxLoanAmountThb').value = '';
     document.querySelectorAll('[name="loanType"], [name="targetGroup"]').forEach(el => el.checked = false);
     document.getElementById('promoMaxLTV').value = '';
     document.getElementById('promoMaxLoanAge').value = '';
@@ -1051,5 +1062,6 @@ async function start() {
 start();
 
 </script>
+
 </body>
 </html>
