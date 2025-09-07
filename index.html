@@ -279,34 +279,45 @@
         <h2 class="card-header" onclick="toggleCard(this)">🛠️ เพิ่ม/แก้ไข โปรธนาคาร</h2>
         <div class="card-content collapsed">
 
-          <fieldset class="form-section">
-            <legend>ส่วนที่ 1: ข้อมูลทั่วไป</legend>
-            <div class="input-group">
-              <label>เลือกธนาคาร</label>
-              <select id="promoBankName" onchange="handleBankSelectionChange()"></select>
-            </div>
-            <div class="input-group">
-              <label>ชื่อโปรโมชัน/แคมเปญ</label>
-              <input id="promoName" type="text" placeholder="เช่น บ้านใหม่ ดอกเบี้ยพิเศษ">
-            </div>
-            <div class="input-group">
-              <label>ประเภทสินเชื่อ (เลือกได้หลายข้อ)</label>
-              <div class="checkbox-group">
-                <label><input type="checkbox" name="loanType" value="บ้านใหม่"> บ้านใหม่</label>
-                <label><input type="checkbox" name="loanType" value="บ้านมือสอง"> บ้านมือสอง</label>
-                <label><input type="checkbox" name="loanType" value="รีไฟแนนซ์"> รีไฟแนนซ์</label>
-                <label><input type="checkbox" name="loanType" value="สร้างบ้าน"> สร้างบ้าน</label>
-              </div>
-            </div>
-             <div class="input-group">
-              <label>กลุ่มเป้าหมาย (ถ้ามี)</label>
-              <div class="checkbox-group">
-                <label><input type="checkbox" name="targetGroup" value="ทั่วไป"> ทั่วไป</label>
-                <label><input type="checkbox" name="targetGroup" value="วิชาชีพเฉพาะ"> วิชาชีพเฉพาะ</label>
-                <label><input type="checkbox" name="targetGroup" value="ข้าราชการ"> ข้าราชการ</label>
-              </div>
-            </div>
-          </fieldset>
+			<fieldset class="form-section">
+				<legend>ส่วนที่ 1: ข้อมูลทั่วไป</legend>
+				<div class="input-group">
+					<label>เลือกธนาคาร</label>
+					<select id="promoBankName" onchange="handleBankSelectionChange()"></select>
+				</div>
+				<div class="input-group">
+					<label>ชื่อโปรโมชัน/แคมเปญ</label>
+					<input id="promoName" type="text" placeholder="เช่น บ้านใหม่ ดอกเบี้ยพิเศษ">
+				</div>
+				
+				<div class="mrr-grid">
+					<div class="input-group">
+						<label>ยื่นกู้ภายในวันที่</label>
+						<input id="promoEndDate" type="date">
+					</div>
+					<div class="input-group">
+						<label>ทำนิติกรรมภายในวันที่</label>
+						<input id="contractEndDate" type="date">
+					</div>
+				</div>
+				<div class="input-group">
+					<label>ประเภทสินเชื่อ (เลือกได้หลายข้อ)</label>
+					<div class="checkbox-group">
+						<label><input type="checkbox" name="loanType" value="บ้านใหม่"> บ้านใหม่</label>
+						<label><input type="checkbox" name="loanType" value="บ้านมือสอง"> บ้านมือสอง</label>
+						<label><input type="checkbox" name="loanType" value="รีไฟแนนซ์"> รีไฟแนนซ์</label>
+						<label><input type="checkbox" name="loanType" value="สร้างบ้าน"> สร้างบ้าน</label>
+					</div>
+				</div>
+				<div class="input-group">
+					<label>กลุ่มเป้าหมาย (ถ้ามี)</label>
+					<div class="checkbox-group">
+						<label><input type="checkbox" name="targetGroup" value="ทั่วไป"> ทั่วไป</label>
+						<label><input type="checkbox" name="targetGroup" value="วิชาชีพเฉพาะ"> วิชาชีพเฉพาะ</label>
+						<label><input type="checkbox" name="targetGroup" value="ข้าราชการ"> ข้าราชการ</label>
+					</div>
+				</div>
+			</fieldset>
 
           <fieldset class="form-section">
             <legend>ส่วนที่ 2: อัตราดอกเบี้ย</legend>
@@ -619,38 +630,73 @@ function clearBankForm() {
 }
 
 // ===== Promotion Management =====
-async function fetchPromotions() {
-    if (!supabaseClient) return;
-    try {
-        const { data, error } = await supabaseClient.from('bank_promotions').select('*').order('bank_name');
-        if (error) throw error;
-        promoByBank = (data || []).reduce((acc, row) => {
-            (acc[row.bank_name] = acc[row.bank_name] || []).push(row);
-            return acc;
-        }, {});
-        renderPromoList();
-    } catch (e) {
-        console.error("Failed to fetch promotions:", e);
-        toast('ไม่สามารถดึงโปรโมชันได้', 'error');
-    }
-}
-function renderPromoList() {
-    const h = document.getElementById('myPromoList');
-    if (!h) return;
-    const flatPromos = Object.values(promoByBank).flat();
-    if (flatPromos.length === 0) {
-        h.innerHTML = '<p style="text-align:center;color:#666">ยังไม่มีโปรในฐานข้อมูล</p>';
+async function savePromotion() {
+    if (!isAdmin) return;
+    const id = document.getElementById('promoIdInput').value.trim();
+    const promoData = {
+        bank_name: document.getElementById('promoBankName').value,
+        name: document.getElementById('promoName').value.trim(),
+        promo_end_date: document.getElementById('promoEndDate').value || null,
+        contract_end_date: document.getElementById('contractEndDate').value || null,
+        loan_types: Array.from(document.querySelectorAll('[name="loanType"]:checked')).map(el => el.value),
+        target_groups: Array.from(document.querySelectorAll('[name="targetGroup"]:checked')).map(el => el.value),
+        max_loan_ltv: parseInt(document.getElementById('promoMaxLTV').value, 10) || 100,
+        max_loan_age: parseInt(document.getElementById('promoMaxLoanAge').value, 10) || 65,
+        prepayment_policy: { years: parseInt(document.getElementById('promoPrepaymentYears').value, 10) || 3 },
+        rates: parseRatesFromForm(),
+        income_rules: {
+            salary: parseInt(document.getElementById('incomeSalary').value, 10) || 100,
+            ot: parseInt(document.getElementById('incomeOT').value, 10) || 50,
+            commission: parseInt(document.getElementById('incomeCommission').value, 10) || 50,
+            bonus: parseInt(document.getElementById('incomeBonus').value, 10) || 50,
+        }
+    };
+    if (!promoData.bank_name || !promoData.name || promoData.rates.length === 0) {
+        alert('กรุณากรอกข้อมูลโปรโมชันให้ครบถ้วน');
         return;
     }
-    h.innerHTML = flatPromos.map(p => {
-        const ratesText = (p.rates || []).map(r => `ปีที่ ${r.year === 99 ? 'ถัดไป' : r.year}: ${r.rate.toFixed(2)}% <span style="color:#6c757d; font-size:11px">(${r.description || ''})</span>`).join('<br>');
-        return `<div style="padding:10px;border:1px solid #e9ecef;border-radius:10px;margin:6px 0;">
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <div><strong>${p.bank_name}</strong> — ${p.name}</div>
-              ${isAdmin ? `<div style="display:flex;gap:6px">
-                  <button class="btn btn-secondary btn-admin" onclick='editPromotion(${JSON.stringify(p)})'>แก้ไข</button>
-                  <button class="btn btn-danger btn-admin" onclick="deletePromotion('${p.id}')">ลบ</button>
-                </div>` : ''}
+    try {
+        if (id) {
+            const { error } = await supabaseClient.from('bank_promotions').update(promoData).eq('id', id);
+            if (error) throw error;
+        } else {
+            const { error } = await supabaseClient.from('bank_promotions').insert([promoData]);
+            if (error) throw error;
+        }
+        toast('บันทึกโปรโมชันสำเร็จ', 'success');
+        clearPromoForm();
+        await fetchPromotions();
+    } catch (e) { alert('เกิดข้อผิดพลาด: ' + e.message); }
+}
+
+			function renderPromoList() {
+				const h = document.getElementById('myPromoList');
+				if (!h) return;
+				const flatPromos = Object.values(promoByBank).flat();
+				if (flatPromos.length === 0) {
+					h.innerHTML = '<p style="text-align:center;color:#666">ยังไม่มีโปรในฐานข้อมูล</p>';
+					return;
+				}
+				h.innerHTML = flatPromos.map(p => {
+					const ratesText = (p.rates || []).map(r => `ปีที่ ${r.year === 99 ? 'ถัดไป' : r.year}: ${r.rate.toFixed(2)}% <span style="color:#6c757d; font-size:11px">(${r.description || ''})</span>`).join('<br>');
+					
+					// จัดรูปแบบวันที่เพื่อแสดงผล
+					const endDate = p.promo_end_date ? new Date(p.promo_end_date).toLocaleDateString('th-TH') : 'ไม่มีกำหนด';
+
+					return `<div style="padding:10px;border:1px solid #e9ecef;border-radius:10px;margin:6px 0;">
+						<div style="display:flex;justify-content:space-between;align-items:center">
+						  <div><strong>${p.bank_name}</strong> — ${p.name}</div>
+						  ${isAdmin ? `<div style="display:flex;gap:6px">
+							  <button class="btn btn-secondary btn-admin" onclick='editPromotion(${JSON.stringify(p)})'>แก้ไข</button>
+							  <button class="btn btn-danger btn-admin" onclick="deletePromotion('${p.id}')">ลบ</button>
+							</div>` : ''}
+						</div>
+						<div style="font-size:12px;color:red;margin-top:4px;font-weight:bold;">ยื่นกู้ภายใน: ${endDate}</div>
+						<div style="font-size:12px;margin-top:6px; line-height: 1.6;">${ratesText}</div>
+					  </div>`;
+				}).join('');
+			}
+
             </div>
             <div style="font-size:12px;color:#555;margin-top:4px">${p.conditions || ''} (ผ่อนได้ถึงอายุ ${p.max_loan_age} ปี)</div>
             <div style="font-size:12px;margin-top:6px; line-height: 1.6;">${ratesText}</div>
@@ -739,6 +785,8 @@ function clearPromoForm() {
     document.getElementById('promoIdInput').value = '';
     document.getElementById('promoBankName').value = '';
     document.getElementById('promoName').value = '';
+    document.getElementById('promoEndDate').value = '';
+    document.getElementById('contractEndDate').value = '';
     document.querySelectorAll('[name="loanType"], [name="targetGroup"]').forEach(el => el.checked = false);
     document.getElementById('promoMaxLTV').value = '';
     document.getElementById('promoMaxLoanAge').value = '';
