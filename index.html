@@ -281,16 +281,20 @@
               <label>ชื่อโปรโมชัน/แคมเปญ</label>
               <input id="promoName" type="text" placeholder="เช่น บ้านใหม่ ดอกเบี้ยพิเศษ">
             </div>
-            <div class="mrr-grid">
-              <div class="input-group">
-                <label>โปรโมชันเริ่มวันที่</label>
-                <input id="promoStartDate" type="date">
-              </div>
-              <div class="input-group">
-                <label>ยื่นกู้ภายในวันที่</label>
-                <input id="promoEndDate" type="date">
-              </div>
-            </div>
+<div class="mrr-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+    <div class="input-group">
+        <label>โปรโมชันเริ่มวันที่</label>
+        <input id="promoStartDate" type="date">
+    </div>
+    <div class="input-group">
+        <label>ยื่นกู้ภายในวันที่</label>
+        <input id="promoEndDate" type="date">
+    </div>
+    <div class="input-group">
+        <label>ทำนิติกรรมภายในวันที่</label>
+        <input id="contractEndDate" type="date">
+    </div>
+</div>
             <div class="input-group">
               <label>ประเภทสินเชื่อ (เลือกได้หลายข้อ)</label>
               <div class="checkbox-group">
