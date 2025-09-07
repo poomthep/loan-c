@@ -1032,13 +1032,16 @@ function saveLoanLocal() {
     localStorage.setItem('loan_saves', JSON.stringify(arr));
     toast('บันทึกข้อมูลในเครื่องแล้ว');
 }
+
 async function refreshPromos() {
     showSpinner('กำลังรีเฟรช...');
     await fetchBanks();
     await fetchPromotions();
     calculateLoan();
     hideSpinner();
+	toast('รีเฟรชข้อมูลสำเร็จ', 'success'); 
 }
+
 async function restoreSession() {
     if (!supabaseClient) return;
     try {
