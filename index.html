@@ -378,7 +378,6 @@
 </body>
 
 <script>
-
 // ===== Config =====
 const SUPABASE_URL = 'https://crgyqlfotaceyvoxatnq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNyZ3lxbGZvdGFjZXl2b3hhdG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY5ODg5NzAsImV4cCI6MjA3MjU2NDk3MH0.pvSRkwkkCQNyRuG-cFadLTQjL6Cf73d4Nu7ur3YSn2U';
@@ -410,7 +409,9 @@ function formatNumberInput(inputElement) {
         inputElement.value = '';
         return;
     }
-    inputElement.value = parseFloat(value).toLocaleString('en-US');
+    if (!isNaN(value)) {
+        inputElement.value = parseFloat(value).toLocaleString('en-US');
+    }
 }
 
 function getNumericValue(elementId) {
@@ -461,6 +462,19 @@ function initSupabase() {
         }
     } catch (e) { console.error('Supabase init error:', e); }
 }
+
+// ===== เพิ่มฟังก์ชันที่ขาดหายไปกลับเข้ามา =====
+function waitForSupabase(timeout = 8000) {
+    return new Promise(res => {
+        const start = Date.now();
+        (function check() {
+            if (window.supabase) return res(true);
+            if (Date.now() - start > timeout) return res(false);
+            requestAnimationFrame(check);
+        })();
+    });
+}
+
 async function login() {
     if (!supabaseClient) { initSupabase(); if (!supabaseClient) { showLoginError('ยังโหลดไลบรารีไม่เสร็จ'); return; } }
     const email = document.getElementById('email').value.trim();
@@ -844,7 +858,11 @@ function runAdvancedAnalysis(promo, borrower) {
     }
 
     const maxLoanFromLTV = borrower.housePrice * ((promo.max_loan_ltv || 100) / 100);
-    analysis.finalLoanAmount = Math.min(analysis.maxLoanAmount, maxLoanFromLTV, borrower.housePrice);
+    let finalMaxLoan = analysis.maxLoanAmount;
+    if(promo.max_loan_amount_thb) {
+        finalMaxLoan = Math.min(finalMaxLoan, promo.max_loan_amount_thb);
+    }
+    analysis.finalLoanAmount = Math.min(finalMaxLoan, maxLoanFromLTV, borrower.housePrice);
     
     if (analysis.finalLoanAmount <= 0) {
         analysis.verdict = "วงเงินกู้ไม่พอ";
@@ -1034,14 +1052,20 @@ async function start() {
     showSpinner('กำลังโหลดข้อมูล...');
     try {
         await new Promise(resolve => window.addEventListener('DOMContentLoaded', resolve));
-        const ok = await waitForSupabase();
-        if (!ok) throw new Error('Supabase library not loaded.');
+        // Remove the old script loaders and use the one in the head
+        if (!window.supabase) {
+             await new Promise(resolve => setTimeout(resolve, 1000)); // Wait a bit for the script in head
+        }
+        if (!window.supabase) throw new Error('Supabase library not loaded.');
+
         initSupabase();
         if (supabaseClient) { toast('เชื่อมต่อ Supabase สำเร็จ', 'success'); }
+        
         await restoreSession();
         await fetchBanks();
         await fetchPromotions();
         calculateLoan();
+
     } catch (e) {
         console.error("Initialization failed:", e);
         toast(e.message, 'error');
@@ -1061,6 +1085,7 @@ async function start() {
 }
 
 start();
+
 
 </script>
 
