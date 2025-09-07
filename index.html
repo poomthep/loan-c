@@ -202,11 +202,16 @@
         font-size: 10px;
     }
 
-    /* ========== การจัดวาง Grid สำหรับมือถือ ========== */
-    .main-content-grid { 
-        display: grid; 
-        grid-template-columns: 1fr; 
-        gap: 15px; 
+    .main-columns {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
+
+    #left-column, #right-column {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
     }
     
     .grid-column { 
@@ -482,9 +487,28 @@
         font-size: 12px;
         line-height: 1.4;
     }
+    
+    /* ========== Desktop & Tablet Layout ========== */
+    @media (min-width: 992px) {
+        .main-columns {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 15px;
+            align-items: flex-start;
+        }
+
+        #left-column, #right-column {
+            gap: 15px; /* Add gap between cards within columns */
+        }
+        
+        .card {
+            margin-bottom: 0; /* Remove margin as gap handles spacing */
+        }
+    }
+
 
     /* ========== สไตล์สำหรับมือถือโดยเฉพาะ ========== */
-    @media (max-width: 768px) {
+    @media (max-width: 991px) {
         body { 
             padding: 8px; 
             font-size: 14px;
@@ -772,114 +796,121 @@
       </div>
     </div>
 
-    <div class="main-content-grid" id="mainContent" style="display: none;">
+    <div id="mainContent" style="display: none;">
       
-      <div class="card">
-        <h2 class="card-header active" onclick="toggleCard(this)">📊 ข้อมูลสินเชื่อและผู้กู้</h2>
-        <div class="card-content">
-          <div class="input-group">
-            <label>ราคาบ้าน (บาท)</label>
-            <input id="housePrice" type="text" inputmode="numeric" value="5,000,000" oninput="formatNumberInput(this)">
-          </div>
-          <div class="input-group">
-            <label>อายุ (ปี)</label>
-            <input id="borrowerAge" type="number" value="30">
-          </div>
-          <div class="input-group">
-            <label>เงินเดือน (บาท/เดือน)</label>
-            <input id="borrowerSalary" type="text" inputmode="numeric" value="50,000" oninput="formatNumberInput(this)">
-          </div>
-          <div class="input-group">
-            <label>โบนัส</label>
-            <input id="borrowerBonus" type="text" inputmode="numeric" value="50,000" oninput="formatNumberInput(this)">
-          </div>
-          <div class="input-group">
-            <label>OT / ค่าล่วงเวลา</label>
-            <div class="income-average-group">
-              <input id="borrowerOT" type="text" inputmode="numeric" value="0" oninput="formatNumberInput(this)">
-              <span>บาท หาร</span>
-              <input id="borrowerOTMonths" type="number" value="1">
-              <span>เดือน</span>
+      <div class="main-columns">
+        <div id="left-column">
+          <div class="card">
+            <h2 class="card-header active" onclick="toggleCard(this)">📊 ข้อมูลสินเชื่อและผู้กู้</h2>
+            <div class="card-content">
+              <div class="input-group">
+                <label>ราคาบ้าน (บาท)</label>
+                <input id="housePrice" type="text" inputmode="numeric" value="5,000,000" oninput="formatNumberInput(this)">
+              </div>
+              <div class="input-group">
+                <label>อายุ (ปี)</label>
+                <input id="borrowerAge" type="number" value="30">
+              </div>
+              <div class="input-group">
+                <label>เงินเดือน (บาท/เดือน)</label>
+                <input id="borrowerSalary" type="text" inputmode="numeric" value="50,000" oninput="formatNumberInput(this)">
+              </div>
+              <div class="input-group">
+                <label>โบนัส</label>
+                <input id="borrowerBonus" type="text" inputmode="numeric" value="50,000" oninput="formatNumberInput(this)">
+              </div>
+              <div class="input-group">
+                <label>OT / ค่าล่วงเวลา</label>
+                <div class="income-average-group">
+                  <input id="borrowerOT" type="text" inputmode="numeric" value="0" oninput="formatNumberInput(this)">
+                  <span>บาท หาร</span>
+                  <input id="borrowerOTMonths" type="number" value="1">
+                  <span>เดือน</span>
+                </div>
+              </div>
+              <div class="input-group">
+                <label>ค่าคอมมิชชั่น</label>
+                <div class="income-average-group">
+                  <input id="borrowerCommission" type="text" inputmode="numeric" value="0" oninput="formatNumberInput(this)">
+                  <span>บาท หาร</span>
+                  <input id="borrowerCommissionMonths" type="number" value="1">
+                  <span>เดือน</span>
+                </div>
+              </div>
+              <div class="input-group">
+                <label>รายได้อื่นๆ</label>
+                <div class="income-average-group">
+                  <input id="borrowerOtherIncome" type="text" inputmode="numeric" value="0" oninput="formatNumberInput(this)">
+                  <span>บาท หาร</span>
+                  <input id="borrowerOtherIncomeMonths" type="number" value="1">
+                  <span>เดือน</span>
+                </div>
+              </div>
+              <div class="input-group">
+                <label>หนี้สินในบูโร (ผ่อนชำระต่อเดือน)</label>
+                <input id="borrowerDebt" type="text" inputmode="numeric" value="5,000" oninput="formatNumberInput(this)">
+              </div>
+              <button class="btn block" onclick="calculateLoan()">🔍 วิเคราะห์สินเชื่อ</button>
+              <div class="export-section">
+                <button class="btn btn-secondary" onclick="saveLoanLocal()">💾 บันทึกข้อมูล</button>
+                <button class="btn btn-secondary" onclick="exportToPDF()">📄 Export PDF</button>
+              </div>
+              <div id="debtNotice" class="notice" style="display:none"></div>
             </div>
           </div>
-          <div class="input-group">
-            <label>ค่าคอมมิชชั่น</label>
-            <div class="income-average-group">
-              <input id="borrowerCommission" type="text" inputmode="numeric" value="0" oninput="formatNumberInput(this)">
-              <span>บาท หาร</span>
-              <input id="borrowerCommissionMonths" type="number" value="1">
-              <span>เดือน</span>
+        </div>
+
+        <div id="right-column">
+          <div class="card">
+            <h2 class="card-header" onclick="toggleCard(this)">💰 ผลการวิเคราะห์ (ดอกเบี้ยเฉลี่ย)</h2>
+            <div class="card-content collapsed">
+              <div class="results-grid">
+                <div class="result-item">
+                  <div>ยอดกู้ยืม</div>
+                  <div id="loanAmount" class="value">-</div>
+                </div>
+                <div class="result-item">
+                  <div>ผ่อนต่อเดือน</div>
+                  <div id="monthlyPayment" class="value">-</div>
+                </div>
+              </div>
+              <div class="chart-container"><canvas id="paymentChart"></canvas></div>
             </div>
           </div>
-          <div class="input-group">
-            <label>รายได้อื่นๆ</label>
-            <div class="income-average-group">
-              <input id="borrowerOtherIncome" type="text" inputmode="numeric" value="0" oninput="formatNumberInput(this)">
-              <span>บาท หาร</span>
-              <input id="borrowerOtherIncomeMonths" type="number" value="1">
-              <span>เดือน</span>
+    
+          <div class="card">
+            <h2 class="card-header" onclick="toggleCard(this)">📋 ตารางการชำระหนี้ (12 เดือนแรก)</h2>
+            <div class="card-content collapsed">
+              <div style="overflow-x: auto;">
+                <table class="amortization">
+                  <thead>
+                    <tr>
+                      <th width="10%">งวด</th>
+                      <th width="22%">ยอดผ่อน</th>
+                      <th width="22%">เงินต้น</th>
+                      <th width="22%">ดอกเบี้ย</th>
+                      <th width="24%">เงินต้นคงเหลือ</th>
+                    </tr>
+                  </thead>
+                  <tbody id="amortizationTable"></tbody>
+                </table>
+              </div>
             </div>
           </div>
-          <div class="input-group">
-            <label>หนี้สินในบูโร (ผ่อนชำระต่อเดือน)</label>
-            <input id="borrowerDebt" type="text" inputmode="numeric" value="5,000" oninput="formatNumberInput(this)">
+    
+          <div class="card">
+            <h2 class="card-header" onclick="toggleCard(this)">🏦 เปรียบเทียบโปรโมชั่นธนาคาร</h2>
+            <div class="card-content collapsed">
+              <div id="promoStatus" class="notice" style="display:none"></div>
+              <div id="bankComparison" class="bank-comparison"></div>
+              <div id="rateUpdateTime" style="text-align:center;color:#666;margin-top:6px;font-size:12px;"></div>
+            </div>
           </div>
-          <button class="btn block" onclick="calculateLoan()">🔍 วิเคราะห์สินเชื่อ</button>
-          <div class="export-section">
-            <button class="btn btn-secondary" onclick="saveLoanLocal()">💾 บันทึกข้อมูล</button>
-            <button class="btn btn-secondary" onclick="exportToPDF()">📄 Export PDF</button>
-          </div>
-          <div id="debtNotice" class="notice" style="display:none"></div>
         </div>
       </div>
 
-      <div class="card">
-        <h2 class="card-header" onclick="toggleCard(this)">💰 ผลการวิเคราะห์ (ดอกเบี้ยเฉลี่ย)</h2>
-        <div class="card-content collapsed">
-          <div class="results-grid">
-            <div class="result-item">
-              <div>ยอดกู้ยืม</div>
-              <div id="loanAmount" class="value">-</div>
-            </div>
-            <div class="result-item">
-              <div>ผ่อนต่อเดือน</div>
-              <div id="monthlyPayment" class="value">-</div>
-            </div>
-          </div>
-          <div class="chart-container"><canvas id="paymentChart"></canvas></div>
-        </div>
-      </div>
 
-      <div class="card">
-        <h2 class="card-header" onclick="toggleCard(this)">📋 ตารางการชำระหนี้ (12 เดือนแรก)</h2>
-        <div class="card-content collapsed">
-          <div style="overflow-x: auto;">
-            <table class="amortization">
-              <thead>
-                <tr>
-                  <th width="10%">งวด</th>
-                  <th width="22%">ยอดผ่อน</th>
-                  <th width="22%">เงินต้น</th>
-                  <th width="22%">ดอกเบี้ย</th>
-                  <th width="24%">เงินต้นคงเหลือ</th>
-                </tr>
-              </thead>
-              <tbody id="amortizationTable"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <div class="card full-width">
-        <h2 class="card-header" onclick="toggleCard(this)">🏦 เปรียบเทียบโปรโมชั่นธนาคาร</h2>
-        <div class="card-content collapsed">
-          <div id="promoStatus" class="notice" style="display:none"></div>
-          <div id="bankComparison" class="bank-comparison"></div>
-          <div id="rateUpdateTime" style="text-align:center;color:#666;margin-top:6px;font-size:12px;"></div>
-        </div>
-      </div>
-
-      <div class="card full-width" id="bankAdmin" style="display:none">
+      <div class="card" id="bankAdmin" style="display:none">
         <h2 class="card-header" onclick="toggleCard(this)">🏦 จัดการข้อมูลธนาคารและ MRR</h2>
         <div class="card-content collapsed">
           <div class="input-group">
@@ -902,7 +933,7 @@
         </div>
       </div>
       
-      <div class="card full-width" id="promoAdmin" style="display:none">
+      <div class="card" id="promoAdmin" style="display:none">
         <h2 class="card-header" onclick="toggleCard(this)">🛠️ เพิ่ม/แก้ไข โปรธนาคาร</h2>
         <div class="card-content collapsed">
           <fieldset class="form-section">
@@ -1207,7 +1238,7 @@ function updateAuthUI(loggedIn) {
     if (loggedIn && currentUser) {
         loginArea.style.display = 'none';
         userArea.style.display = 'flex';
-        mainContent.style.display = 'grid';
+        mainContent.style.display = 'block'; // Changed from 'grid' to 'block'
         if (who) who.textContent = currentUser.email;
         if (badge) badge.textContent = isAdmin ? 'สิทธิ์: ADMIN' : 'สิทธิ์: USER';
         if (isAdmin) {
@@ -1622,7 +1653,9 @@ function runAdvancedAnalysis(promo, borrower) {
         return analysis;
     }
     
-    const rules = promo.income_rules || { salary: 100, ot: 50, commission: 50, bonus: 50, other: 50 };
+    const defaultRules = { salary: 100, ot: 50, commission: 50, bonus: 50, other: 50 };
+    const rules = Object.assign({}, defaultRules, promo.income_rules);
+
     const assessableSalary = borrower.salary * (rules.salary / 100);
     const assessableBonus = (borrower.bonus / 12) * (rules.bonus / 100);
     
@@ -1637,7 +1670,11 @@ function runAdvancedAnalysis(promo, borrower) {
 
     analysis.totalAssessableIncome = assessableSalary + assessableBonus + assessableOT + assessableCommission + assessableOther;
     
-    if (analysis.totalAssessableIncome <= 0) return analysis;
+    if (analysis.totalAssessableIncome <= 0) {
+        analysis.verdict = "รายได้ไม่เพียงพอ";
+        analysis.verdictClass = "verdict-bad";
+        return analysis;
+    }
 
     analysis.maxTerm = Math.max(1, (promo.max_loan_age || 65) - borrower.age);
     const DSR_CEILING = 55;
