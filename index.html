@@ -425,6 +425,7 @@ function getNumericValue(elementId) {
 
 function addFixedRateYear(year = 0, rate = '') {
     const container = document.getElementById('fixedRatesContainer');
+    if (!container) return;
     const nextYear = year > 0 ? year : container.getElementsByClassName('fixed-rate-row').length + 1;
     const rateDiv = document.createElement('div');
     rateDiv.className = 'fixed-rate-row';
@@ -494,6 +495,7 @@ async function logout() {
     promoByBank = {};
     allBanks = [];
     updateAuthUI(false);
+    document.getElementById('bankComparison').innerHTML = '';
 }
 function showLoginError(msg) {
     const errEl = document.getElementById('loginError');
@@ -630,6 +632,56 @@ function clearBankForm() {
 }
 
 // ===== Promotion Management =====
+async function fetchPromotions() {
+    if (!supabaseClient) return;
+    try {
+        const { data, error } = await supabaseClient.from('bank_promotions').select('*').order('bank_name');
+        if (error) throw error;
+        promoByBank = (data || []).reduce((acc, row) => {
+            (acc[row.bank_name] = acc[row.bank_name] || []).push(row);
+            return acc;
+        }, {});
+        renderPromoList();
+    } catch (e) {
+        console.error("Failed to fetch promotions:", e);
+        toast('ไม่สามารถดึงโปรโมชันได้', 'error');
+    }
+}
+function renderPromoList() {
+    const h = document.getElementById('myPromoList');
+    if (!h) return;
+    const flatPromos = Object.values(promoByBank).flat();
+    if (flatPromos.length === 0) {
+        h.innerHTML = '<p style="text-align:center;color:#666">ยังไม่มีโปรในฐานข้อมูล</p>';
+        return;
+    }
+    h.innerHTML = flatPromos.map(p => {
+        const ratesText = (p.rates || []).map(r => `ปีที่ ${r.year === 99 ? 'ถัดไป' : r.year}: ${r.rate.toFixed(2)}% <span style="color:#6c757d; font-size:11px">(${r.description || ''})</span>`).join('<br>');
+        const endDate = p.promo_end_date ? new Date(p.promo_end_date).toLocaleDateString('th-TH') : 'ไม่มีกำหนด';
+        return `<div style="padding:10px;border:1px solid #e9ecef;border-radius:10px;margin:6px 0;">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div><strong>${p.bank_name}</strong> — ${p.name}</div>
+              ${isAdmin ? `<div style="display:flex;gap:6px">
+                  <button class="btn btn-secondary btn-admin" onclick='editPromotion(${JSON.stringify(p)})'>แก้ไข</button>
+                  <button class="btn btn-danger btn-admin" onclick="deletePromotion('${p.id}')">ลบ</button>
+                </div>` : ''}
+            </div>
+            <div style="font-size:12px;color:red;margin-top:4px;font-weight:bold;">ยื่นกู้ภายใน: ${endDate}</div>
+            <div style="font-size:12px;color:#555;margin-top:4px">${p.conditions || ''} (ผ่อนได้ถึงอายุ ${p.max_loan_age} ปี)</div>
+            <div style="font-size:12px;margin-top:6px; line-height: 1.6;">${ratesText}</div>
+          </div>`;
+    }).join('');
+}
+function handleBankSelectionChange() {
+    const selectedBankName = document.getElementById('promoBankName').value;
+    const mrrDisplay = document.getElementById('promoMrrDisplay');
+    if (selectedBankName) {
+        const bank = allBanks.find(b => b.bank_name === selectedBankName);
+        mrrDisplay.value = bank ? bank.current_mrr.toFixed(2) : '';
+    } else {
+        mrrDisplay.value = '';
+    }
+}
 async function savePromotion() {
     if (!isAdmin) return;
     const id = document.getElementById('promoIdInput').value.trim();
@@ -668,101 +720,24 @@ async function savePromotion() {
         await fetchPromotions();
     } catch (e) { alert('เกิดข้อผิดพลาด: ' + e.message); }
 }
-
-			function renderPromoList() {
-				const h = document.getElementById('myPromoList');
-				if (!h) return;
-				const flatPromos = Object.values(promoByBank).flat();
-				if (flatPromos.length === 0) {
-					h.innerHTML = '<p style="text-align:center;color:#666">ยังไม่มีโปรในฐานข้อมูล</p>';
-					return;
-				}
-				h.innerHTML = flatPromos.map(p => {
-					const ratesText = (p.rates || []).map(r => `ปีที่ ${r.year === 99 ? 'ถัดไป' : r.year}: ${r.rate.toFixed(2)}% <span style="color:#6c757d; font-size:11px">(${r.description || ''})</span>`).join('<br>');
-					
-					// จัดรูปแบบวันที่เพื่อแสดงผล
-					const endDate = p.promo_end_date ? new Date(p.promo_end_date).toLocaleDateString('th-TH') : 'ไม่มีกำหนด';
-
-					return `<div style="padding:10px;border:1px solid #e9ecef;border-radius:10px;margin:6px 0;">
-						<div style="display:flex;justify-content:space-between;align-items:center">
-						  <div><strong>${p.bank_name}</strong> — ${p.name}</div>
-						  ${isAdmin ? `<div style="display:flex;gap:6px">
-							  <button class="btn btn-secondary btn-admin" onclick='editPromotion(${JSON.stringify(p)})'>แก้ไข</button>
-							  <button class="btn btn-danger btn-admin" onclick="deletePromotion('${p.id}')">ลบ</button>
-							</div>` : ''}
-						</div>
-						<div style="font-size:12px;color:red;margin-top:4px;font-weight:bold;">ยื่นกู้ภายใน: ${endDate}</div>
-						<div style="font-size:12px;margin-top:6px; line-height: 1.6;">${ratesText}</div>
-					  </div>`;
-				}).join('');
-			}
-
-function handleBankSelectionChange() {
-    const selectedBankName = document.getElementById('promoBankName').value;
-    const mrrDisplay = document.getElementById('promoMrrDisplay');
-    if (selectedBankName) {
-        const bank = allBanks.find(b => b.bank_name === selectedBankName);
-        mrrDisplay.value = bank ? bank.current_mrr.toFixed(2) : '';
-    } else {
-        mrrDisplay.value = '';
-    }
-}
-async function savePromotion() {
-    if (!isAdmin) return;
-    const id = document.getElementById('promoIdInput').value.trim();
-    const promoData = {
-        bank_name: document.getElementById('promoBankName').value,
-        name: document.getElementById('promoName').value.trim(),
-        loan_types: Array.from(document.querySelectorAll('[name="loanType"]:checked')).map(el => el.value),
-        target_groups: Array.from(document.querySelectorAll('[name="targetGroup"]:checked')).map(el => el.value),
-        max_loan_ltv: parseInt(document.getElementById('promoMaxLTV').value, 10) || 100,
-        max_loan_age: parseInt(document.getElementById('promoMaxLoanAge').value, 10) || 65,
-        prepayment_policy: { years: parseInt(document.getElementById('promoPrepaymentYears').value, 10) || 3 },
-        rates: parseRatesFromForm(),
-        income_rules: {
-            salary: parseInt(document.getElementById('incomeSalary').value, 10) || 100,
-            ot: parseInt(document.getElementById('incomeOT').value, 10) || 50,
-            commission: parseInt(document.getElementById('incomeCommission').value, 10) || 50,
-            bonus: parseInt(document.getElementById('incomeBonus').value, 10) || 50,
-        }
-    };
-    if (!promoData.bank_name || !promoData.name || promoData.rates.length === 0) {
-        alert('กรุณากรอกข้อมูลโปรโมชันให้ครบถ้วน');
-        return;
-    }
-    try {
-        if (id) {
-            const { error } = await supabaseClient.from('bank_promotions').update(promoData).eq('id', id);
-            if (error) throw error;
-        } else {
-            const { error } = await supabaseClient.from('bank_promotions').insert([promoData]);
-            if (error) throw error;
-        }
-        toast('บันทึกโปรโมชันสำเร็จ', 'success');
-        clearPromoForm();
-        await fetchPromotions();
-    } catch (e) { alert('เกิดข้อผิดพลาด: ' + e.message); }
-}
 function editPromotion(p) {
     document.getElementById('promoIdInput').value = p.id || '';
     document.getElementById('promoBankName').value = p.bank_name || '';
     handleBankSelectionChange();
     document.getElementById('promoName').value = p.name || '';
-    
+    document.getElementById('promoEndDate').value = p.promo_end_date ? p.promo_end_date.split('T')[0] : '';
+    document.getElementById('contractEndDate').value = p.contract_end_date ? p.contract_end_date.split('T')[0] : '';
     document.querySelectorAll('[name="loanType"]').forEach(el => el.checked = (p.loan_types || []).includes(el.value));
     document.querySelectorAll('[name="targetGroup"]').forEach(el => el.checked = (p.target_groups || []).includes(el.value));
-    
     document.getElementById('promoMaxLTV').value = p.max_loan_ltv || '';
     document.getElementById('promoMaxLoanAge').value = p.max_loan_age || '';
     document.getElementById('promoPrepaymentYears').value = p.prepayment_policy?.years || '';
-
     if (p.income_rules) {
         document.getElementById('incomeSalary').value = p.income_rules.salary || 100;
         document.getElementById('incomeOT').value = p.income_rules.ot || 50;
         document.getElementById('incomeCommission').value = p.income_rules.commission || 50;
         document.getElementById('incomeBonus').value = p.income_rules.bonus || 50;
     }
-    
     populateFormWithRates(p.rates || []);
     window.scrollTo({ top: document.getElementById('promoAdmin').offsetTop - 20, behavior: 'smooth' });
 }
@@ -832,8 +807,8 @@ function clearPromoFormFields() {
 
 // ===== Core Calculation Engine =====
 function runAdvancedAnalysis(promo, borrower) {
-    const analysis = { verdict: "N/A", finalLoanAmount: 0, monthlyPayment: 0, finalDSR: 0, maxTerm: 0, verdictClass: "verdict-ok" };
-    if (!borrower.age || !borrower.salary) {
+    const analysis = { verdict: "N/A", finalLoanAmount: 0, monthlyPayment: 0, finalDSR: 0, maxTerm: 0, verdictClass: "verdict-ok", maxLoanAmount: 0 };
+    if (!borrower.age || borrower.salary <= 0) {
         analysis.verdict = "กรอกข้อมูลผู้กู้";
         analysis.verdictClass = "verdict-bad";
         return analysis;
@@ -861,6 +836,8 @@ function runAdvancedAnalysis(promo, borrower) {
     
     if (analysis.finalLoanAmount <= 0) {
         analysis.verdict = "วงเงินกู้ไม่พอ";
+        analysis.monthlyPayment = 0;
+        analysis.finalDSR = 0;
         analysis.verdictClass = "verdict-bad";
         return analysis;
     }
@@ -989,6 +966,7 @@ function buildChart(p, i) {
 }
 function buildAmort(loan, rate, years, pay) {
     const tb = document.getElementById('amortizationTable');
+    if(!tb) return;
     tb.innerHTML = '';
     if (!loan || !rate || !years || !pay) return;
     const mr = rate / 100 / 12;
@@ -1064,7 +1042,7 @@ async function start() {
     ['housePrice', 'borrowerAge', 'borrowerSalary', 'borrowerBonus', 'borrowerOtherIncome', 'borrowerDebt'].forEach(id => {
         const el = document.getElementById(id);
         if(el) el.addEventListener('input', () => {
-             if(el.type === 'text' && el.inputMode === 'numeric') formatNumberInput(el);
+             if(el.id !== 'borrowerAge') formatNumberInput(el);
              calculateLoan();
         });
     });
