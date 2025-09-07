@@ -113,6 +113,31 @@
     border-color: red !important; /* ทำให้ขอบเป็นสีแดง */
     background-color: #fff5f5 !important; /* ทำให้พื้นหลังเป็นสีแดงจางๆ */
 }
+
+#toastContainer {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.toast {
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: all .25s ease;
+    padding: 10px 14px;
+    border-radius: 10px;
+    color: #fff;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, .15);
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.hide { opacity: 0; transform: translateY(-8px); }
+.toast.info { background: linear-gradient(135deg, #667eea, #764ba2); }
+.toast.success { background: linear-gradient(135deg, #20bf6b, #01a3a4); }
+.toast.error { background: linear-gradient(135deg, #ff6b6b, #ee5a52); }
+
   </style>
 
   <script>
@@ -456,6 +481,7 @@ function hideSpinner() {
     const ov = document.getElementById('globalSpinner');
     if (ov) ov.style.display = 'none';
 }
+
 function toast(message, type = 'info') {
     const cont = document.getElementById('toastContainer');
     if (!cont) return;
