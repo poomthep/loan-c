@@ -263,7 +263,7 @@
 
     .income-rule-grid { 
         display: grid; 
-        grid-template-columns: 1fr auto; 
+        grid-template-columns: auto 1fr auto; 
         gap: 8px 12px; 
         align-items: center; 
     }
@@ -523,13 +523,14 @@
             gap: 6px;
         }
         
-        .welcome-buttons {
+        /* .welcome-buttons {
             flex-direction: column;
         }
         
         .welcome-buttons .btn {
             width: 100%;
-        }
+        } 
+        */
         
         .bank-card {
             padding: 12px;
@@ -556,18 +557,9 @@
             grid-template-columns: 1fr;
         }
         
-        .income-rule-grid {
-            grid-template-columns: 1fr;
-            gap: 5px;
-        }
-        
         .income-rule-grid label {
             font-size: 12px;
             margin-bottom: 2px;
-        }
-        
-        .income-rule-grid input {
-            margin-bottom: 8px;
         }
         
         /* ปรับปรุงรายการธนาคาร */
@@ -758,7 +750,7 @@
         </div>
         <div class="welcome-buttons"> 
           <button class="btn btn-secondary" onclick="logout()">ออกจากระบบ</button> 
-          <button class="btn btn-secondary" onclick="refreshPromos()">🔄รีเฟรชโปร</button> 
+          <button class="btn btn-secondary" onclick="refreshPromos()">รีเฟรชโปร</button> 
         </div>
       </div>
     </div>
