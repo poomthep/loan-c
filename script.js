@@ -231,9 +231,18 @@ async function login() {
     updateAuthUI(true);
     await refreshPromos();
     toast('เข้าสู่ระบบสำเร็จ', 'success');
+
+    // หลังล็อกอินสำเร็จ เลื่อนขึ้นสู่ส่วนทำงานหลักทันที
+    setTimeout(() => {
+      const main = document.getElementById('mainContent');
+      if (main) main.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 120);
+
   } catch (e) {
     toast('เข้าสู่ระบบไม่สำเร็จ', 'error');
-    const errorMessage = e?.message === 'Invalid login credentials' ? 'อีเมลหรือรหัสผ่านไม่ถูกต้อง' : `เกิดข้อผิดพลาด: ${e?.message || e}`;
+    const errorMessage = e?.message === 'Invalid login credentials'
+      ? 'อีเมลหรือรหัสผ่านไม่ถูกต้อง'
+      : `เกิดข้อผิดพลาด: ${e?.message || e}`;
     showLoginError(errorMessage);
   } finally {
     hideSpinner();
@@ -254,9 +263,58 @@ async function logout() {
   allBanks = [];
   selectedPromoIds = new Set();
   updateCompareBar();
+
+  // กลับสู่โหมดไม่ล็อกอิน + โฟกัสอีเมล
   updateAuthUI(false);
+  const emailInput = document.getElementById('email');
+  if (emailInput) emailInput.focus();
   const cmp = document.getElementById('bankComparison');
   if (cmp) cmp.innerHTML = '';
+}
+
+/** Boot app on load: init client, check session, then paint UI. */
+async function boot() {
+  try {
+    showSpinner('กำลังเตรียมระบบ...');
+    initSupabase();
+
+    // ถ้ายังไม่ได้สร้าง client (เช่น script Supabase ยังไม่โหลด) ให้รอเล็กน้อย
+    if (!supabaseClient && window.supabase) {
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+
+    // เช็กเซสชัน (จะเร็ว ไม่ต้อง popup)
+    let session = null;
+    if (supabaseClient?.auth?.getSession) {
+      const { data } = await supabaseClient.auth.getSession();
+      session = data?.session || null;
+    }
+
+    currentUser = session?.user || null;
+    if (currentUser) await determineAdmin();
+
+    // วาด UI ตามสถานะ
+    updateAuthUI(!!currentUser);
+
+    // ตั้งค่า UX เพิ่มเติมสำหรับช่องตัวเลขบนมือถือ
+    enhanceNumericInputs();
+  } catch (e) {
+    console.warn('boot error', e);
+    updateAuthUI(false);
+  } finally {
+    hideSpinner();
+  }
+}
+// เรียกเมื่อ DOM พร้อม
+window.addEventListener('DOMContentLoaded', boot);
+
+/** Improve mobile numeric UX for all numeric-like inputs. */
+function enhanceNumericInputs() {
+  document.querySelectorAll('input[type="number"], input[inputmode="numeric"]').forEach(el => {
+    el.setAttribute('inputmode', 'numeric');
+    el.setAttribute('pattern', '[0-9]*');
+    el.setAttribute('autocomplete', 'off');
+  });
 }
 
 /**
@@ -276,61 +334,57 @@ function showLoginError(msg) {
  * @param {boolean} loggedIn Is the user logged in?
  */
 function updateAuthUI(loggedIn) {
-  const mainContent = document.getElementById('mainContent');
   const authCard = document.getElementById('auth-card');
-  const leftCol = document.getElementById('left-column');
+  const mainContent = document.getElementById('mainContent');
   const adminButtons = document.querySelectorAll('.admin-btn');
 
-  // การ์ด/แพเนลฝั่งขวาที่ต้องซ่อนเมื่อยังไม่ล็อกอิน
-  const rightPanels = [
-    'actionButtonsCard',
-    'analysisResultCard',
-    'comparisonResultCard',
-    'amortizationResultCard',
-    'bankAdmin',
-    'promoAdmin'
-  ];
-
-  // ให้ main แสดงเสมอเพื่อให้เห็นการ์ดล็อกอิน
-  if (mainContent) mainContent.style.display = 'block';
-
-  if (loggedIn && currentUser) {
-    // ซ่อนการ์ดล็อกอิน → โชว์ทุกอย่างที่ต้องใช้
-    if (authCard) authCard.style.display = 'none';
-
-    if (leftCol) leftCol.style.display = ''; // ให้เห็นข้อมูลผู้กู้ทางซ้าย
-    rightPanels.forEach(id => {
-      const el = document.getElementById(id);
-      if (!el) return;
-      // โชว์เฉพาะ "เครื่องมือและผลลัพธ์" เป็นค่าเริ่ม
-      el.style.display = (id === 'actionButtonsCard') ? 'block' : 'none';
-    });
-
-    adminButtons.forEach(btn => { btn.style.display = isAdmin ? 'flex' : 'none'; });
-  } else {
-    // ยังไม่ล็อกอิน: ซ่อนการ์ดข้อมูลผู้กู้ + ซ่อนการ์ดผลลัพธ์ทั้งหมด และโชว์การ์ดล็อกอิน
-    if (leftCol) leftCol.style.display = 'none';
-    rightPanels.forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.style.display = 'none';
-    });
-    adminButtons.forEach(btn => { btn.style.display = 'none'; });
-
-    if (authCard) {
-      authCard.style.display = 'block';
-      // โฟกัสช่องอีเมล + เลื่อนให้การ์ดอยู่กลางจอ
-      setTimeout(() => {
-        const email = document.getElementById('email');
-        if (email) email.focus();
-        authCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 100);
-    }
-  }
-
-  // เคลียร์รหัสผ่านทุกครั้ง
+  // เคลียร์ช่อง password ทุกครั้ง
   const pwd = document.getElementById('password');
   if (pwd) pwd.value = '';
+
+  if (loggedIn && currentUser) {
+    // ซ่อนการ์ดล็อกอิน แสดงคอนเทนต์หลัก และปลดอินเทอร์แอกชัน
+    if (authCard) {
+      authCard.style.display = 'none';
+      authCard.setAttribute('aria-hidden', 'true');
+      authCard.removeAttribute('tabindex');
+    }
+    if (mainContent) {
+      mainContent.style.display = 'block';
+      mainContent.removeAttribute('inert'); // ให้โฟกัส/คลิกได้
+      mainContent.setAttribute('aria-hidden', 'false');
+    }
+    adminButtons.forEach(btn => { btn.style.display = isAdmin ? 'flex' : 'none'; });
+
+    // ทำให้หัวข้อข้อมูลหลักพร้อมทำงาน
+    const firstFocusable = document.getElementById('data-card-header');
+    if (firstFocusable) {
+      // ป้องกันหน้ากระดิกแรง ถ้าผู้ใช้ตั้งค่าลดแอนิเมชันไว้
+      try { firstFocusable.focus({ preventScroll: true }); } catch {}
+    }
+  } else {
+    // ยังไม่ได้ล็อกอิน: แสดงการ์ดล็อกอิน ซ่อน/ล็อกส่วนหลัก
+    if (mainContent) {
+      mainContent.style.display = 'none';
+      mainContent.setAttribute('inert', ''); // กันโฟกัส/คลิก
+      mainContent.setAttribute('aria-hidden', 'true');
+    }
+    if (authCard) {
+      authCard.style.display = 'block';
+      authCard.removeAttribute('aria-hidden');
+      authCard.setAttribute('tabindex', '-1'); // ให้รับโฟกัส
+      // เลื่อนและโฟกัสไปยังฟอร์มล็อกอิน
+      setTimeout(() => {
+        authCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const emailInput = document.getElementById('email');
+        if (emailInput) emailInput.focus();
+      }, 100);
+    }
+    // ซ่อนปุ่ม admin ทั้งหมด
+    adminButtons.forEach(btn => { btn.style.display = 'none'; });
+  }
 }
+
 
 /** Checks if the current user has an 'admin' role via Supabase RPC. */
 async function determineAdmin() {
