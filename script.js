@@ -276,29 +276,58 @@ function showLoginError(msg) {
  * @param {boolean} loggedIn Is the user logged in?
  */
 function updateAuthUI(loggedIn) {
-  const loginArea = document.getElementById('loginArea');
-  const userArea = document.getElementById('userArea');
   const mainContent = document.getElementById('mainContent');
-  const adminButtons = document.getElementById('adminButtons'); // Get the new button container
-  const who = document.getElementById('who');
-  const badge = document.getElementById('roleBadge');
+  const authCard = document.getElementById('auth-card');
+  const leftCol = document.getElementById('left-column');
+  const adminButtons = document.querySelectorAll('.admin-btn');
+
+  // การ์ด/แพเนลฝั่งขวาที่ต้องซ่อนเมื่อยังไม่ล็อกอิน
+  const rightPanels = [
+    'actionButtonsCard',
+    'analysisResultCard',
+    'comparisonResultCard',
+    'amortizationResultCard',
+    'bankAdmin',
+    'promoAdmin'
+  ];
+
+  // ให้ main แสดงเสมอเพื่อให้เห็นการ์ดล็อกอิน
+  if (mainContent) mainContent.style.display = 'block';
 
   if (loggedIn && currentUser) {
-    loginArea.style.display = 'none';
-    userArea.style.display = 'flex';
-    mainContent.style.display = 'block';
-    if (who) who.textContent = currentUser.email;
-    if (badge) badge.textContent = isAdmin ? 'สิทธิ์: ADMIN' : 'สิทธิ์: USER';
-    
-    // Show or hide the admin buttons based on the user's role
-    if(adminButtons) adminButtons.style.display = isAdmin ? 'flex' : 'none';
+    // ซ่อนการ์ดล็อกอิน → โชว์ทุกอย่างที่ต้องใช้
+    if (authCard) authCard.style.display = 'none';
 
+    if (leftCol) leftCol.style.display = ''; // ให้เห็นข้อมูลผู้กู้ทางซ้าย
+    rightPanels.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      // โชว์เฉพาะ "เครื่องมือและผลลัพธ์" เป็นค่าเริ่ม
+      el.style.display = (id === 'actionButtonsCard') ? 'block' : 'none';
+    });
+
+    adminButtons.forEach(btn => { btn.style.display = isAdmin ? 'flex' : 'none'; });
   } else {
-    loginArea.style.display = 'block';
-    userArea.style.display = 'none';
-    mainContent.style.display = 'none';
-    if(adminButtons) adminButtons.style.display = 'none';
+    // ยังไม่ล็อกอิน: ซ่อนการ์ดข้อมูลผู้กู้ + ซ่อนการ์ดผลลัพธ์ทั้งหมด และโชว์การ์ดล็อกอิน
+    if (leftCol) leftCol.style.display = 'none';
+    rightPanels.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+    adminButtons.forEach(btn => { btn.style.display = 'none'; });
+
+    if (authCard) {
+      authCard.style.display = 'block';
+      // โฟกัสช่องอีเมล + เลื่อนให้การ์ดอยู่กลางจอ
+      setTimeout(() => {
+        const email = document.getElementById('email');
+        if (email) email.focus();
+        authCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
+    }
   }
+
+  // เคลียร์รหัสผ่านทุกครั้ง
   const pwd = document.getElementById('password');
   if (pwd) pwd.value = '';
 }
@@ -866,6 +895,13 @@ function buildAmort(loanAmount, tiers, years, monthlyPayment) {
 
 /** Main function to trigger the loan calculation and analysis process. */
 function calculateLoan() {
+  if (!currentUser) {
+    toast('กรุณาเข้าสู่ระบบก่อนใช้งาน', 'error');
+    const authCard = document.getElementById('auth-card');
+    if (authCard) authCard.scrollIntoView({ behavior: 'smooth' });
+    return;
+  }
+
   const borrower = {
     housePrice: getNumericValue('housePrice'),
     age: getNumericValue('borrowerAge'),
@@ -909,9 +945,10 @@ function calculateLoan() {
     document.getElementById('amortizationTable').innerHTML = '';
   }
 
-  // Also update the compact comparison view
+  // อัปเดตมุมมองเปรียบเทียบ (ขณะล็อกอินแล้วเท่านั้น)
   compareBanks(borrower);
 }
+
 
 
 // ===== COMPACT VIEW & COMPARISON MODAL =====
@@ -1108,12 +1145,32 @@ const resultPanelIds = {
  * Hides all result panels and shows the main action buttons panel.
  */
 function showActionButtons() {
-    document.getElementById('actionButtonsCard').style.display = 'block';
-    Object.values(resultPanelIds).forEach(id => {
-        const panel = document.getElementById(id);
-        if (panel) panel.style.display = 'none';
-    });
+  const ids = ['actionButtonsCard','analysisResultCard','comparisonResultCard','amortizationResultCard'];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.display = (id === 'actionButtonsCard') ? 'block' : 'none';
+  });
 }
+
+async function initApp() {
+  try {
+    initSupabase();                // เตรียม client (ถ้า lib โหลดแล้ว)
+    updateAuthUI(false);           // สำคัญ: ซ่อนการใช้งานทั้งหมด และโชว์การ์ดล็อกอิน
+
+    if (supabaseClient) {
+      // เตรียมข้อมูลหลังบ้านไว้ล่วงหน้า (ถ้าจำเป็น)
+      await fetchBanks().catch(()=>{});
+      await fetchPromotions().catch(()=>{});
+      toast('เชื่อมต่อ Supabase สำเร็จ', 'success');
+    }
+  } catch (e) {
+    console.error('initApp error:', e);
+    toast('เกิดข้อผิดพลาดในการเริ่มระบบ', 'error');
+  }
+}
+document.addEventListener('DOMContentLoaded', initApp);
+
 
 /**
  * Shows a specific result panel and hides the action buttons.
@@ -1224,3 +1281,4 @@ document.addEventListener('touchstart', function () {}, { passive: true });
 
 // Start the application
 start();
+

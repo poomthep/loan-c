@@ -439,3 +439,37 @@ input[type=number]::-webkit-inner-spin-button {
 input[type=number] {
     -moz-appearance: textfield;
 }
+
+/* ทำให้ปุ่มใน card เครื่องมือเล็กลง */
+.action-buttons-grid .btn {
+  padding: 10px 14px;
+  font-size: 13px;
+  min-height: 40px;
+}
+
+/* จัดเรียงปุ่มจัดการระบบเป็น 2 คอลัมน์ */
+.system-buttons-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #eee; /* เพิ่มเส้นคั่นเพื่อความสวยงาม */
+}
+
+/* Compact Login Form */
+#auth-card .input-group {
+  margin-bottom: 8px;
+}
+#auth-card .input-group label {
+  margin-bottom: 3px;
+  font-size: 12px;
+}
+#auth-card .input-group input {
+  padding: 8px 10px;
+  font-size: 14px;
+}
+#auth-card .btn {
+  padding: 10px;
+  min-height: 0;
+}
