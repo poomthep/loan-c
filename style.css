@@ -1,0 +1,428 @@
+/* ===== Base & Global Styles ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+	height: 100%; /* เพิ่ม/แก้ไขบรรทัดนี้ */
+	overflow-x: hidden;
+}
+
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  padding: 10px;
+  font-size: 14px;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  height: 100%;
+  display: flex; /* กลับไปใช้ Flexbox */
+  flex-direction: column; /* จัดเรียงจากบนลงล่าง */
+}
+
+.header {
+  color: #fff;
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.header h1 {
+  font-size: 1.8rem;
+  margin-bottom: 5px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.25);
+}
+
+/* ===== Components (Cards, Buttons, Inputs) ===== */
+.card {
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 15px;
+  padding: 15px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  margin-bottom: 15px;
+}
+
+.blur {
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+
+.input-group {
+  margin-bottom: 12px;
+}
+
+.input-group label {
+  display: block;
+  margin-bottom: 5px;
+  color: #444;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.input-group input,
+.input-group select {
+  width: 100%;
+  padding: 8px 12px; /* ลดช่องว่างบน-ล่างเพื่อลดความสูง */
+  border: 2px solid #e1e5e9;
+  border-radius: 10px;
+  font-size: 16px; /* ขนาดตัวอักษรยังคงเท่าเดิม */
+  background: #fff;
+  appearance: none;
+}
+
+.btn,
+.btn-secondary,
+.btn-danger {
+  color: #fff;
+  border: none;
+  padding: 14px 18px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s;
+  font-size: 14px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+.btn-secondary {
+  background: linear-gradient(135deg, #20bf6b 0%, #01a3a4 100%);
+}
+.btn-danger {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+}
+.btn-admin {
+  padding: 8px 12px;
+  font-size: 12px;
+  min-height: 36px;
+}
+.btn:active,
+.btn-secondary:active,
+.btn-danger:active {
+  transform: scale(0.98);
+  opacity: 0.85;
+}
+
+.card-header {
+  cursor: pointer;
+  position: relative;
+  padding: 12px 0;
+  user-select: none;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 15px;
+}
+.card-header::after {
+  content: "▼";
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.8em;
+  color: #999;
+  transition: 0.2s;
+}
+.card-header.active::after {
+  transform: translateY(-50%) rotate(180deg);
+}
+.card-content.collapsed {
+  display: none;
+}
+
+/* ===== Results & Comparison View ===== */
+.results-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+.result-item {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: #fff;
+  border-radius: 12px;
+  padding: 15px;
+  text-align: center;
+}
+.result-item .value {
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+.bank-comparison {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+.bank-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 15px;
+  border: 1px solid #e9ecef;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+  border-left: 4px solid #667eea;
+  position: relative;
+}
+.bank-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 5px;
+}
+.selected-promotion {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+/* ===== Overlays (Modal, Toast, Spinner) ===== */
+#modalHost {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+}
+#compareBar {
+  position: fixed;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  display: none;
+  z-index: 9999;
+}
+#toastContainer {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.toast {
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: 0.25s;
+  padding: 12px 16px;
+  border-radius: 10px;
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  font-size: 14px;
+  text-align: center;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.hide { opacity: 0; transform: translateY(-8px); }
+.toast.info { background: linear-gradient(135deg, #667eea, #764ba2); }
+.toast.success { background: linear-gradient(135deg, #20bf6b, #01a3a4); }
+.toast.error { background: linear-gradient(135deg, #ff6b6b, #ee5a52); }
+
+#globalSpinner {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9998;
+  flex-direction: column;
+}
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+.spinner-label {
+  color: #fff;
+  margin-top: 15px;
+  font-size: 16px;
+}
+@keyframes spin {
+  0% { transform: rotate(0); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ===== Tables ===== */
+.amortization {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  overflow-x: auto;
+  display: block;
+  white-space: nowrap;
+}
+.amortization th,
+.amortization td {
+  padding: 8px 4px;
+  border: 1px solid #ddd;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.amortization th {
+  background: #f8f9fa;
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+}
+
+/* ===== Layout ===== */
+#mainContent {
+  display: flex;
+  min-height: 0;
+  flex-grow: 1; /* เพิ่มบรรทัดนี้เพื่อให้ยืดเต็มพื้นที่ที่เหลือ */
+}
+
+.main-columns {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 15px;
+  width: 100%; /* ทำให้ยืดเต็มความกว้าง */
+  height: 100%; /* เพิ่มบรรทัดนี้เข้ามาครับ */
+}
+
+#left-column {
+  overflow-y: auto; /* เพิ่ม Scrollbar แนวตั้งเมื่อจำเป็น */
+  padding-right: 10px; /* เพิ่มระยะห่างให้ Scrollbar ไม่ติดเนื้อหา */
+}
+
+@media (min-width: 992px) {
+  .main-columns {
+    grid-template-columns: 400px 1fr;
+  }
+}
+
+/* Hide original admin panels from the document flow, they will be used in modals */
+#bankAdmin,
+#promoAdmin {
+  display: none;
+}
+
+/* Adjustments for welcome buttons layout */
+.welcome {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap; /* Allow wrapping on smaller screens */
+  gap: 10px;
+}
+
+.welcome-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Styling for the new action buttons container */
+.action-buttons-grid {
+  display: grid;
+  grid-template-columns: 1fr; /* Make buttons stack vertically */
+  gap: 10px; /* Space between buttons */
+}
+
+.action-buttons-grid .btn {
+  width: 100%; /* Make buttons take full width */
+}
+
+/* Styling for the new flexible card header with a back button */
+.card-header-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 15px;
+}
+
+.card-header-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Make the main data card header non-collapsible */
+#data-card-header {
+  cursor: default; /* เปลี่ยนจากรูปลูกศรเป็นลูกศรปกติ */
+}
+
+#data-card-header::after {
+  content: ''; /* เอารูปลูกศรชี้ลงออกไป */
+}
+
+/* Styles for horizontally aligned label and input */
+.inline-group {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+.inline-group label {
+  flex-basis: 100px; /* กำหนดความกว้างเริ่มต้นของ label */
+  flex-shrink: 0; /* ป้องกันไม่ให้ label หดตัว */
+  margin-bottom: 0; /* ลบระยะห่างด้านล่างของ label ออก */
+  font-weight: normal; /* อาจจะปรับน้ำหนักตัวอักษรให้อ่อนลง */
+}
+
+/* Styles for the multi-input rows (e.g., OT, Commission) */
+.multi-input-line {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Styles for the multi-input rows (e.g., OT, Commission) */
+.multi-input-line {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  /* เพิ่มบรรทัดนี้เพื่อให้ flex item ยืดเต็มความกว้าง */
+  flex-grow: 1;
+}
+
+/* ให้ช่องแรก (บาท) ขยายเต็มพื้นที่ที่เหลือ */
+.multi-input-line input:first-of-type {
+  flex-grow: 1;
+  min-width: 0;
+}
+
+/* กำหนดให้ช่องที่สอง (เดือน) มีขนาดคงที่ */
+.multi-input-line input:last-of-type {
+  flex-basis: 60px; /* กำหนดความกว้างคงที่ */
+  text-align: center;
+}
+
+/* Hide the arrows on number input fields */
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type=number] {
+    -moz-appearance: textfield;
+}
