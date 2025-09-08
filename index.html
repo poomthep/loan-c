@@ -43,10 +43,10 @@
           <section class="card">
             <h2 class="card-header active" id="data-card-header">📊 ข้อมูลสินเชื่อและผู้กู้</h2>
             <div class="card-content">
-              <div class="input-group inline-group"><label>ราคาบ้าน (บาท)</label><input id="housePrice" type="text" inputmode="numeric" value="1,890,000" oninput="formatNumberInput(this)"></div>
-              <div class="input-group inline-group"><label>อายุผู้กู้ (ปี)</label><input id="borrowerAge" type="number" value="30"></div>
-              <div class="input-group inline-group"><label>เงินเดือน (บาท/เดือน)</label><input id="borrowerSalary" type="text" inputmode="numeric" value="15,000" oninput="formatNumberInput(this)"></div>
-              <div class="input-group inline-group"><label>โบนัส</label><input id="borrowerBonus" type="text" inputmode="numeric" value="0" oninput="formatNumberInput(this)"></div>
+              <div class="input-group inline-group"><label>ราคาบ้าน</label><input id="housePrice" type="text" inputmode="numeric" value="1,890,000" oninput="formatNumberInput(this)">บาท</div>
+              <div class="input-group inline-group"><label>อายุผู้กู้</label><input id="borrowerAge" type="number" value="30">ปี</div>
+              <div class="input-group inline-group"><label>เงินเดือน</label><input id="borrowerSalary" type="text" inputmode="numeric" value="15,000" oninput="formatNumberInput(this)">บาท/เดือน</div>
+              <div class="input-group inline-group"><label>โบนัส</label><input id="borrowerBonus" type="text" inputmode="numeric" value="0" oninput="formatNumberInput(this)">บาท/ปี</div>
 			
 			<div class="input-group inline-group">
                 <label>OT / ค่าล่วงเวลา</label>
@@ -78,7 +78,7 @@
                 </div>
               </div>
 			  
-              <div class="input-group inline-group"><label>หนี้ในบูโร (บาท/เดือน)</label><input id="borrowerDebt" type="text" inputmode="numeric" value="0" oninput="formatNumberInput(this)"></div>
+              <div class="input-group inline-group"><label>หนี้ในบูโร</label><input id="borrowerDebt" type="text" inputmode="numeric" value="0" oninput="formatNumberInput(this)">บาท/เดือน</div>
               <button class="btn" style="width:100%" onclick="calculateLoan()">🔍 วิเคราะห์สินเชื่อ</button>
             </div>
           </section>

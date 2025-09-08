@@ -382,7 +382,7 @@ body {
 }
 
 .inline-group label {
-  flex-basis: 100px; /* กำหนดความกว้างเริ่มต้นของ label */
+  flex-basis: 90px; /* กำหนดความกว้างเริ่มต้นของ label */
   flex-shrink: 0; /* ป้องกันไม่ให้ label หดตัว */
   margin-bottom: 0; /* ลบระยะห่างด้านล่างของ label ออก */
   font-weight: normal; /* อาจจะปรับน้ำหนักตัวอักษรให้อ่อนลง */
