@@ -7,7 +7,6 @@
 
 html,
 body {
-	height: 100%; /* เพิ่ม/แก้ไขบรรทัดนี้ */
 	overflow-x: hidden;
 }
 
@@ -305,11 +304,25 @@ body {
 }
 
 #left-column {
-  overflow-y: auto; /* เพิ่ม Scrollbar แนวตั้งเมื่อจำเป็น */
-  padding-right: 10px; /* เพิ่มระยะห่างให้ Scrollbar ไม่ติดเนื้อหา */
+  /* overflow-y: auto; /* เพิ่ม Scrollbar แนวตั้งเมื่อจำเป็น */
+  /* padding-right: 10px; /* เพิ่มระยะห่างให้ Scrollbar ไม่ติดเนื้อหา */
 }
 
 @media (min-width: 992px) {
+  /* เพิ่มกฎสำหรับจำกัดความสูงและการเลื่อนเฉพาะบนจอใหญ่ */
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  /* เพิ่มกฎให้คอลัมน์ซ้ายเลื่อนได้เฉพาะบนจอใหญ่ */
+  #left-column {
+    overflow-y: auto;
+    padding-right: 10px;
+  }
+
+  /* กฎเดิมที่มีอยู่แล้ว */
   .main-columns {
     grid-template-columns: 400px 1fr;
   }
