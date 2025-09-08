@@ -473,28 +473,3 @@ input[type=number] {
   padding: 10px;
   min-height: 0;
 }
-
-/* วงแหวนโฟกัสให้เห็นชัด */
-:focus-visible {
-  outline: 3px solid rgba(102,126,234,.55);
-  outline-offset: 2px;
-}
-
-/* ปุ่ม/อินพุตให้สูงพอสำหรับนิ้ว */
-button, .btn, .btn-secondary, .btn-danger, input, select {
-  min-height: 44px;
-}
-
-/* ปุ่มวิเคราะห์แบบ sticky สำหรับจอเล็ก */
-@media (max-width: 640px) {
-  .sticky-cta {
-    position: sticky;
-    bottom: 10px;
-    z-index: 50;
-  }
-}
-
-/* ลดแอนิเมชันตามค่าผู้ใช้ */
-@media (prefers-reduced-motion: reduce) {
-  * { animation: none !important; transition: none !important; }
-}
