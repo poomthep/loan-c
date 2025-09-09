@@ -1568,75 +1568,9 @@ function initMobileEnhancements() {
     }, { passive: true });
   });
 
-  // ===== ส่วนของ Swipe-to-close ที่เขียนใหม่ทั้งหมด =====
-  const modalHost = document.getElementById('modalHost');
-  if (!modalHost) return;
-
-  let startY = 0;
-  let currentY = 0;
-  let isDragging = false;
-  let allowDragToClose = false; // ตัวแปรสำคัญ: ใช้ตรวจสอบว่าจะอนุญาตให้ลากปิดได้หรือไม่
-
-  modalHost.addEventListener('touchstart', (e) => {
-    isDragging = true;
-    const target = e.target;
-    const scrollableContainer = target.closest('.modal-body-scrollable');
-
-    // ตรวจสอบว่าควรอนุญาตให้ลากปิดหรือไม่
-    if (!scrollableContainer || scrollableContainer.scrollTop === 0) {
-      allowDragToClose = true;
-    } else {
-      allowDragToClose = false;
-    }
-    
-    startY = e.touches[0].clientY;
-    currentY = startY; // Reset currentY
-  }, { passive: true });
-
-  modalHost.addEventListener('touchmove', (e) => {
-    // ถ้าไม่อนุญาตให้ลาก หรือไม่ได้กำลังลากอยู่ ให้หยุดทำงานทันที
-    if (!isDragging || !allowDragToClose) return;
-
-    currentY = e.touches[0].clientY;
-    const diffY = currentY - startY;
-    
-    // ทำให้ลากลงได้อย่างเดียว
-    if (diffY > 0 && window.innerWidth < 768) {
-      // ไม่ให้ event การเลื่อน scroll ทำงานทับซ้อนกัน
-      e.preventDefault(); 
-      const modal = modalHost.querySelector('div[role="dialog"]');
-      if (modal) {
-        modal.style.transition = 'none'; // ปิด transition ตอนลาก
-        modal.style.transform = `translateY(${diffY}px)`;
-        modal.style.opacity = Math.max(1 - diffY / 300, 0.5);
-      }
-    }
-  }, { passive: false }); // เปลี่ยนเป็น false เพื่อให้ preventDefault() ทำงานได้
-
-  modalHost.addEventListener('touchend', () => {
-    if (!isDragging) return;
-    isDragging = false;
-    
-    // ถ้าไม่เคยได้รับอนุญาตให้ลาก ก็ไม่ต้องทำอะไรต่อ
-    if (!allowDragToClose) return;
-
-    const diffY = currentY - startY;
-    const modal = modalHost.querySelector('div[role="dialog"]');
-    
-    if (diffY > 80 && window.innerWidth < 768) { // ลดระยะที่ต้องลากลงเล็กน้อย
-      closeModal();
-    } else if (modal) {
-      // ทำให้ Modal เด้งกลับที่เดิม
-      modal.style.transition = 'transform 0.2s ease, opacity 0.2s ease';
-      modal.style.transform = '';
-      modal.style.opacity = '';
-    }
-
-    // รีเซ็ตสถานะ
-    allowDragToClose = false;
-  }, { passive: true });
+  // ===== ลบโค้ดส่วนที่เกี่ยวกับ Swipe-to-Close และ Tap-outside-to-close ออกทั้งหมด =====
+  // โค้ดส่วนที่ควบคุมการลากเพื่อปิดถูกลบออกจากฟังก์ชันนี้แล้ว
 }
-  
   
 
   // Improve modal behavior on mobile
@@ -1649,45 +1583,5 @@ function initMobileEnhancements() {
     }, { passive: true });
   }
 
-  // Add swipe-to-close for modals on mobile
-  let startY = 0;
-  let currentY = 0;
-  let isDragging = false;
-
-  modalHost?.addEventListener('touchstart', (e) => {
-    startY = e.touches[0].clientY;
-    isDragging = true;
-  }, { passive: true });
-
-  modalHost?.addEventListener('touchmove', (e) => {
-    if (!isDragging) return;
-    currentY = e.touches[0].clientY;
-    const diffY = currentY - startY;
-    
-    if (diffY > 0 && window.innerWidth < 768) {
-      const modal = modalHost.querySelector('div');
-      if (modal) {
-        modal.style.transform = `translateY(${Math.min(diffY, 100)}px)`;
-        modal.style.opacity = Math.max(1 - diffY / 200, 0.5);
-      }
-    }
-  }, { passive: true });
-
-  modalHost?.addEventListener('touchend', () => {
-    if (!isDragging) return;
-    isDragging = false;
-    
-    const diffY = currentY - startY;
-    const modal = modalHost.querySelector('div');
-    
-    if (diffY > 100 && window.innerWidth < 768) {
-      closeModal();
-    } else if (modal) {
-      modal.style.transform = '';
-      modal.style.opacity = '';
-    }
-  }, { passive: true });
-
-
-// เพิ่มบรรทัดนี้ที่ท้ายสุดของไฟล์
+ 
 start();
