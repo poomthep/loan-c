@@ -42,15 +42,19 @@
       <div class="main-columns">
 	  
         <div id="left-column">
-          <section class="card">
+
+<section class="card">
             <h2 class="card-header active" id="data-card-header">📊 ข้อมูลสินเชื่อและผู้กู้</h2>
             <div class="card-content">
               <div class="input-group inline-group"><label>ราคาบ้าน</label><input id="housePrice" type="text" inputmode="numeric" value="1,890,000" oninput="formatNumberInput(this)">บาท</div>
               <div class="input-group inline-group"><label>อายุผู้กู้</label><input id="borrowerAge" type="number" value="30">ปี</div>
+              <div class="input-group inline-group">
+                <label>ต้องการผ่อน</label>
+                <input id="desiredTerm" type="number" placeholder="สูงสุด 40" value="30">ปี
+              </div>
               <div class="input-group inline-group"><label>เงินเดือน</label><input id="borrowerSalary" type="text" inputmode="numeric" value="15,000" oninput="formatNumberInput(this)">บาท/เดือน</div>
               <div class="input-group inline-group"><label>โบนัส</label><input id="borrowerBonus" type="text" inputmode="numeric" value="0" oninput="formatNumberInput(this)">บาท/ปี</div>
-			
-			<div class="input-group inline-group">
+              <div class="input-group inline-group">
                 <label>OT / ค่าล่วงเวลา</label>
                 <div class="multi-input-line">
                   <input id="borrowerOT" type="text" inputmode="numeric" value="0" oninput="formatNumberInput(this)">
@@ -59,7 +63,6 @@
                   <span>เดือน</span>
                 </div>
               </div>
-			  
               <div class="input-group inline-group">
                 <label>ค่าคอมมิชชั่น</label>
                 <div class="multi-input-line">
@@ -69,7 +72,6 @@
                   <span>เดือน</span>
                 </div>
               </div>
-			  
               <div class="input-group inline-group">
                 <label>รายได้อื่นๆ</label>
                 <div class="multi-input-line">
@@ -79,11 +81,60 @@
                   <span>เดือน</span>
                 </div>
               </div>
-			  
               <div class="input-group inline-group"><label>หนี้ในบูโร</label><input id="borrowerDebt" type="text" inputmode="numeric" value="0" oninput="formatNumberInput(this)">บาท/เดือน</div>
-              <button class="btn" style="width:100%" onclick="calculateLoan()">🔍 วิเคราะห์สินเชื่อ</button>
+
+              <div style="padding: 10px; margin-top: 15px; border: 1px solid #e9ecef; border-radius: 8px;">
+                <label style="display: flex; align-items: center; gap: 8px; font-weight: 600; cursor:pointer;">
+                  <input type="checkbox" id="hasCoBorrower" onchange="toggleCoBorrowerSection(this.checked)">
+                  มีผู้กู้ร่วม
+                </label>
+                
+                <div id="coBorrowerSection" style="display: none; margin-top: 10px; border-top: 1px solid #eee; padding-top: 10px; flex-direction: column; gap: 12px;">
+                  <div class="input-group inline-group"><label>อายุ (ผู้กู้ร่วม)</label><input id="coBorrowerAge" type="number" value="0">ปี</div>
+                  <div class="input-group inline-group"><label>เงินเดือน (ผู้กู้ร่วม)</label><input id="coBorrowerSalary" type="text" inputmode="numeric" value="0" oninput="formatNumberInput(this)">บาท/เดือน</div>
+                  <div class="input-group inline-group"><label>โบนัส (ผู้กู้ร่วม)</label><input id="coBorrowerBonus" type="text" inputmode="numeric" value="0" oninput="formatNumberInput(this)">บาท/ปี</div>
+                  <div class="input-group inline-group">
+                    <label>OT (ผู้กู้ร่วม)</label>
+                    <div class="multi-input-line">
+                      <input id="coBorrowerOT" type="text" inputmode="numeric" value="0" oninput="formatNumberInput(this)">
+                      <span>บาท/</span>
+                      <input id="coBorrowerOTMonths" type="number" value="1">
+                      <span>เดือน</span>
+                    </div>
+                  </div>
+                  <div class="input-group inline-group">
+                    <label>คอมมิชชั่น (ผู้กู้ร่วม)</label>
+                    <div class="multi-input-line">
+                      <input id="coBorrowerCommission" type="text" inputmode="numeric" value="0" oninput="formatNumberInput(this)">
+                      <span>บาท/</span>
+                      <input id="coBorrowerCommissionMonths" type="number" value="1">
+                      <span>เดือน</span>
+                    </div>
+                  </div>
+                  <div class="input-group inline-group">
+                    <label>รายได้อื่น (ผู้กู้ร่วม)</label>
+                    <div class="multi-input-line">
+                      <input id="coBorrowerOtherIncome" type="text" inputmode="numeric" value="0" oninput="formatNumberInput(this)">
+                      <span>บาท/</span>
+                      <input id="coBorrowerOtherIncomeMonths" type="number" value="1">
+                      <span>เดือน</span>
+                    </div>
+                  </div>
+                  <div class="input-group inline-group"><label>หนี้ (ผู้กู้ร่วม)</label><input id="coBorrowerDebt" type="text" inputmode="numeric" value="0" oninput="formatNumberInput(this)">บาท/เดือน</div>
+                </div>
+              </div>
+              
+              <button class="btn" style="width:100%; margin-top: 15px;" onclick="calculateLoan()">🔍 วิเคราะห์สินเชื่อ</button>
             </div>
           </section>
+
+          <script>
+            function toggleCoBorrowerSection(show) {
+              const section = document.getElementById('coBorrowerSection');
+              if(section) section.style.display = show ? 'flex' : 'none';
+            }
+          </script>
+
         </div>
         <div id="right-column">
 		<section class="card" id="actionButtonsCard">

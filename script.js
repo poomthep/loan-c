@@ -820,8 +820,6 @@ function calculateFinalLoanAmount(borrower, promo) {
   return Math.max(0, Math.floor(finalLoanAmount));
 }
 
-// ===== CORE ANALYSIS LOGIC =====
-
 /**
  * Runs an advanced analysis for a specific promotion and borrower.
  * @param {object} promo The promotion object from the database.
@@ -829,8 +827,9 @@ function calculateFinalLoanAmount(borrower, promo) {
  * @returns {object} A detailed analysis result.
  */
 function runAdvancedAnalysis(promo, borrower) {
-  const DSR_CEILING = promo.dsr_ceiling || 55; // ใช้ค่าจากโปร หรือใช้ 55% เป็นค่าสำรอง
+  const DSR_CEILING = promo.dsr_ceiling || 55;
   const DEFAULT_MAX_AGE = 65;
+  const MAX_LOAN_YEARS = 40;
 
   const analysis = {
     bankName: promo.bank_name,
@@ -845,8 +844,9 @@ function runAdvancedAnalysis(promo, borrower) {
     verdictClass: '',
   };
 
-  // 1. Calculate assessable income based on bank's rules (defaults if none specified)
   const rules = { salary: 100, ot: 50, commission: 50, bonus: 50, other: 50, ...promo.income_rules };
+  
+  // 1. Calculate assessable income for primary borrower
   const avgOT = borrower.ot / (borrower.otMonths || 1);
   const avgCom = borrower.commission / (borrower.commissionMonths || 1);
   const avgOther = borrower.otherIncome / (borrower.otherIncomeMonths || 1);
@@ -857,11 +857,38 @@ function runAdvancedAnalysis(promo, borrower) {
     (isFinite(avgCom) ? avgCom : 0) * (rules.commission / 100) +
     (isFinite(avgOther) ? avgOther : 0) * (rules.other / 100);
 
+  // อัปเดต: รวมรายได้ทั้งหมดของผู้กู้ร่วม
+  if (borrower.hasCoBorrower) {
+    const coAvgOT = borrower.coBorrowerOT / (borrower.coBorrowerOTMonths || 1);
+    const coAvgCom = borrower.coBorrowerCommission / (borrower.coBorrowerCommissionMonths || 1);
+    const coAvgOther = borrower.coBorrowerOtherIncome / (borrower.coBorrowerOtherIncomeMonths || 1);
+    
+    const coBorrowerIncome = 
+      (borrower.coBorrowerSalary || 0) * (rules.salary / 100) +
+      ((borrower.coBorrowerBonus || 0) / 12) * (rules.bonus / 100) +
+      (isFinite(coAvgOT) ? coAvgOT : 0) * (rules.ot / 100) +
+      (isFinite(coAvgCom) ? coAvgCom : 0) * (rules.commission / 100) +
+      (isFinite(coAvgOther) ? coAvgOther : 0) * (rules.other / 100);
+      
+    analysis.totalAssessableIncome += coBorrowerIncome;
+  }
+
   // 2. Determine maximum loan term
-  analysis.maxTerm = Math.max(1, Math.min((promo.max_loan_age || DEFAULT_MAX_AGE) - (borrower.age || 0), 30));
+  // อัปเดต: ใช้อายุของผู้กู้ที่แก่ที่สุดในการคำนวณ
+  let ageForTermCalc = borrower.age;
+  if (borrower.hasCoBorrower && borrower.coBorrowerAge > 0) {
+    ageForTermCalc = Math.max(borrower.age, borrower.coBorrowerAge);
+  }
+  const calculatedMaxTerm = Math.max(1, Math.min(
+    (promo.max_loan_age || DEFAULT_MAX_AGE) - ageForTermCalc, 
+    MAX_LOAN_YEARS
+  ));
+  analysis.maxTerm = Math.min(borrower.desiredTerm, calculatedMaxTerm);
 
   // 3. Calculate max affordable payment based on DSR
-  const maxAffordablePay = (analysis.totalAssessableIncome * (DSR_CEILING / 100)) - (borrower.debt || 0);
+  const totalDebt = (borrower.debt || 0) + (borrower.hasCoBorrower ? (borrower.coBorrowerDebt || 0) : 0);
+  const maxAffordablePay = (analysis.totalAssessableIncome * (DSR_CEILING / 100)) - totalDebt;
+  
   if (maxAffordablePay <= 0) {
     analysis.verdict = 'ภาระหนี้สูง/รายได้ไม่พอ';
     analysis.verdictClass = 'verdict-bad';
@@ -888,7 +915,7 @@ function runAdvancedAnalysis(promo, borrower) {
 
   // 6. Calculate final monthly payment and DSR
   analysis.monthlyPayment = calcTiered(analysis.finalLoanAmount, promo.rates || [], analysis.maxTerm).monthly;
-  analysis.finalDSR = analysis.totalAssessableIncome > 0 ? ((analysis.monthlyPayment + (borrower.debt || 0)) / analysis.totalAssessableIncome * 100) : 0;
+  analysis.finalDSR = analysis.totalAssessableIncome > 0 ? ((analysis.monthlyPayment + totalDebt) / analysis.totalAssessableIncome * 100) : 0;
 
   // 7. Determine the final verdict
   if (analysis.finalDSR > DSR_CEILING + 5) {
@@ -952,9 +979,11 @@ function calculateLoan() {
     return;
   }
 
+  // อัปเดต: ดึงข้อมูลผู้กู้ร่วมแบบเต็มรูปแบบ
   const borrower = {
     housePrice: getNumericValue('housePrice'),
     age: getNumericValue('borrowerAge'),
+    desiredTerm: getNumericValue('desiredTerm') || 30,
     salary: getNumericValue('borrowerSalary'),
     bonus: getNumericValue('borrowerBonus'),
     ot: getNumericValue('borrowerOT'),
@@ -964,6 +993,19 @@ function calculateLoan() {
     otherIncome: getNumericValue('borrowerOtherIncome'),
     otherIncomeMonths: getNumericValue('borrowerOtherIncomeMonths') || 1,
     debt: getNumericValue('borrowerDebt'),
+    
+    // ข้อมูลผู้กู้ร่วม (ฉบับสมบูรณ์)
+    hasCoBorrower: document.getElementById('hasCoBorrower')?.checked || false,
+    coBorrowerAge: getNumericValue('coBorrowerAge'),
+    coBorrowerSalary: getNumericValue('coBorrowerSalary'),
+    coBorrowerBonus: getNumericValue('coBorrowerBonus'),
+    coBorrowerOT: getNumericValue('coBorrowerOT'),
+    coBorrowerOTMonths: getNumericValue('coBorrowerOTMonths') || 1,
+    coBorrowerCommission: getNumericValue('coBorrowerCommission'),
+    coBorrowerCommissionMonths: getNumericValue('coBorrowerCommissionMonths') || 1,
+    coBorrowerOtherIncome: getNumericValue('coBorrowerOtherIncome'),
+    coBorrowerOtherIncomeMonths: getNumericValue('coBorrowerOtherIncomeMonths') || 1,
+    coBorrowerDebt: getNumericValue('coBorrowerDebt'),
   };
 
   if (!borrower.housePrice || !borrower.age) return;
@@ -986,7 +1028,7 @@ function calculateLoan() {
     document.getElementById('bestPromo').textContent = bestOffer.analysis.promoName || '-';
     document.getElementById('bestTerm').textContent = bestOffer.analysis.maxTerm || '-';
     document.getElementById('bestDSR').textContent = bestOffer.analysis.finalDSR.toFixed(1) || '-';
-    detailBox.style.display = 'flex';
+    detailBox.style.display = 'block';
     buildAmort(bestOffer.analysis.finalLoanAmount, bestOffer.promo.rates || [], bestOffer.analysis.maxTerm, bestOffer.analysis.monthlyPayment);
   } else {
     document.getElementById('loanAmount').textContent = '0 บาท';
@@ -995,7 +1037,6 @@ function calculateLoan() {
     document.getElementById('amortizationTable').innerHTML = '';
   }
 
-  // อัปเดตมุมมองเปรียบเทียบ (ขณะล็อกอินแล้วเท่านั้น)
   compareBanks(borrower);
 }
 
