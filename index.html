@@ -201,20 +201,30 @@
             <h2 class="card-header active">🏦 จัดการข้อมูลธนาคารและ MRR</h2>
             <div class="card-content">
               <div style="margin-bottom: 15px;">
-                <h3 style="font-size: 14px; margin-bottom: 8px;">เพิ่ม/แก้ไขธนาคาร</h3>
-                <input type="hidden" id="bankIdInput">
-                <div class="input-group">
-                  <label>ชื่อธนาคาร</label>
-                  <input id="bankNameMasterInput" type="text" placeholder="เช่น ธนาคารกสิกรไทย">
-                </div>
-                <div class="input-group">
-                  <label>MRR ปัจจุบัน (%)</label>
-                  <input id="bankMrrMasterInput" type="number" step="0.01" placeholder="เช่น 6.75">
-                </div>
-                <div style="display: flex; gap: 8px;">
-                  <button class="btn" onclick="saveBank()">บันทึก</button>
-                  <button class="btn btn-secondary" onclick="clearBankForm()">ล้างฟอร์ม</button>
-                </div>
+					<h3 style="font-size: 14px; margin-bottom: 8px;">เพิ่ม/แก้ไขธนาคาร</h3>
+					<input type="hidden" id="bankIdInput">
+					<div class="input-group">
+					  <label>ชื่อธนาคาร</label>
+					  <input id="bankNameMasterInput" type="text" placeholder="เช่น ธนาคารกสิกรไทย">
+					</div>
+					<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+					  <div class="input-group">
+						<label>MRR (%)</label>
+						<input id="bankMrrMasterInput" type="number" step="0.01" placeholder="เช่น 6.75">
+					  </div>
+					  <div class="input-group">
+						<label>MLR (%)</label>
+						<input id="bankMlrMasterInput" type="number" step="0.01" placeholder="เช่น 7.00">
+					  </div>
+					  <div class="input-group">
+						<label>MOR (%)</label>
+						<input id="bankMorMasterInput" type="number" step="0.01" placeholder="เช่น 7.25">
+					  </div>
+					</div>
+					<div id="bankActionButtons" style="display: none; gap: 8px;">
+					  <button class="btn" onclick="saveBank()">บันทึก</button>
+					  <button class="btn btn-secondary" onclick="clearBankForm()">ล้างฟอร์ม</button>
+					</div>
               </div>
               
               <div>
@@ -324,19 +334,28 @@
                   <button type="button" class="btn btn-secondary" style="margin-top: 8px;" onclick="addFixedRateYear()">+ เพิ่มปี</button>
                 </div>
                 
-                <div style="background: #f8f9fa; padding: 10px; border-radius: 8px;">
-                  <h4 style="font-size: 13px; margin-bottom: 8px;">ดอกเบี้ยลอยตัว (ปีถัดไป)</h4>
-                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                    <div class="input-group">
-                      <label>MRR ของธนาคาร (%)</label>
-                      <input id="promoMrrDisplay" type="number" step="0.01" readonly style="background: #e9ecef;">
-                    </div>
-                    <div class="input-group">
-                      <label>หัก (%)</label>
-                      <input id="promoMrrSubtractInput" type="number" step="0.01" placeholder="เช่น 1.50">
-                    </div>
-                  </div>
-                </div>
+					<div style="background: #f8f9fa; padding: 10px; border-radius: 8px;">
+					  <h4 style="font-size: 13px; margin-bottom: 8px;">ดอกเบี้ยลอยตัว (ปีถัดไป)</h4>
+					  <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; align-items: flex-end;">
+						<div class="input-group">
+						  <label>อ้างอิง</label>
+						  <select id="promoRefRateType" onchange="updateRefRateDisplay()">
+							<option value="MRR">MRR</option>
+							<option value="MLR">MLR</option>
+							<option value="MOR">MOR</option>
+						  </select>
+						</div>
+						<div class="input-group">
+						  <label>เรทปัจจุบัน (%)</label>
+						  <input id="promoRefRateDisplay" type="number" step="0.01" readonly style="background: #e9ecef;">
+						</div>
+						<div class="input-group">
+						  <label>ส่วนลด (%)</label>
+						  <input id="promoRefRateSubtract" type="number" step="0.01" placeholder="เช่น 1.50">
+						</div>
+					  </div>
+					  </div>
+					  
               </div>
               
               <div id="promoActionButtons" style="display: flex; gap: 8px;">

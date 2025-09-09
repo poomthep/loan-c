@@ -309,22 +309,27 @@ body {
 }
 
 @media (min-width: 992px) {
-  /* เพิ่มกฎสำหรับจำกัดความสูงและการเลื่อนเฉพาะบนจอใหญ่ */
-  html,
-  body {
-    height: 100%;
-    overflow: hidden;
-  }
+  /* ของเดิมที่เราจะลบออก:
+    html, body {
+      height: 100%;
+      overflow: hidden; 
+    }
+  */
 
-  /* เพิ่มกฎให้คอลัมน์ซ้ายเลื่อนได้เฉพาะบนจอใหญ่ */
-  #left-column {
-    overflow-y: auto;
-    padding-right: 10px;
-  }
-
-  /* กฎเดิมที่มีอยู่แล้ว */
+  /* ทำให้คอลัมน์หลักจัดเรียงกันถูกต้อง */
   .main-columns {
     grid-template-columns: 400px 1fr;
+    /* เพิ่ม: จัดตำแหน่ง item ให้อยู่ด้านบนสุด */
+    align-items: start; 
+  }
+
+  /* ===== แก้ไข: ทำให้คอลัมน์ซ้ายเป็น Sticky ===== */
+  #left-column {
+    position: sticky;
+    top: 15px; /* ระยะห่างจากขอบบนของหน้าจอ */
+    height: calc(100vh - 30px); /* ความสูงเกือบเต็มหน้าจอ */
+    overflow-y: auto; /* ทำให้คอลัมน์ซ้ายเองมี scrollbar เมื่อเนื้อหายาว */
+    padding-right: 10px;
   }
 }
 
@@ -502,4 +507,66 @@ input[type=number] {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
+}
+
+/* ===== Redesign Amortization Table ===== */
+
+/* 1. สไตล์สำหรับกรอบนอกของตาราง */
+#amortizationResultCard .card-content {
+  padding: 0; /* เอา padding เดิมออกเพื่อให้ตารางชิดขอบ */
+  border-radius: 12px; /* ทำให้มุมของกรอบโค้งมน */
+  overflow: hidden; /* ซ่อนส่วนเกินของตารางที่มุม */
+  border: 1px solid #e9ecef; /* เพิ่มเส้นขอบบางๆ ที่สวยงาม */
+}
+
+/* 2. สไตล์หลักของตาราง */
+.amortization {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+/* 3. สไตล์หัวตาราง (Header) */
+.amortization th {
+  background-color: #f8f9fa; /* สีพื้นหลังเทาอ่อน */
+  font-weight: 600;
+  color: #495057; /* สีตัวอักษรเทาเข้ม */
+  padding: 12px 15px;
+  text-align: right; /* จัดตัวเลขชิดขวา */
+  border-bottom: 2px solid #dee2e6; /* เส้นคั่นหนาขึ้น */
+  border-top: none;
+  border-left: none;
+  border-right: none;
+}
+
+/* 4. สไตล์แถวข้อมูล (Data Rows) */
+.amortization td {
+  padding: 12px 15px;
+  border: none; /* เอาเส้นขอบแนวตั้งและแนวนอนเดิมออก */
+  border-bottom: 1px solid #f1f3f5; /* เพิ่มแค่เส้นคั่นแนวนอนบางๆ */
+  text-align: right; /* จัดตัวเลขชิดขวา */
+}
+
+/* 5. จัดคอลัมน์แรก (งวดที่) ให้อยู่ตรงกลาง */
+.amortization th:first-child,
+.amortization td:first-child {
+  text-align: center;
+  font-weight: 500;
+  color: #6c757d;
+}
+
+/* 6. เพิ่มลายสลับสีให้แถวเพื่อให้อ่านง่ายขึ้น */
+.amortization tbody tr:nth-child(even) {
+  background-color: #fcfdff; /* สีฟ้าอ่อนจางๆ */
+}
+
+/* 7. เพิ่มเอฟเฟกต์เมื่อเอาเมาส์ไปชี้ */
+.amortization tbody tr:hover {
+  background-color: #f1f3f5; /* เปลี่ยนเป็นสีเทาอ่อนเมื่อเมาส์ชี้ */
+}
+
+/* 8. เอาเส้นคั่นของแถวสุดท้ายออก */
+.amortization tbody tr:last-child td {
+  border-bottom: none;
 }
