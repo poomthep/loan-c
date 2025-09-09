@@ -1687,7 +1687,7 @@ function initMobileEnhancements() {
       modal.style.opacity = '';
     }
   }, { passive: true });
-}
+
 
 // เพิ่มบรรทัดนี้ที่ท้ายสุดของไฟล์
 start();
