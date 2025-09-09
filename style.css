@@ -473,3 +473,33 @@ input[type=number] {
   padding: 10px;
   min-height: 0;
 }
+
+/* เพิ่มสไตล์สำหรับส่วนผู้กู้ร่วม */
+.co-borrower-box {
+    background-color: #ffffcf; /* สีพื้นหลัง */
+    border: 1px solid #dee2e6 !important; /* ขอบสีเทาเข้มขึ้นเล็กน้อย */
+}
+
+/* ปรับสี label ภายในเพื่อให้ดูโดดเด่นขึ้นเล็กน้อย */
+.co-borrower-box label {
+    color: #495057; /* สีเทาเข้มขึ้น */
+}
+
+/* ===== เพิ่มสไตล์สำหรับ Sticky Footer ของ Modal ===== */
+.modal-sticky-footer {
+  padding: 12px 16px;
+  background-color: #ffffff; /* พื้นหลังสีขาว */
+  border-top: 1px solid #e9ecef; /* เส้นคั่นด้านบน */
+  border-bottom-left-radius: 14px; /* ทำให้มุมโค้งมนรับกับ Modal */
+  border-bottom-right-radius: 14px;
+  position: sticky; /* ทำให้มันติดอยู่กับที่ */
+  bottom: 0; /* ตำแหน่งด้านล่างสุด */
+  z-index: 10; /* ให้อยู่เหนือเนื้อหาที่เลื่อน */
+}
+
+/* ทำให้ปุ่มใน sticky footer ยืดเต็มความกว้าง */
+.modal-sticky-footer > div {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}

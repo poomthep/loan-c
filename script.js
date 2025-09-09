@@ -20,6 +20,11 @@ let promoByBank = {};
 let promosById = {};
 let selectedPromoIds = new Set();
 
+// ===== เพิ่ม 2 บรรทัดนี้ =====
+let promoAdminOriginalParent = null;
+let bankAdminOriginalParent = null;
+// ==========================
+
 // ===== UTILITY FUNCTIONS =====
 
 /**
@@ -115,8 +120,32 @@ function ensureModalHost() {
 /** Closes any active modal. */
 function closeModal() {
   const host = ensureModalHost();
+  const promoAdminPanel = host.querySelector('#promoAdmin');
+  const bankAdminPanel = host.querySelector('#bankAdmin');
+  const actionButtons = host.querySelector('#promoActionButtons');
+
+  // ย้าย promo panel กลับไปที่เดิม (ถ้ามี)
+  if (promoAdminPanel && promoAdminOriginalParent) {
+    // ก่อนย้าย panel กลับ, เอากลุ่มปุ่มกลับเข้าไปใน panel ก่อน
+    if(actionButtons) {
+        // หา .card-content เพื่อเอากลุ่มปุ่มไปต่อท้าย
+        const cardContent = promoAdminPanel.querySelector('.card-content');
+        if (cardContent) {
+            cardContent.appendChild(actionButtons);
+        }
+    }
+    promoAdminPanel.style.display = 'none'; // ซ่อน panel ก่อนย้ายกลับ
+    promoAdminOriginalParent.appendChild(promoAdminPanel);
+  }
+
+  // ย้าย bank panel กลับไปที่เดิม (ถ้ามี)
+  if (bankAdminPanel && bankAdminOriginalParent) {
+    bankAdminPanel.style.display = 'none'; // ซ่อน panel ก่อนย้ายกลับ
+    bankAdminOriginalParent.appendChild(bankAdminPanel);
+  }
+
   host.style.display = 'none';
-  host.innerHTML = '';
+  host.innerHTML = ''; // ล้างเนื้อหา modal
 }
 
 /**
@@ -170,26 +199,91 @@ function openBankAdminModal() {
  */
 function openPromoAdminModal() {
   const host = ensureModalHost();
-  const promoAdminContent = document.getElementById('promoAdmin')?.innerHTML;
-  if (!promoAdminContent) {
+  const promoAdminPanel = document.getElementById('promoAdmin');
+  if (!promoAdminPanel) {
     toast('ไม่พบส่วนจัดการโปรโมชัน', 'error');
     return;
   }
 
-  host.innerHTML = `
-    <div role="dialog" aria-modal="true" style="width: 95%; max-width: 800px; background: #fff; border-radius: 14px; box-shadow: 0 20px 60px rgba(0,0,0,.3);">
+  // บันทึกตำแหน่งเดิมของ panel ถ้ายังไม่เคยบันทึก
+  if (!promoAdminOriginalParent) {
+    promoAdminOriginalParent = promoAdminPanel.parentElement;
+  }
+
+  // สร้างโครงสร้าง HTML ของ Modal ใหม่ ให้มีส่วน footer
+  const modalContentHTML = `
+    <div role="dialog" aria-modal="true" style="width: 95%; max-width: 800px; background: #fff; border-radius: 14px; box-shadow: 0 20px 60px rgba(0,0,0,.3); display: flex; flex-direction: column; max-height: 90vh;">
       <div style="display:flex; justify-content:space-between; align-items:center; padding: 12px 16px; border-bottom: 1px solid #e9ecef;">
         <h2 style="font-size: 1.1rem; margin:0;">🛠️ เพิ่ม/แก้ไข โปรธนาคาร</h2>
         <button class="btn btn-danger" style="padding: 8px 12px;" onclick="closeModal()">ปิด</button>
       </div>
-      <div style="padding: 16px; max-height: 75vh; overflow-y: auto;">
-        ${promoAdminContent}
-      </div>
+      <div id="promoModalBody" style="padding: 16px; overflow-y: auto; flex-grow: 1;">
+        </div>
+      <div id="promoModalFooter" class="modal-sticky-footer">
+        </div>
     </div>
   `;
-  // Make the content visible inside the modal
-  const modalContent = host.querySelector('.card-content');
-  if(modalContent) modalContent.classList.remove('collapsed');
+  host.innerHTML = modalContentHTML;
+
+  // ย้าย panel เนื้อหาหลักเข้ามาใน modal body
+  const modalBody = host.querySelector('#promoModalBody');
+  if (modalBody) {
+    modalBody.appendChild(promoAdminPanel);
+  }
+  
+  // ย้ายกลุ่มปุ่ม (ด้วย ID ที่เราตั้ง) เข้ามาใน footer
+  const modalFooter = host.querySelector('#promoModalFooter');
+  const actionButtons = document.getElementById('promoActionButtons');
+  if (modalFooter && actionButtons) {
+    modalFooter.appendChild(actionButtons);
+  }
+
+  // ทำให้ panel และเนื้อหาแสดงผล
+  promoAdminPanel.style.display = 'block';
+  const content = promoAdminPanel.querySelector('.card-content');
+  if (content) content.classList.remove('collapsed');
+
+  host.style.display = 'flex';
+}
+
+/**
+ * Opens the Bank Admin panel in a modal window.
+ */
+function openBankAdminModal() {
+  const host = ensureModalHost();
+  const bankAdminPanel = document.getElementById('bankAdmin');
+  if (!bankAdminPanel) {
+    toast('ไม่พบส่วนจัดการธนาคาร', 'error');
+    return;
+  }
+
+  // บันทึกตำแหน่งเดิมของ panel
+  if (!bankAdminOriginalParent) {
+    bankAdminOriginalParent = bankAdminPanel.parentElement;
+  }
+
+  const modalContentHTML = `
+    <div role="dialog" aria-modal="true" style="width: 95%; max-width: 800px; background: #fff; border-radius: 14px; box-shadow: 0 20px 60px rgba(0,0,0,.3);">
+      <div style="display:flex; justify-content:space-between; align-items:center; padding: 12px 16px; border-bottom: 1px solid #e9ecef;">
+        <h2 style="font-size: 1.1rem; margin:0;">🏦 จัดการข้อมูลธนาคารและ MRR</h2>
+        <button class="btn btn-danger" style="padding: 8px 12px;" onclick="closeModal()">ปิด</button>
+      </div>
+      <div id="bankModalBody" style="padding: 16px; max-height: 75vh; overflow-y: auto;">
+        </div>
+    </div>
+  `;
+  host.innerHTML = modalContentHTML;
+
+  // ย้าย panel เข้ามาใน modal body
+  const modalBody = host.querySelector('#bankModalBody');
+  if (modalBody) {
+    modalBody.appendChild(bankAdminPanel);
+  }
+  
+  // ทำให้ panel และเนื้อหาแสดงผล
+  bankAdminPanel.style.display = 'block';
+  const content = bankAdminPanel.querySelector('.card-content');
+  if (content) content.classList.remove('collapsed');
   
   host.style.display = 'flex';
 }
@@ -650,13 +744,18 @@ async function savePromotion() {
     max_loan_ltv: parseInt(document.getElementById('promoMaxLTV').value, 10) || 100,
     max_loan_age: parseInt(document.getElementById('promoMaxLoanAge').value, 10) || 65,
 	dsr_ceiling: parseInt(document.getElementById('promoDsrCeiling').value, 10) || 55,
-	  income_rules: {
+	income_rules: {
 		salary: parseInt(document.getElementById('incomeSalaryPercent').value, 10) || 100,
 		bonus: parseInt(document.getElementById('incomeBonusPercent').value, 10) || 50,
 		ot: parseInt(document.getElementById('incomeOtPercent').value, 10) || 50,
 		commission: parseInt(document.getElementById('incomeCommissionPercent').value, 10) || 50,
 		other: parseInt(document.getElementById('incomeOtherPercent').value, 10) || 50,
-	  }
+	},
+    loan_calc_method: document.getElementById('promoCalcMethod')?.value || 'accurate',
+    multiplier: parseInt(document.getElementById('promoMultiplier')?.value, 10) || 150,
+    per_million_rate: getNumericValue('promoPerMillionRate') || 7000,
+    // ===== เพิ่มบรรทัดนี้เพื่อบันทึกค่าใหม่ =====
+    income_acceptance_ratio: parseInt(document.getElementById('promoIncomeAcceptanceRatio')?.value, 10) || 100,
   };
 
   try {
@@ -846,7 +945,7 @@ function runAdvancedAnalysis(promo, borrower) {
 
   const rules = { salary: 100, ot: 50, commission: 50, bonus: 50, other: 50, ...promo.income_rules };
   
-  // 1. Calculate assessable income for primary borrower
+  // 1. Calculate total assessable income
   const avgOT = borrower.ot / (borrower.otMonths || 1);
   const avgCom = borrower.commission / (borrower.commissionMonths || 1);
   const avgOther = borrower.otherIncome / (borrower.otherIncomeMonths || 1);
@@ -857,24 +956,25 @@ function runAdvancedAnalysis(promo, borrower) {
     (isFinite(avgCom) ? avgCom : 0) * (rules.commission / 100) +
     (isFinite(avgOther) ? avgOther : 0) * (rules.other / 100);
 
-  // อัปเดต: รวมรายได้ทั้งหมดของผู้กู้ร่วม
   if (borrower.hasCoBorrower) {
     const coAvgOT = borrower.coBorrowerOT / (borrower.coBorrowerOTMonths || 1);
     const coAvgCom = borrower.coBorrowerCommission / (borrower.coBorrowerCommissionMonths || 1);
     const coAvgOther = borrower.coBorrowerOtherIncome / (borrower.coBorrowerOtherIncomeMonths || 1);
-    
     const coBorrowerIncome = 
       (borrower.coBorrowerSalary || 0) * (rules.salary / 100) +
       ((borrower.coBorrowerBonus || 0) / 12) * (rules.bonus / 100) +
       (isFinite(coAvgOT) ? coAvgOT : 0) * (rules.ot / 100) +
       (isFinite(coAvgCom) ? coAvgCom : 0) * (rules.commission / 100) +
       (isFinite(coAvgOther) ? coAvgOther : 0) * (rules.other / 100);
-      
     analysis.totalAssessableIncome += coBorrowerIncome;
   }
 
+  // ===== เพิ่ม: นำเกณฑ์รับรู้รายได้รวมมาใช้ (Haircut) =====
+  const incomeAcceptanceRatio = (promo.income_acceptance_ratio || 100) / 100;
+  const finalAssessableIncome = analysis.totalAssessableIncome * incomeAcceptanceRatio;
+  // =======================================================
+
   // 2. Determine maximum loan term
-  // อัปเดต: ใช้อายุของผู้กู้ที่แก่ที่สุดในการคำนวณ
   let ageForTermCalc = borrower.age;
   if (borrower.hasCoBorrower && borrower.coBorrowerAge > 0) {
     ageForTermCalc = Math.max(borrower.age, borrower.coBorrowerAge);
@@ -887,7 +987,9 @@ function runAdvancedAnalysis(promo, borrower) {
 
   // 3. Calculate max affordable payment based on DSR
   const totalDebt = (borrower.debt || 0) + (borrower.hasCoBorrower ? (borrower.coBorrowerDebt || 0) : 0);
-  const maxAffordablePay = (analysis.totalAssessableIncome * (DSR_CEILING / 100)) - totalDebt;
+  
+  // ===== แก้ไข: ใช้ finalAssessableIncome ที่ปรับลดแล้วในการคำนวณ =====
+  const maxAffordablePay = (finalAssessableIncome * (DSR_CEILING / 100)) - totalDebt;
   
   if (maxAffordablePay <= 0) {
     analysis.verdict = 'ภาระหนี้สูง/รายได้ไม่พอ';
@@ -896,8 +998,27 @@ function runAdvancedAnalysis(promo, borrower) {
   }
 
   // 4. Calculate max loan amount from affordability
-  const avgRate3Y = (promo.rates?.slice(0, 3).reduce((sum, r) => sum + r.rate, 0) / Math.min(promo.rates?.length, 3)) || 3.5;
-  analysis.maxLoanAmount = calculateMaxLoan(maxAffordablePay, avgRate3Y, analysis.maxTerm);
+  let maxLoanFromAffordability;
+  const calcMethod = promo.loan_calc_method || 'accurate';
+  switch(calcMethod) {
+    case 'multiplier':
+      const multiplier = promo.multiplier || 150;
+      maxLoanFromAffordability = maxAffordablePay * multiplier;
+      break;
+    case 'per_million':
+      const perMillionRate = promo.per_million_rate || 7000;
+      if (perMillionRate > 0) {
+        maxLoanFromAffordability = (maxAffordablePay / perMillionRate) * 1000000;
+      } else {
+        maxLoanFromAffordability = 0;
+      }
+      break;
+    case 'accurate':
+    default:
+      const avgRate3Y = (promo.rates?.slice(0, 3).reduce((sum, r) => sum + r.rate, 0) / Math.min(promo.rates?.length, 3)) || 3.5;
+      maxLoanFromAffordability = calculateMaxLoan(maxAffordablePay, avgRate3Y, analysis.maxTerm);
+  }
+  analysis.maxLoanAmount = maxLoanFromAffordability;
 
   // 5. Apply LTV and other limits to get final loan amount
   const maxLoanFromLTV = (borrower.housePrice || 0) * ((promo.max_loan_ltv || 100) / 100);
@@ -915,6 +1036,7 @@ function runAdvancedAnalysis(promo, borrower) {
 
   // 6. Calculate final monthly payment and DSR
   analysis.monthlyPayment = calcTiered(analysis.finalLoanAmount, promo.rates || [], analysis.maxTerm).monthly;
+  // หมายเหตุ: DSR สุดท้ายจะคำนวณจากรายได้รวม 'ก่อน' หักเกณฑ์ เพื่อสะท้อนสัดส่วนหนี้ต่อรายได้ที่แท้จริง
   analysis.finalDSR = analysis.totalAssessableIncome > 0 ? ((analysis.monthlyPayment + totalDebt) / analysis.totalAssessableIncome * 100) : 0;
 
   // 7. Determine the final verdict
