@@ -205,19 +205,17 @@ function openPromoAdminModal() {
     return;
   }
 
-  // บันทึกตำแหน่งเดิมของ panel ถ้ายังไม่เคยบันทึก
   if (!promoAdminOriginalParent) {
     promoAdminOriginalParent = promoAdminPanel.parentElement;
   }
 
-  // สร้างโครงสร้าง HTML ของ Modal ใหม่ ให้มีส่วน footer
   const modalContentHTML = `
     <div role="dialog" aria-modal="true" style="width: 95%; max-width: 800px; background: #fff; border-radius: 14px; box-shadow: 0 20px 60px rgba(0,0,0,.3); display: flex; flex-direction: column; max-height: 90vh;">
       <div style="display:flex; justify-content:space-between; align-items:center; padding: 12px 16px; border-bottom: 1px solid #e9ecef;">
         <h2 style="font-size: 1.1rem; margin:0;">🛠️ เพิ่ม/แก้ไข โปรธนาคาร</h2>
         <button class="btn btn-danger" style="padding: 8px 12px;" onclick="closeModal()">ปิด</button>
       </div>
-      <div id="promoModalBody" style="padding: 16px; overflow-y: auto; flex-grow: 1;">
+      <div id="promoModalBody" class="modal-body-scrollable" style="padding: 16px; overflow-y: auto; flex-grow: 1;">
         </div>
       <div id="promoModalFooter" class="modal-sticky-footer">
         </div>
@@ -225,24 +223,60 @@ function openPromoAdminModal() {
   `;
   host.innerHTML = modalContentHTML;
 
-  // ย้าย panel เนื้อหาหลักเข้ามาใน modal body
   const modalBody = host.querySelector('#promoModalBody');
   if (modalBody) {
     modalBody.appendChild(promoAdminPanel);
   }
   
-  // ย้ายกลุ่มปุ่ม (ด้วย ID ที่เราตั้ง) เข้ามาใน footer
   const modalFooter = host.querySelector('#promoModalFooter');
   const actionButtons = document.getElementById('promoActionButtons');
   if (modalFooter && actionButtons) {
     modalFooter.appendChild(actionButtons);
   }
 
-  // ทำให้ panel และเนื้อหาแสดงผล
   promoAdminPanel.style.display = 'block';
   const content = promoAdminPanel.querySelector('.card-content');
   if (content) content.classList.remove('collapsed');
 
+  host.style.display = 'flex';
+}
+
+/**
+ * Opens the Bank Admin panel in a modal window.
+ */
+function openBankAdminModal() {
+  const host = ensureModalHost();
+  const bankAdminPanel = document.getElementById('bankAdmin');
+  if (!bankAdminPanel) {
+    toast('ไม่พบส่วนจัดการธนาคาร', 'error');
+    return;
+  }
+
+  if (!bankAdminOriginalParent) {
+    bankAdminOriginalParent = bankAdminPanel.parentElement;
+  }
+
+  const modalContentHTML = `
+    <div role="dialog" aria-modal="true" style="width: 95%; max-width: 800px; background: #fff; border-radius: 14px; box-shadow: 0 20px 60px rgba(0,0,0,.3);">
+      <div style="display:flex; justify-content:space-between; align-items:center; padding: 12px 16px; border-bottom: 1px solid #e9ecef;">
+        <h2 style="font-size: 1.1rem; margin:0;">🏦 จัดการข้อมูลธนาคารและ MRR</h2>
+        <button class="btn btn-danger" style="padding: 8px 12px;" onclick="closeModal()">ปิด</button>
+      </div>
+       <div id="bankModalBody" class="modal-body-scrollable" style="padding: 16px; max-height: 75vh; overflow-y: auto;">
+        </div>
+    </div>
+  `;
+  host.innerHTML = modalContentHTML;
+
+  const modalBody = host.querySelector('#bankModalBody');
+  if (modalBody) {
+    modalBody.appendChild(bankAdminPanel);
+  }
+  
+  bankAdminPanel.style.display = 'block';
+  const content = bankAdminPanel.querySelector('.card-content');
+  if (content) content.classList.remove('collapsed');
+  
   host.style.display = 'flex';
 }
 
@@ -1533,6 +1567,77 @@ function initMobileEnhancements() {
       }, 150);
     }, { passive: true });
   });
+
+  // ===== ส่วนของ Swipe-to-close ที่เขียนใหม่ทั้งหมด =====
+  const modalHost = document.getElementById('modalHost');
+  if (!modalHost) return;
+
+  let startY = 0;
+  let currentY = 0;
+  let isDragging = false;
+  let allowDragToClose = false; // ตัวแปรสำคัญ: ใช้ตรวจสอบว่าจะอนุญาตให้ลากปิดได้หรือไม่
+
+  modalHost.addEventListener('touchstart', (e) => {
+    isDragging = true;
+    const target = e.target;
+    const scrollableContainer = target.closest('.modal-body-scrollable');
+
+    // ตรวจสอบว่าควรอนุญาตให้ลากปิดหรือไม่
+    if (!scrollableContainer || scrollableContainer.scrollTop === 0) {
+      allowDragToClose = true;
+    } else {
+      allowDragToClose = false;
+    }
+    
+    startY = e.touches[0].clientY;
+    currentY = startY; // Reset currentY
+  }, { passive: true });
+
+  modalHost.addEventListener('touchmove', (e) => {
+    // ถ้าไม่อนุญาตให้ลาก หรือไม่ได้กำลังลากอยู่ ให้หยุดทำงานทันที
+    if (!isDragging || !allowDragToClose) return;
+
+    currentY = e.touches[0].clientY;
+    const diffY = currentY - startY;
+    
+    // ทำให้ลากลงได้อย่างเดียว
+    if (diffY > 0 && window.innerWidth < 768) {
+      // ไม่ให้ event การเลื่อน scroll ทำงานทับซ้อนกัน
+      e.preventDefault(); 
+      const modal = modalHost.querySelector('div[role="dialog"]');
+      if (modal) {
+        modal.style.transition = 'none'; // ปิด transition ตอนลาก
+        modal.style.transform = `translateY(${diffY}px)`;
+        modal.style.opacity = Math.max(1 - diffY / 300, 0.5);
+      }
+    }
+  }, { passive: false }); // เปลี่ยนเป็น false เพื่อให้ preventDefault() ทำงานได้
+
+  modalHost.addEventListener('touchend', () => {
+    if (!isDragging) return;
+    isDragging = false;
+    
+    // ถ้าไม่เคยได้รับอนุญาตให้ลาก ก็ไม่ต้องทำอะไรต่อ
+    if (!allowDragToClose) return;
+
+    const diffY = currentY - startY;
+    const modal = modalHost.querySelector('div[role="dialog"]');
+    
+    if (diffY > 80 && window.innerWidth < 768) { // ลดระยะที่ต้องลากลงเล็กน้อย
+      closeModal();
+    } else if (modal) {
+      // ทำให้ Modal เด้งกลับที่เดิม
+      modal.style.transition = 'transform 0.2s ease, opacity 0.2s ease';
+      modal.style.transform = '';
+      modal.style.opacity = '';
+    }
+
+    // รีเซ็ตสถานะ
+    allowDragToClose = false;
+  }, { passive: true });
+}
+  
+  
 
   // Improve modal behavior on mobile
   const modalHost = document.getElementById('modalHost');
