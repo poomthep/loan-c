@@ -649,6 +649,14 @@ async function savePromotion() {
     max_loan_amount_thb: getNumericValue('maxLoanAmountThb') || null,
     max_loan_ltv: parseInt(document.getElementById('promoMaxLTV').value, 10) || 100,
     max_loan_age: parseInt(document.getElementById('promoMaxLoanAge').value, 10) || 65,
+	dsr_ceiling: parseInt(document.getElementById('promoDsrCeiling').value, 10) || 55,
+	  income_rules: {
+		salary: parseInt(document.getElementById('incomeSalaryPercent').value, 10) || 100,
+		bonus: parseInt(document.getElementById('incomeBonusPercent').value, 10) || 50,
+		ot: parseInt(document.getElementById('incomeOtPercent').value, 10) || 50,
+		commission: parseInt(document.getElementById('incomeCommissionPercent').value, 10) || 50,
+		other: parseInt(document.getElementById('incomeOtherPercent').value, 10) || 50,
+	  }
   };
 
   try {
@@ -769,6 +777,48 @@ function calcTiered(P, rates, years) {
   return { monthly: calcMonthly(P, averageRate, years) };
 }
 
+/**
+ * ฟังก์ชันสำหรับคำนวณวงเงินกู้สูงสุด โดยพิจารณาจาก 2 เกณฑ์หลัก
+ * 1. ความสามารถในการผ่อนชำระ (DSR)
+ * 2. มูลค่าหลักประกัน (LTV)
+ * และจะคืนค่าวงเงินที่ "ต่ำกว่า"
+ *
+ * @param {object} borrower ข้อมูลผู้กู้ (รายได้, หนี้สิน, ราคาบ้าน)
+ * @param {object} promo ข้อมูลโปรโมชัน (LTV, อัตราดอกเบี้ย)
+ * @returns {number} วงเงินกู้สูงสุดที่สามารถอนุมัติได้
+ */
+function calculateFinalLoanAmount(borrower, promo) {
+  // --- ส่วนที่ 1: คำนวณจากความสามารถในการผ่อน (DSR) ---
+
+  const DSR_CEILING_PERCENT = 55; // เพดานหนี้ 55% ของรายได้
+  const MONTHLY_PAYMENT_PER_MILLION = 7000; // ยอดผ่อนล้านละ 7,000
+
+  // สมมติว่ารายได้ที่ประเมินคือเงินเดือน 100%
+  const assessableIncome = borrower.salary || 0;
+
+  // คำนวณยอดที่สามารถผ่อนได้ต่อเดือน
+  const maxAffordablePayment = (assessableIncome * (DSR_CEILING_PERCENT / 100)) - (borrower.debt || 0);
+
+  // แปลงเป็นวงเงินกู้สูงสุดจากความสามารถในการผ่อน
+  let maxLoanFromDSR = 0;
+  if (maxAffordablePayment > 0) {
+    maxLoanFromDSR = (maxAffordablePayment * 1000000) / MONTHLY_PAYMENT_PER_MILLION;
+  }
+
+
+  // --- ส่วนที่ 2: คำนวณจากมูลค่าหลักประกัน (LTV) ---
+
+  const maxLtvPercent = promo.max_loan_ltv || 100; // ถ้าโปรโมชันไม่กำหนด ให้ LTV เป็น 100%
+  const maxLoanFromLTV = (borrower.housePrice || 0) * (maxLtvPercent / 100);
+
+
+  // --- ส่วนที่ 3: สรุปวงเงินสุดท้าย (เลือกค่าที่ต่ำที่สุด) ---
+
+  const finalLoanAmount = Math.min(maxLoanFromDSR, maxLoanFromLTV, borrower.housePrice);
+
+  // คืนค่าเป็นจำนวนเต็มและป้องกันค่าติดลบ
+  return Math.max(0, Math.floor(finalLoanAmount));
+}
 
 // ===== CORE ANALYSIS LOGIC =====
 
@@ -779,7 +829,7 @@ function calcTiered(P, rates, years) {
  * @returns {object} A detailed analysis result.
  */
 function runAdvancedAnalysis(promo, borrower) {
-  const DSR_CEILING = 55; // Debt-to-Service Ratio ceiling in percent
+  const DSR_CEILING = promo.dsr_ceiling || 55; // ใช้ค่าจากโปร หรือใช้ 55% เป็นค่าสำรอง
   const DEFAULT_MAX_AGE = 65;
 
   const analysis = {
