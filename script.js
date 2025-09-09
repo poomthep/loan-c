@@ -1265,6 +1265,9 @@ async function start() {
     await fetchPromotions();
     calculateLoan();
     bindAutoCalculateInputs();
+    
+    // Add mobile-specific enhancements
+    initMobileEnhancements();
 
   } catch (e) {
     console.error('Initialization failed:', e);
@@ -1276,9 +1279,97 @@ async function start() {
   }
 }
 
-// Add event listener for better mobile experience
-document.addEventListener('touchstart', function () {}, { passive: true });
+/** Initialize mobile-specific enhancements */
+function initMobileEnhancements() {
+  // Hide the library status message
+  const statusEl = document.getElementById('libStatus');
+  if (statusEl) statusEl.style.display = 'none';
 
-// Start the application
+  // Prevent zoom on input focus (iOS)
+  const inputs = document.querySelectorAll('input, select, textarea');
+  inputs.forEach(input => {
+    input.addEventListener('focus', () => {
+      if (window.innerWidth < 768) {
+        const viewport = document.querySelector('meta[name=viewport]');
+        if (viewport) {
+          viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+        }
+      }
+    });
+    
+    input.addEventListener('blur', () => {
+      if (window.innerWidth < 768) {
+        const viewport = document.querySelector('meta[name=viewport]');
+        if (viewport) {
+          viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, user-scalable=yes');
+        }
+      }
+    });
+  });
+
+  // Add touch feedback for buttons
+  const buttons = document.querySelectorAll('.btn, .btn-secondary, .btn-danger');
+  buttons.forEach(button => {
+    button.addEventListener('touchstart', function() {
+      this.style.opacity = '0.8';
+    }, { passive: true });
+    
+    button.addEventListener('touchend', function() {
+      setTimeout(() => {
+        this.style.opacity = '1';
+      }, 150);
+    }, { passive: true });
+  });
+
+  // Improve modal behavior on mobile
+  const modalHost = document.getElementById('modalHost');
+  if (modalHost) {
+    modalHost.addEventListener('touchstart', (e) => {
+      if (e.target === modalHost) {
+        closeModal();
+      }
+    }, { passive: true });
+  }
+
+  // Add swipe-to-close for modals on mobile
+  let startY = 0;
+  let currentY = 0;
+  let isDragging = false;
+
+  modalHost?.addEventListener('touchstart', (e) => {
+    startY = e.touches[0].clientY;
+    isDragging = true;
+  }, { passive: true });
+
+  modalHost?.addEventListener('touchmove', (e) => {
+    if (!isDragging) return;
+    currentY = e.touches[0].clientY;
+    const diffY = currentY - startY;
+    
+    if (diffY > 0 && window.innerWidth < 768) {
+      const modal = modalHost.querySelector('div');
+      if (modal) {
+        modal.style.transform = `translateY(${Math.min(diffY, 100)}px)`;
+        modal.style.opacity = Math.max(1 - diffY / 200, 0.5);
+      }
+    }
+  }, { passive: true });
+
+  modalHost?.addEventListener('touchend', () => {
+    if (!isDragging) return;
+    isDragging = false;
+    
+    const diffY = currentY - startY;
+    const modal = modalHost.querySelector('div');
+    
+    if (diffY > 100 && window.innerWidth < 768) {
+      closeModal();
+    } else if (modal) {
+      modal.style.transform = '';
+      modal.style.opacity = '';
+    }
+  }, { passive: true });
+}
+
+// เพิ่มบรรทัดนี้ที่ท้ายสุดของไฟล์
 start();
-
