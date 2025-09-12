@@ -745,7 +745,21 @@ function editPromotion(promo) {
         document.getElementById('incomeOtherPercent').value = promo.income_rules.other || '50';
     }
     populateFormWithRates(promo.rates || []);
-    document.getElementById('promoAdmin').scrollIntoView({ behavior: 'smooth' });
+
+    // ใช้ setTimeout เพื่อให้แน่ใจว่า Modal พร้อมทำงานแล้วจริงๆ
+    setTimeout(() => {
+      const modalBody = document.querySelector('#promoModalBody');
+      if (modalBody) {
+        // สั่งให้ scrollbar ของ modal เลื่อนไปจุดบนสุด
+        modalBody.scrollTop = 0;
+      }
+      
+      const bankDropdown = document.getElementById('promoBankName');
+      if (bankDropdown) {
+        // สั่ง focus ที่ dropdown
+        bankDropdown.focus();
+      }
+    }, 100); // เพิ่ม delay เป็น 100ms เพื่อความแน่นอน
 }
 
 async function deletePromotion(id) {
@@ -999,9 +1013,9 @@ function calculateLoan() {
   const detailBox = document.getElementById('bestOfferDetails');
   if (bestOffer && bestOffer.analysis.finalLoanAmount > 0) {
     document.getElementById('loanAmount').textContent = `${fmt(bestOffer.analysis.finalLoanAmount)} บาท`;
-    document.getElementById('maxAffordableLoan').textContent = `${fmt(bestOffer.analysis.maxLoanByAffordability)} บาท`; // <--- เพิ่มบรรทัดนี้
+    document.getElementById('maxAffordableLoan').textContent = `${fmt(bestOffer.analysis.maxLoanByAffordability)} บาท`;
     document.getElementById('monthlyPayment').textContent = `${fmt(bestOffer.analysis.monthlyPayment)} บาท`;
-	document.getElementById('bestBank').textContent = bestOffer.analysis.bankName || '-';
+    document.getElementById('bestBank').textContent = bestOffer.analysis.bankName || '-';
     document.getElementById('bestPromo').textContent = bestOffer.analysis.promoName || '-';
     document.getElementById('bestTerm').textContent = bestOffer.analysis.maxTerm || '-';
     document.getElementById('bestDSR').textContent = bestOffer.analysis.finalDSR.toFixed(1) || '-';
@@ -1009,6 +1023,7 @@ function calculateLoan() {
     buildAmort(bestOffer.analysis.finalLoanAmount, bestOffer.promo.rates || [], bestOffer.analysis.maxTerm, bestOffer.analysis.monthlyPayment);
   } else {
     document.getElementById('loanAmount').textContent = '0 บาท';
+    document.getElementById('maxAffordableLoan').textContent = '0 บาท'; // <--- เพิ่มบรรทัดนี้เข้ามา
     document.getElementById('monthlyPayment').textContent = '0 บาท';
     detailBox.style.display = 'flex';
     document.getElementById('amortizationTable').innerHTML = '';
@@ -1036,7 +1051,8 @@ function compareBanks(borrower) {
     card.className = 'bank-card';
     card.style.borderLeftColor = promo.color || '#667eea';
     card.setAttribute('data-promo-id', promo.id);
-    const borrowerArgs = `${borrower.housePrice}, ${borrower.age}, ${borrower.salary}, ${borrower.bonus}, ${borrower.ot}, ${borrower.otMonths}, ${borrower.commission}, ${borrower.commissionMonths}, ${borrower.otherIncome}, ${borrower.otherIncomeMonths}, ${borrower.debt}`;
+    
+    // เราจะไม่ใช้ borrowerArgs อีกต่อไป
 
     card.innerHTML = `
       <div style="position:absolute;top:8px;right:8px">
@@ -1062,7 +1078,7 @@ function compareBanks(borrower) {
         <span style="font-size:16px; font-weight:800; color:#667eea;">${fmt(analysis.monthlyPayment)} บาท</span>
       </div>
 
-      <button class="btn btn-secondary" style="margin-top:12px;width:100%" onclick="openPromoModal('${promo.id}', ${borrowerArgs})">
+      <button class="btn btn-secondary" style="margin-top:12px;width:100%" onclick="openPromoModal('${promo.id}')">
         ดูรายละเอียด
       </button>
     `;
@@ -1071,10 +1087,38 @@ function compareBanks(borrower) {
   updateCompareBar();
 }
 
-function openPromoModal(promoId, housePrice, age, salary, bonus, ot, otMonths, commission, commissionMonths, otherIncome, otherIncomeMonths, debt) {
+function openPromoModal(promoId) {
   const promo = promosById[promoId];
   if (!promo) return;
-  const borrower = { housePrice, age, salary, bonus, ot, otMonths, commission, commissionMonths, otherIncome, otherIncomeMonths, debt };
+
+  // คัดลอกโค้ดส่วนนี้มาจากฟังก์ชัน calculateLoan()
+  // เพื่อให้ได้ข้อมูลล่าสุดและครบถ้วนเสมอ
+  const borrower = {
+    housePrice: getNumericValue('housePrice'),
+    age: getNumericValue('borrowerAge'),
+    desiredTerm: getNumericValue('desiredTerm') || 30,
+    salary: getNumericValue('borrowerSalary'),
+    bonus: getNumericValue('borrowerBonus'),
+    ot: getNumericValue('borrowerOT'),
+    otMonths: getNumericValue('borrowerOTMonths') || 1,
+    commission: getNumericValue('borrowerCommission'),
+    commissionMonths: getNumericValue('borrowerCommissionMonths') || 1,
+    otherIncome: getNumericValue('borrowerOtherIncome'),
+    otherIncomeMonths: getNumericValue('borrowerOtherIncomeMonths') || 1,
+    debt: getNumericValue('borrowerDebt'),
+    hasCoBorrower: document.getElementById('hasCoBorrower')?.checked || false,
+    coBorrowerAge: getNumericValue('coBorrowerAge'),
+    coBorrowerSalary: getNumericValue('coBorrowerSalary'),
+    coBorrowerBonus: getNumericValue('coBorrowerBonus'),
+    coBorrowerOT: getNumericValue('coBorrowerOT'),
+    coBorrowerOTMonths: getNumericValue('coBorrowerOTMonths') || 1,
+    coBorrowerCommission: getNumericValue('coBorrowerCommission'),
+    coBorrowerCommissionMonths: getNumericValue('coBorrowerCommissionMonths') || 1,
+    coBorrowerOtherIncome: getNumericValue('coBorrowerOtherIncome'),
+    coBorrowerOtherIncomeMonths: getNumericValue('coBorrowerOtherIncomeMonths') || 1,
+    coBorrowerDebt: getNumericValue('coBorrowerDebt'),
+  };
+
   const analysis = runAdvancedAnalysis(promo, borrower);
   const host = ensureModalHost();
   host.innerHTML = `
@@ -1087,7 +1131,7 @@ function openPromoModal(promoId, housePrice, age, salary, bonus, ot, otMonths, c
         <div class="card" style="border:1px solid #e9ecef; margin:0;">
           <div style="font-weight:700;margin-bottom:6px">สรุปวงเงิน/ค่างวด</div>
           <div style="font-size:13px;color:#555">ระยะเวลากู้สูงสุด: ${analysis.maxTerm} ปี</div>
-          <div style-size:13px;color:#555">วงเงินกู้ (คำนวณ): <b>${fmt(analysis.finalLoanAmount)} บาท</b></div>
+          <div style="font-size:13px;color:#555">วงเงินกู้ (คำนวณ): <b>${fmt(analysis.finalLoanAmount)} บาท</b></div>
           <div style="font-size:13px;color:#555">ค่างวด/เดือน (ประมาณ): <b>${fmt(analysis.monthlyPayment)} บาท</b></div>
           <div style="font-size:13px;color:#555">DSR โดยประมาณ: <b>${analysis.finalDSR.toFixed(1)}%</b></div>
         </div>
@@ -1144,14 +1188,34 @@ function clearSelection() {
 }
 
 function openCompareModal() {
+  const host = ensureModalHost();
   if (selectedPromoIds.size < 2) return;
+  
+  // แก้ไข: ให้ดึงข้อมูลผู้กู้ทั้งหมด (รวมผู้กู้ร่วม) มาใหม่จากฟอร์มโดยตรง
   const borrower = {
-    housePrice: getNumericValue('housePrice'), age: getNumericValue('borrowerAge'),
-    salary: getNumericValue('borrowerSalary'), bonus: getNumericValue('borrowerBonus'),
-    ot: getNumericValue('borrowerOT'), otMonths: getNumericValue('borrowerOTMonths') || 1,
-    commission: getNumericValue('borrowerCommission'), commissionMonths: getNumericValue('borrowerCommissionMonths') || 1,
-    otherIncome: getNumericValue('borrowerOtherIncome'), otherIncomeMonths: getNumericValue('borrowerOtherIncomeMonths') || 1,
+    housePrice: getNumericValue('housePrice'),
+    age: getNumericValue('borrowerAge'),
+    desiredTerm: getNumericValue('desiredTerm') || 30,
+    salary: getNumericValue('borrowerSalary'),
+    bonus: getNumericValue('borrowerBonus'),
+    ot: getNumericValue('borrowerOT'),
+    otMonths: getNumericValue('borrowerOTMonths') || 1,
+    commission: getNumericValue('borrowerCommission'),
+    commissionMonths: getNumericValue('borrowerCommissionMonths') || 1,
+    otherIncome: getNumericValue('borrowerOtherIncome'),
+    otherIncomeMonths: getNumericValue('borrowerOtherIncomeMonths') || 1,
     debt: getNumericValue('borrowerDebt'),
+    hasCoBorrower: document.getElementById('hasCoBorrower')?.checked || false,
+    coBorrowerAge: getNumericValue('coBorrowerAge'),
+    coBorrowerSalary: getNumericValue('coBorrowerSalary'),
+    coBorrowerBonus: getNumericValue('coBorrowerBonus'),
+    coBorrowerOT: getNumericValue('coBorrowerOT'),
+    coBorrowerOTMonths: getNumericValue('coBorrowerOTMonths') || 1,
+    coBorrowerCommission: getNumericValue('coBorrowerCommission'),
+    coBorrowerCommissionMonths: getNumericValue('coBorrowerCommissionMonths') || 1,
+    coBorrowerOtherIncome: getNumericValue('coBorrowerOtherIncome'),
+    coBorrowerOtherIncomeMonths: getNumericValue('coBorrowerOtherIncomeMonths') || 1,
+    coBorrowerDebt: getNumericValue('coBorrowerDebt'),
   };
 
   const promosToCompare = Array.from(selectedPromoIds).map(id => promosById[id]).filter(Boolean);

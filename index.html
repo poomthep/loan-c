@@ -271,33 +271,49 @@
                   <label>วันสิ้นสุดสัญญา</label>
                   <input id="contractEndDate" type="date">
                 </div>
-                
                 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
-                  <div class="input-group">
-                    <label>วงเงินสูงสุด (บาท)</label>
-                    <input id="maxLoanAmountThb" type="text" inputmode="numeric" placeholder="เช่น 10,000,000" oninput="formatNumberInput(this)">
-                  </div>
-                  <div class="input-group">
-                    <label>LTV สูงสุด (%)</label>
-                    <input id="promoMaxLTV" type="number" placeholder="เช่น 90" value="100">
-                  </div>
-				  
-					<div class="input-group">
-					  <label>DSR สูงสุด (%)</label>
-					  <input id="promoDsrCeiling" type="number" placeholder="เช่น 55" value="55">
-					</div>				  
+					  <div class="input-group">
+						<label>วงเงินสูงสุด (บาท)</label>
+						<input id="maxLoanAmountThb" type="text" inputmode="numeric" placeholder="เช่น 10,000,000" oninput="formatNumberInput(this)">
+					  </div>
+					  <div class="input-group">
+						<label>LTV สูงสุด (%)</label>
+						<input id="promoMaxLTV" type="number" placeholder="เช่น 90" value="100">
+					  </div>
+					  
+						<div class="input-group">
+						  <label>DSR สูงสุด (%)</label>
+						  <input id="promoDsrCeiling" type="number" placeholder="เช่น 55" value="55">
+						</div>				  
 
-					<div class="input-group">
-					  <label>เกณฑ์รับรู้รายได้รวม (%)</label>
-					  <input id="promoIncomeAcceptanceRatio" type="number" placeholder="เช่น 80" value="100">
-					</div>
-				  
-                  <div class="input-group">
-                    <label>อายุสูงสุด (ปี)</label>
-                    <input id="promoMaxLoanAge" type="number" placeholder="เช่น 65" value="65">
-                  </div>
-				  
-                </div>
+						<div class="input-group">
+						  <label>เกณฑ์รับรู้รายได้รวม (%)</label>
+						  <input id="promoIncomeAcceptanceRatio" type="number" placeholder="เช่น 80" value="100">
+						</div>
+					  
+					  <div class="input-group">
+						<label>อายุสูงสุด (ปี)</label>
+						<input id="promoMaxLoanAge" type="number" placeholder="เช่น 65" value="65">
+					  </div>
+
+					  <div class="input-group">
+						<label>วิธีคำนวณวงเงิน</label>
+						<select id="promoCalcMethod">
+							<option value="accurate">คำนวณแม่นยำ (Accurate)</option>
+							<option value="multiplier">ตัวคูณ (Multiplier)</option>
+							<option value="per_million">ต่องวดล้านละ (Per Million)</option>
+						</select>
+					  </div>
+					  <div class="input-group">
+						<label>ตัวคูณ (x เท่า)</label>
+						<input id="promoMultiplier" type="number" placeholder="เช่น 150">
+					  </div>
+					  <div class="input-group">
+						<label>งวดล้านละ (บาท)</label>
+						<input id="promoPerMillionRate" type="text" inputmode="numeric" oninput="formatNumberInput(this)" placeholder="เช่น 7,000">
+					  </div>
+					  </div>
+               
               </div>
           
 <div style="margin-bottom: 15px;">
