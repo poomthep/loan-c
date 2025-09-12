@@ -156,7 +156,7 @@ function renderRatesList(rates = []) {
 }
 
 /**
- * Opens the Promotion Admin panel in a modal window. (เวอร์ชันใหม่)
+ * Opens the Promotion Admin panel in a modal window. (เวอร์ชันแก้ไข)
  */
 function openPromoAdminModal() {
   const host = ensureModalHost();
@@ -170,7 +170,6 @@ function openPromoAdminModal() {
     promoAdminOriginalParent = promoAdminPanel.parentElement;
   }
 
-  // สร้าง Modal HTML ที่มีปุ่มอยู่ใน Footer เรียบร้อยแล้ว
   const modalContentHTML = `
     <div role="dialog" aria-modal="true" style="width: 95%; max-width: 800px; background: #fff; border-radius: 14px; box-shadow: 0 20px 60px rgba(0,0,0,.3); display: flex; flex-direction: column; max-height: 90vh;">
       <div style="display:flex; justify-content:space-between; align-items:center; padding: 12px 16px; border-bottom: 1px solid #e9ecef;">
@@ -178,7 +177,7 @@ function openPromoAdminModal() {
         <button class="btn btn-danger" style="padding: 8px 12px;" onclick="closeModal()">ปิด</button>
       </div>
       <div id="promoModalBody" class="modal-body-scrollable" style="padding: 16px; overflow-y: auto; flex-grow: 1;">
-        </div>
+      </div>
       <div class="modal-sticky-footer">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
             <button class="btn" onclick="savePromotion()">บันทึกโปรโมชัน</button>
@@ -189,11 +188,12 @@ function openPromoAdminModal() {
   `;
   host.innerHTML = modalContentHTML;
 
-  // ย้ายเฉพาะเนื้อหาฟอร์มเข้ามา
   const modalBody = host.querySelector('#promoModalBody');
   if (modalBody) {
     modalBody.appendChild(promoAdminPanel);
   }
+
+  // ไม่มีการย้ายปุ่มอีกต่อไป
 
   promoAdminPanel.style.display = 'block';
   const content = promoAdminPanel.querySelector('.card-content');
@@ -203,7 +203,7 @@ function openPromoAdminModal() {
 }
 
 /**
- * Opens the Bank Admin panel in a modal window. (เวอร์ชันใหม่)
+ * Opens the Bank Admin panel in a modal window. (เวอร์ชันแก้ไข)
  */
 function openBankAdminModal() {
   const host = ensureModalHost();
@@ -217,7 +217,6 @@ function openBankAdminModal() {
     bankAdminOriginalParent = bankAdminPanel.parentElement;
   }
 
-  // สร้าง Modal HTML ที่มีปุ่มอยู่ใน Footer เรียบร้อยแล้ว
   const modalContentHTML = `
     <div role="dialog" aria-modal="true" style="width: 95%; max-width: 800px; background: #fff; border-radius: 14px; box-shadow: 0 20px 60px rgba(0,0,0,.3); display: flex; flex-direction: column; max-height: 90vh;">
       <div style="display:flex; justify-content:space-between; align-items:center; padding: 12px 16px; border-bottom: 1px solid #e9ecef;">
@@ -225,7 +224,7 @@ function openBankAdminModal() {
         <button class="btn btn-danger" style="padding: 8px 12px;" onclick="closeModal()">ปิด</button>
       </div>
       <div id="bankModalBody" class="modal-body-scrollable" style="padding: 16px; overflow-y: auto; flex-grow: 1;">
-        </div>
+      </div>
       <div class="modal-sticky-footer">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
             <button class="btn" onclick="saveBank()">บันทึก</button>
@@ -236,12 +235,13 @@ function openBankAdminModal() {
   `;
   host.innerHTML = modalContentHTML;
 
-  // ย้ายเฉพาะเนื้อหาฟอร์มเข้ามา
   const modalBody = host.querySelector('#bankModalBody');
   if (modalBody) {
     modalBody.appendChild(bankAdminPanel);
   }
   
+  // ไม่มีการย้ายปุ่มอีกต่อไป
+
   bankAdminPanel.style.display = 'block';
   const content = bankAdminPanel.querySelector('.card-content');
   if (content) content.classList.remove('collapsed');
@@ -886,7 +886,8 @@ function runAdvancedAnalysis(promo, borrower) {
       const avgRate3Y = (promo.rates?.slice(0, 3).reduce((sum, r) => sum + r.rate, 0) / Math.min(promo.rates?.length, 3)) || 3.5;
       maxLoanFromAffordability = calculateMaxLoan(maxAffordablePay, avgRate3Y, analysis.maxTerm);
   }
-  analysis.maxLoanAmount = maxLoanFromAffordability;
+	analysis.maxLoanByAffordability = maxLoanFromAffordability;
+	analysis.maxLoanAmount = maxLoanFromAffordability;
 
   const maxLoanFromLTV = (borrower.housePrice || 0) * ((promo.max_loan_ltv || 100) / 100);
   let finalMax = analysis.maxLoanAmount;
@@ -998,8 +999,9 @@ function calculateLoan() {
   const detailBox = document.getElementById('bestOfferDetails');
   if (bestOffer && bestOffer.analysis.finalLoanAmount > 0) {
     document.getElementById('loanAmount').textContent = `${fmt(bestOffer.analysis.finalLoanAmount)} บาท`;
+    document.getElementById('maxAffordableLoan').textContent = `${fmt(bestOffer.analysis.maxLoanByAffordability)} บาท`; // <--- เพิ่มบรรทัดนี้
     document.getElementById('monthlyPayment').textContent = `${fmt(bestOffer.analysis.monthlyPayment)} บาท`;
-    document.getElementById('bestBank').textContent = bestOffer.analysis.bankName || '-';
+	document.getElementById('bestBank').textContent = bestOffer.analysis.bankName || '-';
     document.getElementById('bestPromo').textContent = bestOffer.analysis.promoName || '-';
     document.getElementById('bestTerm').textContent = bestOffer.analysis.maxTerm || '-';
     document.getElementById('bestDSR').textContent = bestOffer.analysis.finalDSR.toFixed(1) || '-';
@@ -1018,7 +1020,6 @@ function calculateLoan() {
 
 
 // ===== COMPACT VIEW & COMPARISON MODAL =====
-
 function compareBanks(borrower) {
   const container = document.getElementById('bankComparison');
   if (!container) return;
@@ -1048,11 +1049,20 @@ function compareBanks(borrower) {
       <div class="bank-name" title="${promo.bank_name}">${promo.bank_name}</div>
       <div class="selected-promotion" title="${promo.name}">${promo.name}</div>
 
-      <div style="margin-top:6px;font-size:12px;color:#555">วงเงินกู้ (ประมาณ)</div>
-      <div style="font-size:16px;font-weight:800;color:#333">${fmt(analysis.finalLoanAmount)} บาท</div>
+      <div style="display:flex; justify-content:space-between; align-items:baseline; margin-top:8px;">
+        <span style="font-size:13px; color:#555;">วงเงินกู้ (อ้างอิงราคาบ้าน)</span>
+        <span style="font-size:16px; font-weight:800; color:#333;">${fmt(analysis.finalLoanAmount)} บาท</span>
+      </div>
+      
+      <div style="display:flex; justify-content:space-between; align-items:baseline; margin-top:6px;">
+        <span style="font-size:13px; color:#555;">วงเงินสูงสุด (จากรายได้)</span>
+        <span style="font-size:14px; font-weight:600; color:#333;">${fmt(analysis.maxLoanByAffordability)} บาท</span>
+      </div>
 
-      <div style="margin-top:8px;font-size:12px;color:#555">ผ่อนต่อเดือน (ประมาณ)</div>
-      <div style="font-size:16px;font-weight:800;color:#667eea">${fmt(analysis.monthlyPayment)} บาท</div>
+      <div style="display:flex; justify-content:space-between; align-items:baseline; margin-top:8px;">
+        <span style="font-size:13px; color:#555;">ผ่อนต่อเดือน (ประมาณ)</span>
+        <span style="font-size:16px; font-weight:800; color:#667eea;">${fmt(analysis.monthlyPayment)} บาท</span>
+      </div>
 
       <button class="btn btn-secondary" style="margin-top:12px;width:100%" onclick="openPromoModal('${promo.id}', ${borrowerArgs})">
         ดูรายละเอียด

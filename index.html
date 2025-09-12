@@ -158,10 +158,11 @@
               <button class="btn btn-danger btn-admin" onclick="showActionButtons()"> &lt; กลับ </button>
             </div>
             <div class="card-content">
-                <div class="results-grid" style="margin-bottom: 15px;">
-                    <div class="result-item"><div>ยอดกู้ยืม</div><div id="loanAmount" class="value">-</div></div>
-                    <div class="result-item"><div>ผ่อนต่อเดือน</div><div id="monthlyPayment" class="value">-</div></div>
-                </div>
+				<div class="results-grid" style="margin-bottom: 15px;">
+					<div class="result-item"><div>ยอดกู้ (อ้างอิงราคาบ้าน)</div><div id="loanAmount" class="value">-</div></div>
+					<div class="result-item"><div>วงเงินสูงสุด (จากรายได้)</div><div id="maxAffordableLoan" class="value">-</div></div>
+					<div class="result-item"><div>ผ่อนต่อเดือน</div><div id="monthlyPayment" class="value">-</div></div>
+				</div>
                 <div id="bestOfferDetails" style="background:#f8f9fa;border:1px solid #e9ecef;border-radius:8px;padding:10px">
                     <p><strong>ธนาคาร:</strong> <span id="bestBank"></span></p>
                     <p><strong>โปรโมชั่น:</strong> <span id="bestPromo"></span></p>
@@ -358,7 +359,7 @@
 					  
               </div>
               
-              <div id="promoActionButtons" style="display: flex; gap: 8px;">
+              <div id="promoActionButtons" style="display:none !important"; gap: 8px;">
                 <button class="btn" onclick="savePromotion()">บันทึกโปรโมชัน</button>
                 <button class="btn btn-secondary" onclick="clearPromoForm()">ล้างฟอร์ม</button>
               </div>
