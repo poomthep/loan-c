@@ -1,0 +1,21 @@
+{
+  "name": "เครื่องมือวิเคราะห์สินเชื่อบ้าน",
+  "short_name": "วิเคราะห์สินเชื่อ",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#667eea",
+  "description": "เครื่องมือสำหรับช่วยวิเคราะห์ เปรียบเทียบ และจัดการข้อมูลสินเชื่อบ้าน",
+  "icons": [
+    {
+      "src": "icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -4,15 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>เครื่องมือวิเคราะห์สินเชื่อบ้าน</title>
-  <link rel="icon" href="favicon.ico" />
-  
+  <link rel="icon" href="favicon.ico" />  
   <link rel="stylesheet" href="style.css">
-
+  <meta name="theme-color" content="#667eea">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
- 
-<script defer src="https://unpkg.com/@supabase/supabase-js@2"></script>
-
+  <script defer src="https://unpkg.com/@supabase/supabase-js@2"></script>
 
   <script>
     (function(){
@@ -419,5 +419,16 @@
   </div>
 
   <script defer src="script.js"></script>
-</body>
+  <script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').then(registration => {
+        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+      }, err => {
+        console.log('ServiceWorker registration failed: ', err);
+      });
+    });
+  }
+  </script>
+  </body>
 </html>

@@ -570,3 +570,21 @@ input[type=number] {
 .amortization tbody tr:last-child td {
   border-bottom: none;
 }
+
+/* ===== Mobile App Feel Enhancements ===== */
+
+/* ทำให้การ scroll ลื่นขึ้นบน iOS */
+body {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ป้องกันการเลือกข้อความบนปุ่มและส่วนควบคุมต่างๆ */
+.btn, .card-header, label {
+  user-select: none;
+  -webkit-user-select: none; /* สำหรับ Safari */
+}
+
+/* เอาสีฟ้าๆ ที่ขึ้นตอนกดปุ่มหรือลิงก์บนมือถือออก */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
