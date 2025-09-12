@@ -1017,8 +1017,6 @@ function calculateLoan() {
   compareBanks(borrower);
 }
 
-
-
 // ===== COMPACT VIEW & COMPARISON MODAL =====
 function compareBanks(borrower) {
   const container = document.getElementById('bankComparison');
@@ -1085,11 +1083,11 @@ function openPromoModal(promoId, housePrice, age, salary, bonus, ot, otMonths, c
         <div><div class="bank-name" style="margin:0">${promo.bank_name}</div><div class="selected-promotion" style="margin:0">${promo.name}</div></div>
         <button class="btn btn-danger" onclick="closeModal()">ปิด</button>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px">
+      <div class="modal-grid-content">
         <div class="card" style="border:1px solid #e9ecef; margin:0;">
           <div style="font-weight:700;margin-bottom:6px">สรุปวงเงิน/ค่างวด</div>
           <div style="font-size:13px;color:#555">ระยะเวลากู้สูงสุด: ${analysis.maxTerm} ปี</div>
-          <div style="font-size:13px;color:#555">วงเงินกู้ (คำนวณ): <b>${fmt(analysis.finalLoanAmount)} บาท</b></div>
+          <div style-size:13px;color:#555">วงเงินกู้ (คำนวณ): <b>${fmt(analysis.finalLoanAmount)} บาท</b></div>
           <div style="font-size:13px;color:#555">ค่างวด/เดือน (ประมาณ): <b>${fmt(analysis.monthlyPayment)} บาท</b></div>
           <div style="font-size:13px;color:#555">DSR โดยประมาณ: <b>${analysis.finalDSR.toFixed(1)}%</b></div>
         </div>
